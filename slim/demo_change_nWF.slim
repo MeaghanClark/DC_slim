@@ -1,0 +1,86 @@
+// set up a neutral nonWF simulation
+initialize() {
+	initializeSLiMModelType("nonWF");
+	initializeSLiMOptions(keepPedigrees=T);
+	initializeTreeSeq();
+	
+	if(exists("slimgui")) { // now K and B are defined from the CL
+		defineConstant("K", 2328);	// carrying capacity
+		defineConstant("B", 100); // bottleneck carrying capacity
+		defineConstant("O", "./dc_slim.trees");
+		defineConstant("M", "./meta_dc_slim.txt"); // metadata
+	}
+	
+	// neutral mutations, which are allowed to fix
+	initializeMutationType("m1", 0.5, "f", 0.0);
+	
+	initializeGenomicElementType("g1", m1, 1.0);
+	initializeGenomicElement(g1, 0, 9999999); // should be 2589999999
+	initializeMutationRate(0); // mutation rate should be 1.2e-8 from Fitak et al 2018 (citing Shaffer et al. 2013; Green et al. 2014) 
+	initializeRecombinationRate(1e-8);
+//	initializeSex("A");
+	
+	// set up output
+	HeaderLine = "generation\tindividual_id\tage";
+	writeFile(M,HeaderLine,append=T);
+}
+
+reproduction(NULL) {
+	if (individual.age > 0) { 
+		mate = subpop.sampleIndividuals(1, minAge=1);
+		offspring_count = 2;
+		for (i in seqLen(offspring_count)){
+			subpop.addCrossed(individual, mate);
+		}
+	}
+}
+
+// create an initial population of K individuals
+1 early() {
+	sim.addSubpop("p1", K);
+	p1.individuals.age = rdunif(K, min=0, max=39);
+}
+
+// pre-bottleneck fitness scaling
+1:33999 early() {
+	// density-dependence
+	p1.fitnessScaling = K / (p1.individualCount);
+}
+
+// post-bottleneck fitness scaling
+// demographic decline starts at time 34000
+34000:35000 early() {
+	// density-dependence
+	p1.fitnessScaling = B / (p1.individualCount);
+}
+
+// remember individuals every ten years for 1000 years
+
+// before decline
+33800:33999 late(){
+	if (sim.generation % 10 == 0){ //every ten generations
+		catn("Generation " + sim.generation + ": " + p1.individualCount);
+		sample = p1.sampleIndividuals(100, replace = F);
+		sim.treeSeqRememberIndividuals(sample);
+		for(i in 0:(length(sample)-1)){ //remember metadata for each individual at this point in time (will be overwritten in the treesequence metadata) 
+			OutputLine  = paste(sim.generation, p1.individuals.pedigreeID[i], p1.individuals[i].age, sep = "\t");
+			writeFile(M, OutputLine, append=T);
+		}
+	}
+}
+
+// after decline
+34000:35000 late(){
+	if (sim.generation % 10 == 0){ //every ten generations
+		catn("Generation " + sim.generation + ": " + p1.individualCount);
+		sim.treeSeqRememberIndividuals(p1.individuals);
+		for(i in 0:(p1.individualCount-1)){ //remember metadata for each individual at this point in time (will be overwritten in the treesequence metadata) 
+			OutputLine  = paste(sim.generation, p1.individuals.pedigreeID[i], p1.individuals[i].age, sep = "\t");
+			writeFile(M, OutputLine, append=T);
+		}
+	}
+}
+
+35000 late() {
+	sim.treeSeqOutput(O);
+} //estimate for glacial retreat in southern MI is 35,000 ya
