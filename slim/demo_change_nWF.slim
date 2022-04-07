@@ -7,7 +7,7 @@ initialize() {
 	initializeTreeSeq();
 	
 	if(exists("slimgui")) { // now K and B are defined from the CL
-		defineConstant("K", 2328);	// carrying capacity
+		defineConstant("K", 100);	// carrying capacity
 		defineConstant("B", 100); // bottleneck carrying capacity
 		defineConstant("O", "./dc_slim.trees");
 		defineConstant("M", "./meta_dc_slim.txt"); // metadata
@@ -20,7 +20,7 @@ initialize() {
 	initializeGenomicElement(g1, 0, 9999999); // should be 2589999999
 	initializeMutationRate(0); // mutation rate should be 1.2e-8 from Fitak et al 2018 (citing Shaffer et al. 2013; Green et al. 2014) 
 	initializeRecombinationRate(1e-8);
-//	initializeSex("A");
+	//	initializeSex("A");
 	
 	// set up output
 	HeaderLine = "generation\tindividual_id\tage";
@@ -28,11 +28,28 @@ initialize() {
 }
 
 reproduction(NULL) {
-	if (individual.age > 0) { 
-		mate = subpop.sampleIndividuals(1, minAge=1);
-		offspring_count = 2;
-		for (i in seqLen(offspring_count)){
-			subpop.addCrossed(individual, mate);
+	
+	if(sim.generation <=33999){
+		
+		if (individual.age > 0) {
+			mate = subpop.sampleIndividuals(1, minAge=1);
+			prob_offspring = min(1.0, (K/p1.individualCount));
+			offspring_count=rbinom(1, 1, prob_offspring);
+			for (i in seqLen(offspring_count)){
+				subpop.addCrossed(individual, mate);
+			}
+		}
+	}
+	
+	if(sim.generation > 33999){
+		
+		if (individual.age > 0) {
+			mate = subpop.sampleIndividuals(1, minAge=1);
+			prob_offspring = min(1.0, (B/p1.individualCount));
+			offspring_count=rbinom(1, 1, prob_offspring);
+			for (i in seqLen(2*offspring_count)){
+				subpop.addCrossed(individual, mate);
+			}
 		}
 	}
 }
