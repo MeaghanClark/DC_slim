@@ -1,0 +1,82 @@
+// mini-model for troubleshooting
+
+// set up a neutral nonWF simulation
+initialize() {
+	initializeSLiMModelType("nonWF");
+	
+	if(exists("slimgui")) { // now K and B are defined from the CL
+		defineConstant("K", 10000);	// carrying capacity
+		defineConstant("B", 100); // bottleneck carrying capacity
+		defineConstant("fitness", 0.7); // constant for fitness scaling
+	}
+	
+	
+	initializeMutationType("m1", 0.5, "f", 0.0); // neutral mutations, which are allowed to fix
+
+	initializeGenomicElementType("g1", m1, 1.0);
+	initializeGenomicElement(g1, 0, 9999999); // should be 2589999999
+	initializeMutationRate(0); // mutations will be added in msprime
+	initializeRecombinationRate(1e-8);
+	
+	if(!exists("slimgui")){
+	// set up output
+	HeaderLine = "generation\tindividual_id\tage";
+	writeFile(M,HeaderLine,append=T);
+	}
+
+}
+
+reproduction(NULL) {
+
+// Scaled reproduction calls		
+	if (individual.age > 0) {
+			
+		if(sim.generation <=3399){	prob_offspring = min(1.0, (K/p1.individualCount));}	
+		if(sim.generation > 3399){ prob_offspring = min(1.0, (B/p1.individualCount));}
+		
+		offspring_count=rbinom(1, 1, prob_offspring);
+		if (offspring_count > 0) {
+			mate = subpop.sampleIndividuals(1, minAge=1); // should exclude focal individual
+			subpop.addCrossed(individual, mate); 
+		}
+	}
+}
+	
+
+// create an initial population of K individuals
+1 early() {
+	sim.addSubpop("p1", K);
+	p1.individuals.age = rdunif(K, min=0, max=39);
+	
+}
+
+
+// fitness scaling -- beware, taking this out results is unchecked growth! 
+1:3500 early() {
+	p1.fitnessScaling = 0.7;
+}
+
+
+// before decline
+1:3500 late(){
+	if(exists("slimgui")) {
+		if (sim.generation % 10 == 0){ //every ten generations
+			catn("Generation " + sim.generation + ": ");
+			catn("No. Individuals: " + p1.individualCount);
+			catn("Average age: " + mean(p1.individuals.age));
+			catn("Age range: " + range(p1.individuals.age)[0] + ", " + range(p1.individuals.age)[1]);
+			catn("---");
+		}
+	}
+	//
+	if(!exists("slimgui")) {
+		if (sim.generation % 10 == 0){ //every ten generations
+			OutputLine = paste(sim.generation, p1.individualCount, mean(p1.individuals.age), range(p1.individuals.age)[1]);
+			writeFile(M, OutputLine, append = T);
+		}
+	}
+}
+
+3500 late() {
+	sim.simulationFinished();
+} 
