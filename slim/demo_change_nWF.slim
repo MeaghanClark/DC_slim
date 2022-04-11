@@ -9,18 +9,17 @@ initialize() {
 	if(exists("slimgui")) { // now K and B are defined from the CL
 		defineConstant("K", 100);	// carrying capacity
 		defineConstant("B", 100); // bottleneck carrying capacity
-		defineConstant("O", "./dc_slim.trees");
-		defineConstant("M", "./meta_dc_slim.txt"); // metadata
+		defineConstant("O", "./dc_slim.trees"); // tree file
+		defineConstant("M", "./meta_dc_slim.txt"); // metadata file
 	}
 	
-	// neutral mutations, which are allowed to fix
-	initializeMutationType("m1", 0.5, "f", 0.0);
+	initializeMutationType("m1", 0.5, "f", 0.0); // neutral mutations, which are allowed to fix
+
 	
 	initializeGenomicElementType("g1", m1, 1.0);
 	initializeGenomicElement(g1, 0, 9999999); // should be 2589999999
-	initializeMutationRate(0); // mutation rate should be 1.2e-8 from Fitak et al 2018 (citing Shaffer et al. 2013; Green et al. 2014) 
+	initializeMutationRate(0); // mutations will be added in msprime
 	initializeRecombinationRate(1e-8);
-	//	initializeSex("A");
 	
 	// set up output
 	HeaderLine = "generation\tindividual_id\tage";
@@ -102,4 +101,4 @@ reproduction(NULL) {
 
 35000 late() {
 	sim.treeSeqOutput(O);
-} //estimate for glacial retreat in southern MI is 35,000 ya
+} 
