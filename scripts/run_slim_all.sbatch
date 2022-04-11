@@ -36,5 +36,3 @@ echo PRINTING SUBSET OF ENVIRONMENT VARIABLES:
 (set -o posix ; set | grep -v ^_ | grep -v ^EB | grep -v ^BASH | grep -v PATH | grep -v LS_COLORS)
 
 echo ----------------------------------------------------------------------------------------
-
-
