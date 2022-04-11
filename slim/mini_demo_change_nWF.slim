@@ -5,9 +5,9 @@ initialize() {
 	initializeSLiMModelType("nonWF");
 	
 	if(exists("slimgui")) { // now K and B are defined from the CL
-		defineConstant("K", 10000);	// carrying capacity
-		defineConstant("B", 100); // bottleneck carrying capacity
-		defineConstant("fitness", 0.7); // constant for fitness scaling
+		defineConstant("K", 2500);	// carrying capacity
+		defineConstant("B", 73); // bottleneck carrying capacity
+		defineConstant("FIT", 0.5); // constant for fitness scaling
 	}
 	
 	
@@ -53,7 +53,7 @@ reproduction(NULL) {
 
 // fitness scaling -- beware, taking this out results is unchecked growth! 
 1:3500 early() {
-	p1.fitnessScaling = 0.7;
+	p1.fitnessScaling = FIT;
 }
 
 
