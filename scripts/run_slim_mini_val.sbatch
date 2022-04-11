@@ -14,12 +14,12 @@ module load OpenMPI/2.1.2
 module load SLiM/2021dev
 module list
 
-BVALUE=KVALUE/75
+BVALUE=${KVALUE}/75
 echo running with K == ${KVALUE}
 echo running with B == ${BVALUE}
 echo running with FITNESS == ${FITNESS}
 
-slim -d K=${KVALUE} -d B=${BVALUE} -d O=${OUTDIR} -d FIT=${FITNESS} -d "M='${OUTDIR}/meta_${KVALUE}_${FITNESS}.txt'" ${SLIMSCRIPT}
+slim -d K=${KVALUE} -d B=${BVALUE} -d FIT=${FITNESS} -d "M='${OUTDIR}/meta_${KVALUE}_${FITNESS}.txt'" ${SLIMSCRIPT}
 
 echo done running the simulation
 
