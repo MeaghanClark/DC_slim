@@ -6,8 +6,8 @@ initialize() {
 	
 	if(exists("slimgui")) { // now K and B are defined from the CL
 		defineConstant("K", 2500);	// carrying capacity
-		defineConstant("B", 73); // bottleneck carrying capacity
-		defineConstant("FIT", 0.5); // constant for fitness scaling
+		defineConstant("B", 33.333); // bottleneck carrying capacity
+		defineConstant("FIT", 0.8); // constant for fitness scaling
 	}
 	
 	
@@ -32,9 +32,8 @@ reproduction(NULL) {
 
 // Scaled reproduction calls		
 	if (individual.age > 0) {
-			
-		if(sim.generation <=3399){	prob_offspring = min(1.0, (K/p1.individualCount));}	
-		if(sim.generation > 3399){ prob_offspring = min(1.0, (B/p1.individualCount));}
+		if(sim.generation <=3399){	prob_offspring = max(0.0, (1-p1.individualCount/K));}	 // maybe do it this way
+		if(sim.generation > 3399){ prob_offspring = max(0.0, (1-p1.individualCount/B));}
 		
 		offspring_count=rbinom(1, 1, prob_offspring);
 		if (offspring_count > 0) {
