@@ -12,7 +12,7 @@ storagenode=/mnt/home/clarkm89 #path to top level of dir where input/output file
 jobname=mini_val #label for SLURM book-keeping, nWF or pWF 
 run_name=DC_slim #label to use on output files
 logfilesdir=logfiles_minival #name of directory to create and then write log files to
-executable=$storagenode/$run_name/scripts/run_slim_all.sbatch #script to run 
+executable=$storagenode/$run_name/scripts/run_slim_mini_val.sbatch #script to run 
 
 # *** CHANGE SLIM SCRIPT BASED ON COMMAND LINE***
 slimscript=$storagenode/$run_name/slim/mini_demo_change_nWF.slim #slimulation to run
