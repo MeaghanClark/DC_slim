@@ -14,10 +14,10 @@ module load OpenMPI/2.1.2
 module load SLiM/2021dev
 module list
 
-echo running with K == ${KVALUE}
-echo running with FITNESS == ${FITNESS}
+echo running with N == ${N}
+echo running with prob of mortality == ${P}
 
-slim -d K=${KVALUE} -d FIT=${FITNESS} -d "M='${OUTDIR}/meta_${KVALUE}_${FITNESS}.txt'" ${SLIMSCRIPT}
+slim -d P=${P} -d N=${N} -d "M='${OUTDIR}/Nc_test_${N}_${P}.txt'" ${SLIMSCRIPT}
 
 echo done running the simulation
 
