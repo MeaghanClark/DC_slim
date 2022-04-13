@@ -24,7 +24,8 @@ initialize() {
 	HeaderLine = "generation\tNc\taverage_age\tmax_age";
 	writeFile(M,HeaderLine,append=T);
 	
-	defineConstant("B", K/75);
+	defineConstant("K", N/(1-P));	// carrying capacity 
+	defineConstant("B", K/75); // bottleneck carrying capacity
 	}
 
 }
