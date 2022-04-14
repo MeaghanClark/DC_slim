@@ -6,8 +6,8 @@ initialize() {
 	initializeSLiMOptions(preventIncidentalSelfing=T);
 	
 	if(exists("slimgui")) { // now K and B are defined from the CL
-		defineConstant("N", 7000); //desired census population size
-		defineConstant("P", 0.3); // probability of mortaility, must be less than 0.5
+		defineConstant("N", 7500); //desired census population size
+		defineConstant("P", 0.2); // probability of mortaility, must be less than 0.5, expected lifespan will be (1-P)/P
 		defineConstant("K", N*((1-P)/(1-2*P)));	// carrying capacity 
 		defineConstant("B", K/75); // bottleneck carrying capacity
 		}
@@ -41,10 +41,6 @@ reproduction(NULL) {
 			subpop.addCrossed(individual, subpop.sampleIndividuals(1, exclude=individual, minAge=1));
 		}
 	}
-	//troubleshooting
-		//	catn("post-rep Nc: " + p1.individualCount);
-		//	catn("predicted new Nc: " + p1.fitnessScaling*p1.individualCount);
-		//	catn();
 }
 	
 
@@ -61,11 +57,11 @@ reproduction(NULL) {
 	p1.fitnessScaling = (1-P);
 	
 	//troubleshooting
-	if(exists("slimgui")) {
-		catn("early Nc: " + p1.individualCount);
-		catn("predicted new Nc: " + p1.fitnessScaling*p1.individualCount);
-		catn();
-	}
+//	if(exists("slimgui")) {
+//		catn("early Nc: " + p1.individualCount);
+//		catn("predicted new Nc: " + p1.fitnessScaling*p1.individualCount);
+//		catn();
+//	}
 }
 
 
@@ -73,11 +69,11 @@ reproduction(NULL) {
 // text output
 1:3500 late(){
 	if(exists("slimgui")) {
-	//troubleshooting
-		catn("actual new Nc " + p1.individualCount);
-		catn("predicted early Nc " + (p1.individualCount*max(0.0, (1-p1.individualCount/K))+ p1.individualCount));
-		catn("---");
-		catn();
+//	//troubleshooting
+//		catn("actual new Nc " + p1.individualCount);
+//		catn("predicted early Nc " + (p1.individualCount*max(0.0, (1-p1.individualCount/K))+ p1.individualCount));
+//		catn("---");
+//		catn();
 	//	
 		if (sim.generation % 10 == 0){ //every ten generations
 			catn("Generation " + sim.generation + ": ");
