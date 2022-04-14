@@ -17,7 +17,7 @@ module list
 echo running with N == ${N}
 echo running with prob of mortality == ${P}
 
-slim -d P=${P} -d N=${N} -d "M='${OUTDIR}/Nc_test_${N}_${P}.txt'" ${SLIMSCRIPT}
+slim -d P=${P} -d N=${N} -d "M='${OUTDIR}/Nc_verify_${N}_${P}.txt'" ${SLIMSCRIPT}
 
 echo done running the simulation
 
