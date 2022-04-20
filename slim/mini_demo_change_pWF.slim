@@ -1,0 +1,108 @@
+// mini-model for troubleshooting
+
+// set up a neutral nonWF simulation
+initialize() {
+	initializeSLiMModelType("nonWF");
+	initializeSLiMOptions(preventIncidentalSelfing=T);
+	
+	if(exists("slimgui")) { // now K and B are defined from the CL
+		defineConstant("N", 7500); //desired census population size
+		defineConstant("K", N+1);	// carrying capacity 
+		defineConstant("B", K/75); // bottleneck carrying capacity
+		age_table = c(0,1.0); // probability of mortailty
+		defineConstant("L", age_table);
+
+		}
+	
+	initializeMutationType("m1", 0.5, "f", 0.0); // neutral mutations, which are allowed to fix
+
+	initializeGenomicElementType("g1", m1, 1.0);
+	initializeGenomicElement(g1, 0, 9999999); // should be 2589999999
+	initializeMutationRate(0); // mutations will be added in msprime
+	initializeRecombinationRate(1e-8);
+	
+	if(!exists("slimgui")){
+	// set up output
+	HeaderLine = "generation\tNc\taverage_age\tmax_age";
+	writeFile(M,HeaderLine,append=T);
+	
+	defineConstant("K", N*((1-P)/(1-2*P)));	// carrying capacity 
+	defineConstant("B", K/75); // bottleneck carrying capacity
+	}
+
+}
+
+reproduction(NULL) {
+
+// Scaled reproduction call
+	if (individual.age == 1) { 
+		if(sim.generation <=3399){	prob_offspring = min(1.0, (K/p1.individualCount));}	 // always 1
+		if(sim.generation > 3399){ prob_offspring = min(1.0, (B/p1.individualCount));}
+		offspring_count= rbinom(1, 1, prob_offspring);
+		if (offspring_count > 0) {
+			subpop.addCrossed(individual, subpop.sampleIndividuals(1, exclude=individual, minAge=1));
+		}
+	}
+	
+//Batched reproduction call
+//if(sim.generation <=3399){	
+//	parents = sample(p1.individuals, N, replace = F);
+//	for(i in 0:(N-1)){
+//		subpop.addCrossed(parents[i], subpop.sampleIndividuals(1, exclude=parents[i], minAge=1));
+//	}
+//}
+//if(sim.generation > 3399){	
+//	parents = sample(p1.individuals, asInteger(B), replace = F);
+//	for(i in 0:(asInteger(B)-1)){
+//		subpop.addCrossed(parents[i], subpop.sampleIndividuals(1, exclude=parents[i], minAge=1));
+//	}
+//}
+//
+//	self.active=0;
+	
+} // end reproduction callback
+	
+
+// create an initial population of K individuals
+1 early() {
+	sim.addSubpop("p1", asInteger(N));
+	//p1.individuals.age = rdunif(asInteger(N), min =1, max = 1);
+	
+}
+
+
+// fitness scaling
+1:3500 early() {
+	// life table based individual mortality
+	inds = p1.individuals;
+	ages = inds.age;
+	mortality = L[ages];
+	survival = 1 - mortality;
+	inds.fitnessScaling = survival;
+}
+
+
+
+// text output
+1:3500 late(){
+	if(exists("slimgui")) {
+		if (sim.generation % 10 == 0){ //every ten generations
+			catn("Generation " + sim.generation + ": ");
+			catn("No. Individuals: " + p1.individualCount);
+			catn("Average age: " + mean(p1.individuals.age));
+			catn("Age range: " + range(p1.individuals.age)[0] + ", " + range(p1.individuals.age)[1]);
+			catn("---");
+		}
+	}
+	//
+	if(!exists("slimgui")) {
+		//if (sim.generation % 10 == 0){ //every ten generations
+			OutputLine = paste(sim.generation, p1.individualCount, mean(p1.individuals.age), range(p1.individuals.age)[1]);
+			writeFile(M, OutputLine, append = T);
+		//}
+	}
+}
+
+3500 late() {
+	sim.simulationFinished();
+} 
