@@ -29,11 +29,11 @@ if [ ! -d ./$logfilesdir ]; then mkdir ./$logfilesdir; fi
 #for n in 7500 ; do  #4500 5500 6500 7500 8500 9500 10500 11500
 	for rep in {1..100} ; do  # 0.1 0.2 0.3 0.4 0.5 
 		sbatch --job-name=$jobname \
-		--export=JOBNAME=$jobname,SLIMSCRIPT=$slimscript,N=$n,P=0.2,REP=$rep,CPUS=$cpus,RUN_NAME=$run_name,STORAGENODE=$storagenode,OUTDIR=$outdir,LOGFILESDIR=$logfilesdir \
+		--export=JOBNAME=$jobname,SLIMSCRIPT=$slimscript,N=7500,P=0.2,REP=$rep,CPUS=$cpus,RUN_NAME=$run_name,STORAGENODE=$storagenode,OUTDIR=$outdir,LOGFILESDIR=$logfilesdir \
 		--cpus-per-task=$cpus \
 		--mem-per-cpu=$ram_per_cpu \
-		--output=./$logfilesdir/${jobname}_${n}_${p}_%A.out \
-		--error=./$logfilesdir/${jobname}_${n}_${p}_%A.err \
+		--output=./$logfilesdir/${jobname}_${rep}_%A.out \
+		--error=./$logfilesdir/${jobname}_${rep}_%A.err \
 		--time=12:00:00 \
 		$executable
 		
