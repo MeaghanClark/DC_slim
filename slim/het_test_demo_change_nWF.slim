@@ -16,7 +16,7 @@ initialize() {
 
 	initializeGenomicElementType("g1", m1, 1.0);
 	initializeGenomicElement(g1, 0, 9999999); // should be 2589999999
-	initializeMutationRate(0); // mutations will be added in msprime
+	initializeMutationRate(1e-8); // mutations will be added in msprime
 	initializeRecombinationRate(1e-8);
 	
 	if(!exists("slimgui")){
@@ -34,8 +34,8 @@ reproduction(NULL) {
 
 // Scaled reproduction calls		
 	if (individual.age > 0) { 
-		if(sim.generation <=3399){	prob_offspring = max(0.0, (1-p1.individualCount/K));}	 // 1- (N/K)
-		if(sim.generation > 3399){ prob_offspring = max(0.0, (1-p1.individualCount/B));}
+		if(sim.generation <=33999){	prob_offspring = max(0.0, (1-p1.individualCount/K));}	 // 1- (N/K)
+		if(sim.generation > 33999){ prob_offspring = max(0.0, (1-p1.individualCount/B));}
 		offspring_count=rbinom(1, 1, prob_offspring);
 		if (offspring_count > 0) {
 			subpop.addCrossed(individual, subpop.sampleIndividuals(1, exclude=individual, minAge=1));
@@ -53,7 +53,7 @@ reproduction(NULL) {
 
 
 // fitness scaling
-1:3500 early() {
+1:35000 early() {
 	p1.fitnessScaling = (1-P);
 	
 	//troubleshooting
@@ -67,7 +67,7 @@ reproduction(NULL) {
 
 
 // text output
-1:3500 late(){
+1:35000 late(){
 	if(exists("slimgui")) {
 //	//troubleshooting
 //		catn("actual new Nc " + p1.individualCount);
@@ -94,6 +94,6 @@ reproduction(NULL) {
 	}
 }
 
-3500 late() {
+35000 late() {
 	sim.simulationFinished();
 } 

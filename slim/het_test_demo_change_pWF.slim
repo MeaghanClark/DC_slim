@@ -18,7 +18,7 @@ initialize() {
 
 	initializeGenomicElementType("g1", m1, 1.0);
 	initializeGenomicElement(g1, 0, 9999999); // should be 2589999999
-	initializeMutationRate(0); // mutations will be added in msprime
+	initializeMutationRate(1e-8); // mutations will be added in msprime
 	initializeRecombinationRate(1e-8);
 	
 	if(!exists("slimgui")){
@@ -38,7 +38,7 @@ reproduction(NULL) {
 	if (individual.age == 1) { 
 		
 		//pre-bottleneck
-		if(sim.generation <=3399){	
+		if(sim.generation <=33999){	
 			prob_offspring = min(1.0, (K/p1.individualCount)); // always 1
 			
 			offspring_count= rbinom(1, 1, prob_offspring);
@@ -48,7 +48,7 @@ reproduction(NULL) {
 		}	 
 		
 		//bottleneck
-		if(sim.generation == 3400){  
+		if(sim.generation == 34000){  
 		survivors = p1.individuals[p1.individuals.tag ==1];
 		catn(length(survivors));
 			if(individual.tag == 1) {
@@ -57,7 +57,7 @@ reproduction(NULL) {
 		}
 		
 		//post-bottleneck
-		if(sim.generation > 3400){	
+		if(sim.generation > 34000){	
 			prob_offspring = min(1.0, (B/p1.individualCount)); // always 1
 			
 			offspring_count= rbinom(1, 1, prob_offspring);
@@ -75,14 +75,14 @@ reproduction(NULL) {
 	sim.addSubpop("p1", asInteger(N));	
 }
 
-3399 late(){
+33999 late(){
 	p1.individuals.tag = 0;
 	survivors = p1.sampleIndividuals(asInteger(B));
 	survivors.tag = 1;
 }
 
 // fitness scaling
-1:3500 early() {
+1:35000 early() {
 	// life table based individual mortality
 	inds = p1.individuals;
 	ages = inds.age;
@@ -92,7 +92,7 @@ reproduction(NULL) {
 }
 
 // text output
-1:3500 late(){
+1:35000 late(){
 	if(exists("slimgui")) {
 		if (sim.generation % 10 == 0){ //every ten generations
 			catn("Generation " + sim.generation + ": ");
@@ -112,7 +112,7 @@ reproduction(NULL) {
 	}
 }
 
-3500 late() {
+35000 late() {
 	sim.simulationFinished();
 } 
 
