@@ -19,7 +19,7 @@ slimscript=$storagenode/$run_name/slim/het_test_demo_change_${jobname}.slim #sli
 outdir=$storagenode/$run_name/het_test_output
 
 cpus=1 #number of CPUs to request/use per dataset 
-ram_per_cpu=75G #amount of RAM to request/use per CPU 
+ram_per_cpu=12G #amount of RAM to request/use per CPU 
 
 n=7500
 p=0.2
