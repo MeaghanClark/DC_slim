@@ -1,0 +1,1 @@
+generation	Nc	average_age	max_age	het
