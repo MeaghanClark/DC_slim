@@ -15,7 +15,7 @@ logfilesdir=logfiles_het_test #name of directory to create and then write log fi
 executable=$storagenode/$run_name/scripts/run_slim_het_test.sbatch #script to run 
 
 # *** CHANGE SLIM SCRIPT BASED ON COMMAND LINE***
-slimscript=$storagenode/$run_name/slim/het_test_demo_change_nWF_no_bottleneck.slim #slimulation to run
+slimscript=$storagenode/$run_name/slim/het_test_demo_change_${jobname}_no_bottleneck.slim #slimulation to run
 outdir=$storagenode/$run_name/het_test_output
 
 cpus=1 #number of CPUs to request/use per dataset 
