@@ -3,13 +3,13 @@
 # Last updated 04/21/2022 by MI Clark, script format by R Toczydlowski 
 
 #  run from project directory (where you want output directory to be created)
-# usage: ./scripts/wrapper-run_slim_het_test.sh [pWF or nWF]
+# usage: ./scripts/wrapper-run_slim_het_test.sh [pWF or nWF] [N]
 
 #define variables:
 storagenode=/mnt/home/clarkm89 #path to top level of dir where input/output files live
 
 # ***JOB NAME IS IN COMMAND LINE ARGUMENT*** 
-jobname=nWF #label for SLURM book-keeping, nWF or pWF 
+jobname=$1 #label for SLURM book-keeping, nWF or pWF 
 run_name=DC_slim #label to use on output files
 logfilesdir=logfiles_het_test #name of directory to create and then write log files to
 executable=$storagenode/$run_name/scripts/run_slim_het_test.sbatch #script to run 
@@ -21,7 +21,7 @@ outdir=$storagenode/$run_name/het_test_output
 cpus=1 #number of CPUs to request/use per dataset 
 ram_per_cpu=12G #amount of RAM to request/use per CPU 
 
-n=7500
+n=$2
 p=0.2
 header=no_bot_200K
 

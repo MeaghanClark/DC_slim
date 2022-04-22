@@ -38,36 +38,12 @@ reproduction(NULL) {
 
 // Scaled reproduction call
 	if (individual.age == 1) { 
-		
-		//pre-bottleneck
-		if(sim.generation <=33999){	
 			prob_offspring = min(1.0, (K/p1.individualCount)); // always 1
-			
 			offspring_count= rbinom(1, 1, prob_offspring);
 			if (offspring_count > 0) {
 				subpop.addCrossed(individual, subpop.sampleIndividuals(1, exclude=individual, minAge=1));
-			}
-		}	 
-		
-		//bottleneck
-		if(sim.generation == 34000){  
-		survivors = p1.individuals[p1.individuals.tag ==1];
-			if(individual.tag == 1) {
-				subpop.addCrossed(individual, subpop.sampleIndividuals(1, exclude = individual, tag = 1, minAge=1));
-			}
-		}
-		
-		//post-bottleneck
-		if(sim.generation > 34000){	
-			prob_offspring = min(1.0, (B/p1.individualCount)); // always 1
-			
-			offspring_count= rbinom(1, 1, prob_offspring);
-			if (offspring_count > 0) {
-				subpop.addCrossed(individual, subpop.sampleIndividuals(1, exclude=individual, minAge=1));
-			}
-		}	
+			} 
 	}
-	
 } // end reproduction callback
 	
 
@@ -76,14 +52,9 @@ reproduction(NULL) {
 	sim.addSubpop("p1", asInteger(N));	
 }
 
-33999 late(){
-	p1.individuals.tag = 0;
-	survivors = p1.sampleIndividuals(asInteger(B));
-	survivors.tag = 1;
-}
 
 // fitness scaling
-1:35000 early() {
+1:200000 early() {
 	// life table based individual mortality
 	inds = p1.individuals;
 	ages = inds.age;
@@ -93,7 +64,7 @@ reproduction(NULL) {
 }
 
 // text output
-1:35000 late(){
+1:200000 late(){
 	if(exists("slimgui")) {
 		if (sim.generation % 10 == 0){ //every ten generations
 			catn("Generation " + sim.generation + ": ");
@@ -106,31 +77,13 @@ reproduction(NULL) {
 	}
 	//
 	if(!exists("slimgui")) {
-		//if (sim.generation % 10 == 0){ //every ten generations
+		if (sim.generation % 100 == 0){ //every ten generations
 			OutputLine = paste(sim.generation, p1.individualCount, mean(p1.individuals.age), range(p1.individuals.age)[1], calcHeterozygosity(p1.individuals.genomes), sep = "\t");
 			writeFile(M, OutputLine, append = T);
-		//}
+		}
 	}
 }
 
-35000 late() {
+200000 late() {
 	sim.simulationFinished();
 } 
-
-
-//Batched reproduction call
-//if(sim.generation <=3399){	
-//	parents = sample(p1.individuals, N, replace = F);
-//	for(i in 0:(N-1)){
-//		subpop.addCrossed(parents[i], subpop.sampleIndividuals(1, exclude=parents[i], minAge=1));
-//	}
-//}
-//if(sim.generation > 3399){	
-//	parents = sample(p1.individuals, asInteger(B), replace = F);
-//	for(i in 0:(asInteger(B)-1)){
-//		subpop.addCrossed(parents[i], subpop.sampleIndividuals(1, exclude=parents[i], minAge=1));
-//	}
-//}
-//
-//	self.active=0;
-	
