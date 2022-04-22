@@ -53,7 +53,7 @@ reproduction(NULL) {
 
 
 // fitness scaling
-1:100000 early() {
+1:200000 early() {
 	p1.fitnessScaling = (1-P);
 	
 	//troubleshooting
@@ -67,7 +67,7 @@ reproduction(NULL) {
 
 
 // text output
-1:100000 late(){
+1:200000 late(){
 	if(exists("slimgui")) {
 //	//troubleshooting
 //		catn("actual new Nc " + p1.individualCount);
@@ -94,6 +94,6 @@ reproduction(NULL) {
 	}
 }
 
-100000 late() {
+200000 late() {
 	sim.simulationFinished();
 } 

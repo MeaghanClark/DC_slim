@@ -23,6 +23,7 @@ ram_per_cpu=12G #amount of RAM to request/use per CPU
 
 n=7500
 p=0.2
+header=no_bot_200K
 
 #---------------------------------------------------------
 #check if logfiles directory has been created in submit dir yet; if not, make one
@@ -31,7 +32,7 @@ if [ ! -d ./$logfilesdir ]; then mkdir ./$logfilesdir; fi
 #submit job to cluster
 	for rep in {1..100} ; do 
 		sbatch --job-name=$jobname \
-		--export=JOBNAME=$jobname,SLIMSCRIPT=$slimscript,N=$n,P=$p,REP=$rep,CPUS=$cpus,RUN_NAME=$run_name,STORAGENODE=$storagenode,OUTDIR=$outdir,LOGFILESDIR=$logfilesdir \
+		--export=JOBNAME=$jobname,SLIMSCRIPT=$slimscript,HEADER=$header,N=$n,P=$p,REP=$rep,CPUS=$cpus,RUN_NAME=$run_name,STORAGENODE=$storagenode,OUTDIR=$outdir,LOGFILESDIR=$logfilesdir \
 		--cpus-per-task=$cpus \
 		--mem-per-cpu=$ram_per_cpu \
 		--output=./$logfilesdir/${jobname}_${rep}_%A.out \
