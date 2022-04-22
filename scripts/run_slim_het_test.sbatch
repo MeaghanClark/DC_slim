@@ -14,7 +14,7 @@ module list
 echo running with N == ${N}
 echo running with prob of mortality == ${P}
 
-slim -d P=${P} -d N=${N} -d "M='${OUTDIR}/het_test_${jobname}_${REP}.txt'" ${SLIMSCRIPT}
+slim -d P=${P} -d N=${N} -d "M='${OUTDIR}/no_bot_${jobname}_${REP}.txt'" ${SLIMSCRIPT}
 
 echo done running the simulation
 
