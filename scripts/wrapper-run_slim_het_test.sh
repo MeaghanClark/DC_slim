@@ -3,7 +3,7 @@
 # Last updated 04/21/2022 by MI Clark, script format by R Toczydlowski 
 
 #  run from project directory (where you want output directory to be created)
-# usage: ./scripts/wrapper-run_slim_het_test.sh [pWF or nWF]
+# usage: ./scripts/wrapper-run_slim_het_test.sh [pWF or nWF] [Nc] [header]
 
 #define variables:
 storagenode=/mnt/home/clarkm89 #path to top level of dir where input/output files live
@@ -23,6 +23,7 @@ ram_per_cpu=8G #amount of RAM to request/use per CPU
 
 n=$2
 p=0.2
+header=$3
 
 #---------------------------------------------------------
 #check if logfiles directory has been created in submit dir yet; if not, make one
@@ -31,12 +32,12 @@ if [ ! -d ./$logfilesdir ]; then mkdir ./$logfilesdir; fi
 #submit job to cluster
 	for rep in {1..100} ; do 
 		sbatch --job-name=$jobname \
-		--export=JOBNAME=$jobname,SLIMSCRIPT=$slimscript,N=$n,P=$p,REP=$rep,CPUS=$cpus,RUN_NAME=$run_name,STORAGENODE=$storagenode,OUTDIR=$outdir,LOGFILESDIR=$logfilesdir \
+		--export=JOBNAME=$jobname,SLIMSCRIPT=$slimscript,N=$n,P=$p,HEADER=$header,REP=$rep,CPUS=$cpus,RUN_NAME=$run_name,STORAGENODE=$storagenode,OUTDIR=$outdir,LOGFILESDIR=$logfilesdir \
 		--cpus-per-task=$cpus \
 		--mem-per-cpu=$ram_per_cpu \
 		--output=./$logfilesdir/${jobname}_${rep}_%A.out \
 		--error=./$logfilesdir/${jobname}_${rep}_%A.err \
-		--time=12:00:00 \
+		--time=4:00:00 \
 		$executable
 		
 		echo submitting job with prob of mortality of $p and N of $n!
