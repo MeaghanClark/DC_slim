@@ -19,9 +19,9 @@ slimscript=$storagenode/$run_name/slim/het_test_demo_change_${jobname}.slim #sli
 outdir=$storagenode/$run_name/het_test_output
 
 cpus=1 #number of CPUs to request/use per dataset 
-ram_per_cpu=12G #amount of RAM to request/use per CPU 
+ram_per_cpu=8G #amount of RAM to request/use per CPU 
 
-n=7500
+n=$2
 p=0.2
 
 #---------------------------------------------------------
@@ -36,7 +36,7 @@ if [ ! -d ./$logfilesdir ]; then mkdir ./$logfilesdir; fi
 		--mem-per-cpu=$ram_per_cpu \
 		--output=./$logfilesdir/${jobname}_${rep}_%A.out \
 		--error=./$logfilesdir/${jobname}_${rep}_%A.err \
-		--time=48:00:00 \
+		--time=12:00:00 \
 		$executable
 		
 		echo submitting job with prob of mortality of $p and N of $n!

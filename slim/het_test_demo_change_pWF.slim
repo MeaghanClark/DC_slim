@@ -26,7 +26,7 @@ initialize() {
 	HeaderLine = "generation\tNc\taverage_age\tmax_age\thet";
 	writeFile(M,HeaderLine,append=T);
 	
-	defineConstant("K", N*((1-P)/(1-2*P)));	// carrying capacity 
+	defineConstant("K", N+1);	// carrying capacity 
 	defineConstant("B", K/75); // bottleneck carrying capacity
 	age_table = c(0,1.0); // probability of mortailty
 	defineConstant("L", age_table);
