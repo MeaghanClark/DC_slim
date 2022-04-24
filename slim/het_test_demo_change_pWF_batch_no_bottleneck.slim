@@ -1,0 +1,89 @@
+// mini-model for troubleshooting
+
+// set up a neutral nonWF simulation
+initialize() {
+	initializeSLiMModelType("nonWF");
+	initializeSLiMOptions(preventIncidentalSelfing=T);
+	
+	if(exists("slimgui")) { // now K and B are defined from the CL
+		defineConstant("N", 7500); //desired census population size
+		defineConstant("K", N+1);	// carrying capacity 
+		defineConstant("B", K/75); // bottleneck carrying capacity
+		age_table = c(0,1.0); // probability of mortailty
+		defineConstant("L", age_table);
+	
+	}
+	
+	initializeMutationType("m1", 0.5, "f", 0.0); // neutral mutations, which are allowed to fix
+	
+	initializeGenomicElementType("g1", m1, 1.0);
+	initializeGenomicElement(g1, 0, 9999999); // should be 2589999999
+	initializeMutationRate(1e-8); // mutations will be added in msprime
+	initializeRecombinationRate(1e-8);
+	
+	if(!exists("slimgui")){
+		// set up output
+		HeaderLine = "generation\tNc\taverage_age\tmax_age\thet";
+		writeFile(M,HeaderLine,append=T);
+		
+		defineConstant("K", N+1);	// carrying capacity 
+		defineConstant("B", K/75); // bottleneck carrying capacity
+		age_table = c(0,1.0); // probability of mortailty
+		defineConstant("L", age_table);
+	}
+
+}
+
+reproduction(NULL) {
+	
+	// Scaled reproduction call
+	if(sim.generation <=3399){
+		parents = sample(p1.individuals, N, replace = T);
+		for(parent in parents){
+			subpop.addCrossed(parent, subpop.sampleIndividuals(1, exclude=parent, minAge=1));
+		}
+	}	
+	self.active=0;
+} // end reproduction callback
+
+
+// create an initial population of K individuals
+1 early() {
+	sim.addSubpop("p1", asInteger(N));
+}
+
+
+// fitness scaling
+1:200000 early() {
+	// life table based individual mortality
+	inds = p1.individuals;
+	ages = inds.age;
+	mortality = L[ages];
+	survival = 1 - mortality;
+	inds.fitnessScaling = survival;
+}
+
+// text output
+1:200000 late(){
+	if(exists("slimgui")) {
+		if (sim.generation % 10 == 0){ //every ten generations
+			catn("Generation " + sim.generation + ": ");
+			catn("No. Individuals: " + p1.individualCount);
+			catn("Average age: " + mean(p1.individuals.age));
+			catn("Age range: " + range(p1.individuals.age)[0] + ", " + range(p1.individuals.age)[1]);
+			catn("Heterozygosity: " + calcHeterozygosity(p1.individuals.genomes));
+			catn("---");
+		}
+	}
+	//
+	if(!exists("slimgui")) {
+		if (sim.generation % 100 == 0){ //every ten generations
+			OutputLine = paste(sim.generation, p1.individualCount, mean(p1.individuals.age), range(p1.individuals.age)[1], calcHeterozygosity(p1.individuals.genomes), sep = "\t");
+			writeFile(M, OutputLine, append = T);
+		}
+	}
+}
+
+200000 late() {
+	sim.simulationFinished();
+}
