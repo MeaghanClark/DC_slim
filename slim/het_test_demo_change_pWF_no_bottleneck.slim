@@ -35,15 +35,22 @@ initialize() {
 }
 
 reproduction(NULL) {
-
-// Scaled reproduction call
-	if (individual.age == 1) { 
-			prob_offspring = min(1.0, (K/p1.individualCount)); // always 1
-			offspring_count= rbinom(1, 1, prob_offspring);
-			if (offspring_count > 0) {
+		//pre-bottleneck
+			prob_offspring = (K/p1.individualCount); // always 1
+			offspring_count= rpois(1, prob_offspring);
+			for (offspring in seqLen(offspring_count)){ 
 				subpop.addCrossed(individual, subpop.sampleIndividuals(1, exclude=individual, minAge=1));
-			} 
-	}
+			}
+				
+//// Scaled reproduction call
+//	if (individual.age == 1) { 
+//			prob_offspring = min(1.0, (K/p1.individualCount)); // always 1
+//			offspring_count= rbinom(1, 1, prob_offspring);
+//			if (offspring_count > 0) {
+//				subpop.addCrossed(individual, subpop.sampleIndividuals(1, exclude=individual, minAge=1));
+//			} 
+//	}
+
 } // end reproduction callback
 	
 
