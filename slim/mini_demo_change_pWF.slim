@@ -33,59 +33,53 @@ initialize() {
 }
 
 reproduction(NULL) {
-
-// Scaled reproduction call
-	if (individual.age == 1) { 
 		
-//Batched reproduction call
-if(sim.generation <=3399){	
-	parents = sample(p1.individuals, N, replace = T);
-	for(parent in parents){
-		subpop.addCrossed(parent, subpop.sampleIndividuals(1, exclude=parent, minAge=1));
-	}
-}
-if(sim.generation > 3399){	
-	parents = sample(p1.individuals, asInteger(B), replace = T);
-	for(i in 0:(asInteger(B)-1)){
-		subpop.addCrossed(parents[i], subpop.sampleIndividuals(1, exclude=parents[i], minAge=1));
-	}
-}
-
-	self.active=0;
-		
-}		
-		
-		
-//		//pre-bottleneck
-//		if(sim.generation <=3399){	
-//			prob_offspring = min(1.0, (K/p1.individualCount)); // always 1
-//			
-//			offspring_count= rbinom(1, 1, prob_offspring);
-//			if (offspring_count > 0) {
-//				subpop.addCrossed(individual, subpop.sampleIndividuals(1, exclude=individual, minAge=1));
-//			}
-//		}	 
-//		
-//		//bottleneck
-//		if(sim.generation == 3400){  
-//		survivors = p1.individuals[p1.individuals.tag ==1];
-//		catn(length(survivors));
-//			if(individual.tag == 1) {
-//				subpop.addCrossed(individual, subpop.sampleIndividuals(1, exclude = individual, tag = 1, minAge=1));
-//			}
-//		}
-//		
-//		//post-bottleneck
-//		if(sim.generation > 3400){	
-//			prob_offspring = min(1.0, (B/p1.individualCount)); // always 1
-//			
-//			offspring_count= rbinom(1, 1, prob_offspring);
-//			if (offspring_count > 0) {
-//				subpop.addCrossed(individual, subpop.sampleIndividuals(1, exclude=individual, minAge=1));
-//			}
-//		}	
+////Batched reproduction call
+//if(sim.generation <=3399){	
+//	parents = sample(p1.individuals, N, replace = T);
+//	for(parent in parents){
+//		subpop.addCrossed(parent, subpop.sampleIndividuals(1, exclude=parent, minAge=1));
 //	}
-	
+//}
+//if(sim.generation > 3399){	
+//	parents = sample(p1.individuals, asInteger(B), replace = T);
+//	for(i in 0:(asInteger(B)-1)){
+//		subpop.addCrossed(parents[i], subpop.sampleIndividuals(1, exclude=parents[i], minAge=1));
+//	}
+//}
+//
+//	self.active=0;
+//		
+//}		
+		
+		//pre-bottleneck
+		if(sim.generation <=3399){	
+			prob_offspring = (K/p1.individualCount); // always 1
+			offspring_count= rpois(1, prob_offspring);
+			for (offspring in seqLen(offspring_count)){ 
+				subpop.addCrossed(individual, subpop.sampleIndividuals(1, exclude=individual, minAge=1));
+			}
+		}	 
+		
+		//bottleneck
+		if(sim.generation == 3400){  
+			if(individual.tag == 1) {
+				prob_offspring = (B/sum(p1.individuals.tag==1)); //
+				offspring_count= rpois(1, prob_offspring);
+				for (offspring in seqLen(offspring_count)){
+					subpop.addCrossed(individual, subpop.sampleIndividuals(1, exclude=individual, minAge=1));
+				}
+			}
+		}
+		
+		//post-bottleneck
+		if(sim.generation > 3400){	
+			prob_offspring = (B/p1.individualCount); // always 1
+			offspring_count= rpois(1, prob_offspring);
+			for (offspring in seqLen(offspring_count)){ 
+				subpop.addCrossed(individual, subpop.sampleIndividuals(1, exclude=individual, minAge=1));
+			}
+		}	 
 } // end reproduction callback
 	
 
@@ -94,11 +88,11 @@ if(sim.generation > 3399){
 	sim.addSubpop("p1", asInteger(N));	
 }
 
-//3399 late(){
-//	p1.individuals.tag = 0;
-//	survivors = p1.sampleIndividuals(asInteger(B));
-//	survivors.tag = 1;
-//}
+3399 late(){
+	p1.individuals.tag = 0;
+	survivors = p1.sampleIndividuals(asInteger(B));
+	survivors.tag = 1;
+}
 
 // fitness scaling
 1:3500 early() {
