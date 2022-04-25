@@ -37,12 +37,10 @@ initialize() {
 reproduction(NULL) {
 	
 	// Scaled reproduction call
-	if(sim.generation <=3399){
 		parents = sample(p1.individuals, N, replace = T);
 		for(parent in parents){
 			subpop.addCrossed(parent, subpop.sampleIndividuals(1, exclude=parent, minAge=1));
 		}
-	}	
 	self.active=0;
 } // end reproduction callback
 
