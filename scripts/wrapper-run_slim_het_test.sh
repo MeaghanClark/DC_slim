@@ -35,8 +35,8 @@ if [ ! -d ./$logfilesdir ]; then mkdir ./$logfilesdir; fi
 		--export=JOBNAME=$jobname,SLIMSCRIPT=$slimscript,N=$n,P=$p,HEADER=$header,REP=$rep,CPUS=$cpus,RUN_NAME=$run_name,STORAGENODE=$storagenode,OUTDIR=$outdir,LOGFILESDIR=$logfilesdir \
 		--cpus-per-task=$cpus \
 		--mem-per-cpu=$ram_per_cpu \
-		--output=./$logfilesdir/${jobname}_${rep}_%A.out \
-		--error=./$logfilesdir/${jobname}_${rep}_%A.err \
+		--output=./$logfilesdir/${jobname}_${header}_${rep}_%A.out \
+		--error=./$logfilesdir/${jobname}_${header}_${rep}_%A.err \
 		--time=4:00:00 \
 		$executable
 		

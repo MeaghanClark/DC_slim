@@ -1,4 +1,4 @@
-// mini-model for troubleshooting
+// model for troubleshooting
 
 // set up a neutral nonWF simulation
 initialize() {
@@ -10,10 +10,11 @@ initialize() {
 		defineConstant("P", 0.2); // probability of mortaility, must be less than 0.5, expected lifespan will be (1-P)/P
 		defineConstant("K", N*((1-P)/(1-2*P)));	// carrying capacity 
 		defineConstant("B", K/75); // bottleneck carrying capacity
+		defineConstant("Q", 180000); //when to enact the bottleneck
+		defineConstant("END", 190000); //when to end simultion
 		}
 	
 	initializeMutationType("m1", 0.5, "f", 0.0); // neutral mutations, which are allowed to fix
-
 	initializeGenomicElementType("g1", m1, 1.0);
 	initializeGenomicElement(g1, 0, 9999999); // should be 2589999999
 	initializeMutationRate(1e-8); // mutations will be added in msprime
@@ -26,16 +27,18 @@ initialize() {
 	
 	defineConstant("K", N*((1-P)/(1-2*P)));	// carrying capacity 
 	defineConstant("B", K/75); // bottleneck carrying capacity
+	defineConstant("Q", 180000); //when to enact the bottleneck
+	defineConstant("END", 190000); //when to end simultion
 	}
-
 }
+
 
 reproduction(NULL) {
 
 // Scaled reproduction calls		
 	if (individual.age > 0) { 
-		if(sim.generation <=33999){	prob_offspring = max(0.0, (1-p1.individualCount/K));}	 // 1- (N/K)
-		if(sim.generation > 33999){ prob_offspring = max(0.0, (1-p1.individualCount/B));}
+		if(sim.generation <=(Q-1)){	prob_offspring = max(0.0, (1-p1.individualCount/K));}	 // 1- (N/K)
+		if(sim.generation > (Q-1)){ prob_offspring = max(0.0, (1-p1.individualCount/B));}
 		offspring_count=rbinom(1, 1, prob_offspring);
 		if (offspring_count > 0) {
 			subpop.addCrossed(individual, subpop.sampleIndividuals(1, exclude=individual, minAge=1));
@@ -48,33 +51,19 @@ reproduction(NULL) {
 1 early() {
 	sim.addSubpop("p1", asInteger(N));
 	p1.individuals.age = rdunif(asInteger(N), min=0, max=39);
-	
+	sim.rescheduleScriptBlock(s1, start = END, end = END);
 }
 
 
 // fitness scaling
-1:35000 early() {
+s2 early() {
 	p1.fitnessScaling = (1-P);
-	
-	//troubleshooting
-//	if(exists("slimgui")) {
-//		catn("early Nc: " + p1.individualCount);
-//		catn("predicted new Nc: " + p1.fitnessScaling*p1.individualCount);
-//		catn();
-//	}
-}
-
+} // end fitness scaling
 
 
 // text output
-1:35000 late(){
+late(){
 	if(exists("slimgui")) {
-//	//troubleshooting
-//		catn("actual new Nc " + p1.individualCount);
-//		catn("predicted early Nc " + (p1.individualCount*max(0.0, (1-p1.individualCount/K))+ p1.individualCount));
-//		catn("---");
-//		catn();
-	//	
 		if (sim.generation % 10 == 0){ //every ten generations
 			catn("Generation " + sim.generation + ": ");
 			catn("No. Individuals: " + p1.individualCount);
@@ -87,13 +76,19 @@ reproduction(NULL) {
 	}
 	//
 	if(!exists("slimgui")) {
-		//if (sim.generation % 10 == 0){ //every ten generations
+		if (sim.generation >= (Q-100)){
 			OutputLine = paste(sim.generation, p1.individualCount, mean(p1.individuals.age), range(p1.individuals.age)[1], calcHeterozygosity(p1.individuals.genomes), sep = "\t");
 			writeFile(M, OutputLine, append = T);
-		//}
+		}
+		if (sim.generation < (Q-100)){
+			if (sim.generation % 100 == 0){ //every ten generations
+				OutputLine = paste(sim.generation, p1.individualCount, mean(p1.individuals.age), range(p1.individuals.age)[1], calcHeterozygosity(p1.individuals.genomes), sep = "\t");
+				writeFile(M, OutputLine, append = T);
+			}
+		}
 	}
-}
+} // end late
 
-35000 late() {
+s1 35000 late() {
 	sim.simulationFinished();
 } 
