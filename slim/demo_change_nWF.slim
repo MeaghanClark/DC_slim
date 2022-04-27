@@ -2,103 +2,141 @@
 
 // set up a neutral nonWF simulation
 initialize() {
+	// define model characteristics 
 	initializeSLiMModelType("nonWF");
-	initializeSLiMOptions(keepPedigrees=T);
+	initializeSLiMOptions(keepPedigrees=T, preventIncidentalSelfing=T);
 	initializeTreeSeq();
 	
-	if(exists("slimgui")) { // now K and B are defined from the CL
-		defineConstant("K", 100);	// carrying capacity
-		defineConstant("B", 100); // bottleneck carrying capacity
-		defineConstant("O", "./dc_slim.trees"); // tree file
-		defineConstant("M", "./meta_dc_slim.txt"); // metadata file
-	}
-	
-	initializeMutationType("m1", 0.5, "f", 0.0); // neutral mutations, which are allowed to fix
+	// define constants
+	if(exists("slimgui")) { //
+		defineConstant("N", 7500); //desired census population size
+		defineConstant("P", 0.2); // probability of mortaility, must be less than 0.5, expected lifespan will be (1-P)/P
+		defineConstant("K", N*((1-P)/(1-2*P)));	// carrying capacity 
+		defineConstant("B", K/75); // bottleneck carrying capacity
+		defineConstant("Q", 1000); //when to enact the bottleneck, 180000
+		defineConstant("END", 185000); //when to end simultion
+		
+		defineConstant("MA", "./DC_slim/het_test_output/Meta_all.csv"); 
+		defineConstant("MI", "./DC_slim/het_test_output/Meta_ind.csv"); 
+		HeaderLineInd = "generation\tpedigree_id\tage";
+		writeFile(MI,HeaderLineInd,append=T);
+		HeaderLineAll = "generation\tNc\taverage_age\tmax_age";
+		writeFile(MA,HeaderLineAll,append=T);
 
-	
+		
+	}
+	if(!exists("slimgui")) { //
+		// set up output
+		HeaderLineInd = "generation\tpedigree_id\tage";
+		writeFile(MI,HeaderLineInd,append=T);
+		HeaderLineAll = "generation\tNc\taverage_age\tmax_age";
+		writeFile(MA,HeaderLineInd,append=T);
+				
+		// define constants
+		defineConstant("K", N*((1-P)/(1-2*P)));	// carrying capacity 
+		defineConstant("B", K/75); // bottleneck carrying capacity
+		defineConstant("Q", 180000); //when to enact the bottleneck
+		defineConstant("END", 190000); //when to end simultion
+		// define "O" (tree output) and "MI" and "MA"(metadata output) using the command line 
+	}
+
+	// set up genomes
+	initializeMutationType("m1", 0.5, "f", 0.0); // neutral mutations, which are allowed to fix
 	initializeGenomicElementType("g1", m1, 1.0);
 	initializeGenomicElement(g1, 0, 9999999); // should be 2589999999
 	initializeMutationRate(0); // mutations will be added in msprime
 	initializeRecombinationRate(1e-8);
-	
-	// set up output
-	HeaderLine = "generation\tindividual_id\tage";
-	writeFile(M,HeaderLine,append=T);
-}
+} // end initialize call 
+
 
 reproduction(NULL) {
-	
-	if(sim.generation <=33999){
-		
-		if (individual.age > 0) {
-			mate = subpop.sampleIndividuals(1, minAge=1);
-			prob_offspring = min(1.0, (K/p1.individualCount));
-			offspring_count=rbinom(1, 1, prob_offspring);
-			for (i in seqLen(offspring_count)){
-				subpop.addCrossed(individual, mate);
-			}
+// Scaled reproduction calls		
+	if (individual.age > 0) { 
+		if(sim.generation <(Q)){	prob_offspring = max(0.0, (1-p1.individualCount/K));}	 // 1- (N/K)
+		if(sim.generation >= (Q)){ prob_offspring = max(0.0, (1-p1.individualCount/B));}
+		offspring_count=rbinom(1, 1, prob_offspring);
+		if (offspring_count > 0) {
+			subpop.addCrossed(individual, subpop.sampleIndividuals(1, exclude=individual, minAge=1));
 		}
 	}
-	
-	if(sim.generation > 33999){
-		
-		if (individual.age > 0) {
-			mate = subpop.sampleIndividuals(1, minAge=1);
-			prob_offspring = min(1.0, (B/p1.individualCount));
-			offspring_count=rbinom(1, 1, prob_offspring);
-			for (i in seqLen(2*offspring_count)){
-				subpop.addCrossed(individual, mate);
-			}
-		}
-	}
-}
+} // end reproduction callback
+
 
 // create an initial population of K individuals
 1 early() {
-	sim.addSubpop("p1", K);
-	p1.individuals.age = rdunif(K, min=0, max=39);
-}
+	sim.addSubpop("p1", asInteger(N));
+	p1.individuals.age = rdunif(asInteger(N), min=0, max=39);
+	
+	// redefine event timinig 
+	before_bottleneck = (Q - 200); 
+	begin_decline = (Q + 1);	
+	end_decline = (Q + 22); 
+	after_decline = (Q + 23); 
+	
+	sim.rescheduleScriptBlock(s1, start = END, end = END); // end simulation
+	sim.rescheduleScriptBlock(s2, start = before_bottleneck, end = Q); // before bottleneck, e.g. 179800:180000
+	sim.rescheduleScriptBlock(s3, start = begin_decline, end = end_decline); // during bottleneck
+	sim.rescheduleScriptBlock(s4, start = after_decline, end = END); // after bottleneck
 
-// pre-bottleneck fitness scaling
-1:33999 early() {
-	// density-dependence
-	p1.fitnessScaling = K / (p1.individualCount);
-}
+} // end early callback 
 
-// post-bottleneck fitness scaling
-// demographic decline starts at time 34000
-34000:35000 early() {
-	// density-dependence
-	p1.fitnessScaling = B / (p1.individualCount);
-}
 
-// remember individuals every ten years for 1000 years
+// fitness scaling
+early() {
+	p1.fitnessScaling = (1-P);
+} // end fitness scaling
 
-// before decline
-33800:33999 late(){
-	if (sim.generation % 10 == 0){ //every ten generations
-		catn("Generation " + sim.generation + ": " + p1.individualCount);
+
+// Define output and remember individuals 
+
+// before bottleneck
+s2 179800:180000 late(){
+	if (sim.generation % 50 == 0){ //every fifty generations
+		// individual output
 		sample = p1.sampleIndividuals(100, replace = F);
 		sim.treeSeqRememberIndividuals(sample);
 		for(i in 0:(length(sample)-1)){ //remember metadata for each individual at this point in time (will be overwritten in the treesequence metadata) 
-			OutputLine  = paste(sim.generation, p1.individuals.pedigreeID[i], p1.individuals[i].age, sep = "\t");
-			writeFile(M, OutputLine, append=T);
+			OutputLine  = paste(sim.generation, sample.pedigreeID[i], sample.age[i], sep = "\t");
+			writeFile(MI, OutputLine, append=T);
 		}
-	}
-}
+		// cycle output 
+			OutputLine = paste(sim.generation, p1.individualCount, mean(p1.individuals.age), range(p1.individuals.age)[1], sep = "\t");
+			writeFile(MA, OutputLine, append = T);	
+	}	
+} // end before bottleneck output 
 
-// after decline
-34000:35000 late(){
-	if (sim.generation % 10 == 0){ //every ten generations
-		catn("Generation " + sim.generation + ": " + p1.individualCount);
-		sim.treeSeqRememberIndividuals(p1.individuals);
-		for(i in 0:(p1.individualCount-1)){ //remember metadata for each individual at this point in time (will be overwritten in the treesequence metadata) 
-			OutputLine  = paste(sim.generation, p1.individuals.pedigreeID[i], p1.individuals[i].age, sep = "\t");
-			writeFile(M, OutputLine, append=T);
+// during bottleneck
+s3 180001:180022 late(){
+	if (sim.generation % 5 == 0){ //every ten generations
+		// individual output
+		sample = p1.sampleIndividuals(100, replace = F); // if Nc < 100, will sample Nc individuals
+		sim.treeSeqRememberIndividuals(sample);
+		for(i in 0:(length(sample)-1)){ //remember metadata for each individual at this point in time (will be overwritten in the treesequence metadata) 
+			OutputLine  = paste(sim.generation, sample.pedigreeID[i], sample[i].age, sep = "\t");
+			writeFile(MI, OutputLine, append=T);
 		}
-	}
-}
+		// cycle output 
+			OutputLine = paste(sim.generation, p1.individualCount, mean(p1.individuals.age), range(p1.individuals.age)[1], sep = "\t");
+			writeFile(MA, OutputLine, append = T);	
+	}	
+} // end during bottleneck output 
 
-35000 late() {
+// after bottleneck
+s4 180023:185000 late(){
+	if (sim.generation % 50 == 0){ //every fifty generations
+		// individual output
+		sample = p1.sampleIndividuals(100, replace = F); // if Nc < 100, will sample Nc individuals
+		sim.treeSeqRememberIndividuals(sample);
+		for(i in 0:(length(sample)-1)){ //remember metadata for each individual at this point in time (will be overwritten in the treesequence metadata) 
+			OutputLine  = paste(sim.generation, sample.pedigreeID[i], sample[i].age, sep = "\t");
+			writeFile(MI, OutputLine, append=T);
+		}
+		// cycle output 
+			OutputLine = paste(sim.generation, p1.individualCount, mean(p1.individuals.age), range(p1.individuals.age)[1], sep = "\t");
+			writeFile(MA, OutputLine, append = T);	
+	}	
+} // end after bottleneck output
+
+s1 35000 late() {
 	sim.treeSeqOutput(O);
 } 

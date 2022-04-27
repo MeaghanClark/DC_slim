@@ -1,105 +1,170 @@
+//TESTING
+
 // set up a neutral nonWF simulation
 initialize() {
+	// define model characteristics 
 	initializeSLiMModelType("nonWF");
-	initializeSLiMOptions(keepPedigrees=T);
+	initializeSLiMOptions(keepPedigrees=T, preventIncidentalSelfing=T);
 	initializeTreeSeq();
 	
-	if(exists("slimgui")) { // now K and B are defined from the CL
-		defineConstant("K", 2328);	// carrying capacity
-		defineConstant("B", 100); // bottleneck carrying capacity
-		defineConstant("O", "./dc_slim_WF.trees");
-		defineConstant("M", "./meta_dc_slim_WF.txt"); // metadata
+	// define constants
+	if(exists("slimgui")) { //
+		defineConstant("N", 4232); //desired census population size
+		defineConstant("K", N+1);	// carrying capacity 
+		defineConstant("B", K/75); // bottleneck carrying capacity
+		defineConstant("Q", 1000); //when to enact the bottleneck, 180000
+		defineConstant("END", 185000); //when to end simultion
+		defineConstant("MA", "./DC_slim/het_test_output/Meta_all.csv"); 
+		defineConstant("MI", "./DC_slim/het_test_output/Meta_ind.csv"); 
+		
+		HeaderLineInd = "generation\tpedigree_id\tage";
+		writeFile(MI,HeaderLineInd,append=T);
+		HeaderLineAll = "generation\tNc";
+		writeFile(MA,HeaderLineAll,append=T);
+
+		age_table = c(0,1.0); // probability of mortailty
+		defineConstant("L", age_table);
+
 	}
-	
-	age_table = c(0,1.0); // probability of mortailty
-	defineConstant("L", age_table);
-	
-	// neutral mutations, which are allowed to fix
-	initializeMutationType("m1", 0.5, "f", 0.0);
-	
+	if(!exists("slimgui")) { //
+		// set up output
+		HeaderLineInd = "generation\tpedigree_id\tage";
+		writeFile(MI,HeaderLineInd,append=T);
+		HeaderLineAll = "generation\tNc";
+		writeFile(MA,HeaderLineInd,append=T);
+				
+		// define constants
+		defineConstant("K", N+1);	// carrying capacity 
+		defineConstant("B", K/75); // bottleneck carrying capacity
+		defineConstant("Q", 180000); //when to enact the bottleneck
+		defineConstant("END", 190000); //when to end simultion
+		
+		age_table = c(0,1.0); // probability of mortailty
+		defineConstant("L", age_table);
+
+		// define "O" (tree output) and "MI" and "MA"(metadata output) using the command line 
+	}
+
+	// set up genomes
+	initializeMutationType("m1", 0.5, "f", 0.0); // neutral mutations, which are allowed to fix
 	initializeGenomicElementType("g1", m1, 1.0);
 	initializeGenomicElement(g1, 0, 9999999); // should be 2589999999
-	initializeMutationRate(0); // mutation rate should be 1.2e-8 from Fitak et al 2018 (citing Shaffer et al. 2013; Green et al. 2014) 
+	initializeMutationRate(0); // mutations will be added in msprime
 	initializeRecombinationRate(1e-8);
-	//initializeSex("A");
-	
-	// set up output
-	HeaderLine = "generation\tindividual_id\tage\thet";
-	writeFile(M,HeaderLine,append=T);
-}
+} // end initialize call 
 
 
-reproduction(NULL) {
-	if (individual.age == 1){
-		mate = subpop.sampleIndividuals(1, minAge = 1);
-		offspring_count = 2;
-		for (i in seqLen(offspring_count)){
-			subpop.addCrossed(individual, mate);
+reproduction(NULL) {	
+		
+		//pre-bottleneck
+		if(sim.generation <=(Q-1)){	
+			prob_offspring = (K/p1.individualCount); // always 1
+			offspring_count= rpois(1, prob_offspring);
+			for (offspring in seqLen(offspring_count)){ 
+				subpop.addCrossed(individual, subpop.sampleIndividuals(1, exclude=individual, minAge=1));
+			}
+		}	 
+		
+		//bottleneck
+		if(sim.generation == Q | sim.generation > Q & sim.generation <= (Q + 19)){
+				prob_offspring = ((N*exp(1)^(-0.223006*(sim.generation-Q))/p1.individualCount));
+				offspring_count = rpois(1, prob_offspring);
+				for (offspring in seqLen(offspring_count)){
+					subpop.addCrossed(individual, subpop.sampleIndividuals(1, exclude=individual, minAge=1));
+
+				}
 		}
-	}
-}
+		
+		//post-bottleneck
+		if(sim.generation > (Q+19)){	
+			prob_offspring = (B/p1.individualCount); // always 1
+			offspring_count= rpois(1, prob_offspring);
+			for (offspring in seqLen(offspring_count)){ 
+				subpop.addCrossed(individual, subpop.sampleIndividuals(1, exclude=individual, minAge=1));
+			}
+		}	 
+} // end reproduction callback
+
 
 // create an initial population of K individuals
 1 early() {
-	sim.addSubpop("p1", K);
-}
-
-// pre-bottleneck fitness scaling
-1:32000 early() {
-	// life table based individual mortality
-	inds = p1.individuals;
-	ages = inds.age;
-	mortality = L[ages];
-	survival = 1 - mortality;
-	inds.fitnessScaling = survival;
-			
-	// density-dependence, factoring in individual mortality
-	p1.fitnessScaling = K / (p1.individualCount);
-}
-
-
-// post-bottleneck fitness scaling
-// demographic decline starts at time 34000
-34000:35000 early() {
-	// life table based individual mortality
-	inds = p1.individuals;
-	ages = inds.age;
-	mortality = L[ages];
-	survival = 1 - mortality;
-	inds.fitnessScaling = survival;
+	sim.addSubpop("p1", asInteger(N));	
 	
-	// density-dependence, factoring in individual mortality
-	p1.fitnessScaling = B / (p1.individualCount);
+	// redefine event timinig 
+	before_bottleneck = (Q - 200); 
+	begin_decline = (Q + 1);	
+	end_decline = (Q + 22); 
+	after_decline = (Q + 23); 
+	
+	sim.rescheduleScriptBlock(s1, start = END, end = END); // end simulation
+	sim.rescheduleScriptBlock(s2, start = before_bottleneck, end = Q); // before bottleneck, e.g. 179800:180000
+	sim.rescheduleScriptBlock(s3, start = begin_decline, end = end_decline); // during bottleneck
+	sim.rescheduleScriptBlock(s4, start = after_decline, end = END); // after bottleneck
 
-}
+} // end early callback 
 
-// remember individuals every ten years for 1000 years
 
-// before decline
-33800:33999 late(){
-	if (sim.generation % 10 == 0){ //every ten generations
-		catn("Generation " + sim.generation + ": " + p1.individualCount);
+// fitness scaling
+early() {
+	// life table based individual mortality
+	inds = p1.individuals;
+	ages = inds.age;
+	mortality = L[ages];
+	survival = 1 - mortality;
+	inds.fitnessScaling = survival;
+} //end fitness scaling
+
+
+// Define output and remember individuals 
+
+// before bottleneck
+s2 179800:180000 late(){
+	if (sim.generation % 50 == 0){ //every fifty generations
+		// individual output
 		sample = p1.sampleIndividuals(100, replace = F);
 		sim.treeSeqRememberIndividuals(sample);
 		for(i in 0:(length(sample)-1)){ //remember metadata for each individual at this point in time (will be overwritten in the treesequence metadata) 
-			OutputLine  = paste(sim.generation, p1.individuals.pedigreeID[i], p1.individuals[i].age, sep = "\t");
-			writeFile(M, OutputLine, append=T);
+			OutputLine  = paste(sim.generation, sample.pedigreeID[i], sample[i].age, sep = "\t");
+			writeFile(MI, OutputLine, append=T);
 		}
-	}
-}
+		// cycle output 
+			OutputLine = paste(sim.generation, p1.individualCount, sep = "\t");
+			writeFile(MA, OutputLine, append = T);	
+	}	
+} // end before bottleneck output 
 
-// after decline
-34000:35000 late(){
-	if (sim.generation % 10 == 0){ //every ten generations
-		catn("Generation " + sim.generation + ": " + p1.individualCount);
-		sim.treeSeqRememberIndividuals(p1.individuals);
-		for(i in 0:(p1.individualCount-1)){ //remember metadata for each individual at this point in time (will be overwritten in the treesequence metadata) 
-			OutputLine  = paste(sim.generation, p1.individuals.pedigreeID[i], p1.individuals[i].age, sep = "\t");
-			writeFile(M, OutputLine, append=T);
+// during bottleneck
+s3 180001:180022 late(){
+	if (sim.generation % 5 == 0){ //every ten generations
+		// individual output
+		sample = p1.sampleIndividuals(100, replace = F); // if Nc < 100, will sample Nc individuals
+		sim.treeSeqRememberIndividuals(sample);
+		for(i in 0:(length(sample)-1)){ //remember metadata for each individual at this point in time (will be overwritten in the treesequence metadata) 
+			OutputLine  = paste(sim.generation, sample.pedigreeID[i], sample[i].age, sep = "\t");
+			writeFile(MI, OutputLine, append=T);
 		}
-	}
-}
+		// cycle output 
+			OutputLine = paste(sim.generation, p1.individualCount, sep = "\t");
+			writeFile(MA, OutputLine, append = T);	
+	}	
+} // end during bottleneck output 
 
-35000 late() {
+// after bottleneck
+s4 180023:185000 late(){
+	if (sim.generation % 50 == 0){ //every fifty generations
+		// individual output
+		sample = p1.sampleIndividuals(100, replace = F); // if Nc < 100, will sample Nc individuals
+		sim.treeSeqRememberIndividuals(sample);
+		for(i in 0:(length(sample)-1)){ //remember metadata for each individual at this point in time (will be overwritten in the treesequence metadata) 
+			OutputLine  = paste(sim.generation, sample.pedigreeID[i], sample[i].age, sep = "\t");
+			writeFile(MI, OutputLine, append=T);
+		}
+		// cycle output 
+			OutputLine = paste(sim.generation, p1.individualCount, sep = "\t");
+			writeFile(MA, OutputLine, append = T);	
+	}	
+} // end after bottleneck output
+
+s1 35000 late() {
 	sim.treeSeqOutput(O);
-} //estimate for glacial retreat in southern MI is 35,000 ya
+} 
