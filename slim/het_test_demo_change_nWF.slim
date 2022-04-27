@@ -5,7 +5,7 @@ initialize() {
 	initializeSLiMModelType("nonWF");
 	initializeSLiMOptions(preventIncidentalSelfing=T);
 	
-	if(exists("slimgui")) { // now K and B are defined from the CL
+	if(exists("slimgui")) { 
 		defineConstant("N", 7500); //desired census population size
 		defineConstant("P", 0.2); // probability of mortaility, must be less than 0.5, expected lifespan will be (1-P)/P
 		defineConstant("K", N*((1-P)/(1-2*P)));	// carrying capacity 
@@ -37,8 +37,8 @@ reproduction(NULL) {
 
 // Scaled reproduction calls		
 	if (individual.age > 0) { 
-		if(sim.generation <=(Q-1)){	prob_offspring = max(0.0, (1-p1.individualCount/K));}	 // 1- (N/K)
-		if(sim.generation > (Q-1)){ prob_offspring = max(0.0, (1-p1.individualCount/B));}
+		if(sim.generation <(Q)){	prob_offspring = max(0.0, (1-p1.individualCount/K));}	 // 1- (N/K)
+		if(sim.generation >= (Q)){ prob_offspring = max(0.0, (1-p1.individualCount/B));}
 		offspring_count=rbinom(1, 1, prob_offspring);
 		if (offspring_count > 0) {
 			subpop.addCrossed(individual, subpop.sampleIndividuals(1, exclude=individual, minAge=1));
