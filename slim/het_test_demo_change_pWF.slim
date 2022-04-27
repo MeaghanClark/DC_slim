@@ -49,7 +49,7 @@ reproduction(NULL) {
 		
 		//bottleneck
 		if(sim.generation == Q | sim.generation > Q & sim.generation <= (Q + 19)){
-				prob_offspring = ((N*exp(1)^(-0.22300*(sim.generation-Q))/p1.individualCount));
+				prob_offspring = ((7500*exp(1)^(-0.22300*(sim.generation-Q))/p1.individualCount));
 				offspring_count = rpois(1, prob_offspring);
 				for (offspring in seqLen(offspring_count)){
 					subpop.addCrossed(individual, subpop.sampleIndividuals(1, exclude=individual, minAge=1));
