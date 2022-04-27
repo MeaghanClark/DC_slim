@@ -23,7 +23,7 @@ ram_per_cpu=12G #amount of RAM to request/use per CPU
 
 n=$2
 p=0.2
-header=no_bot_200K
+header=no_bot_200k_pois
 
 #---------------------------------------------------------
 #check if logfiles directory has been created in submit dir yet; if not, make one
