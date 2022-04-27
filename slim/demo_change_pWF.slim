@@ -93,8 +93,8 @@ reproduction(NULL) {
 	// redefine event timinig 
 	before_bottleneck = (Q - 200); 
 	begin_decline = (Q + 1);	
-	end_decline = (Q + 22); 
-	after_decline = (Q + 23); 
+	end_decline = (Q + 45); 
+	after_decline = (Q + 46); 
 	
 	sim.rescheduleScriptBlock(s1, start = END, end = END); // end simulation
 	sim.rescheduleScriptBlock(s2, start = before_bottleneck, end = Q); // before bottleneck, e.g. 179800:180000
