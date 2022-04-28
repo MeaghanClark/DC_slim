@@ -14,7 +14,10 @@ module list
 
 echo This is rep ${REP}
 
-python -u ${TREEPROCESS} ${OUTDIR}/tree_${JOBNAME}_${REP}.trees ${OUTDIR}/meta_${JOBNAME}_${REP}.txt test_${REP} > ${LOGFILESDIR}/log_${JOBNAME}_${REP}.out
+#export=JOBNAME=$jobname,TREEPROCESS=$treeprocess,MODEL=$model,FILENAME=$filename,REP=$rep,CPUS=$cpus,RUN_NAME=$run_name,STORAGENODE=$storagenode,INDIR=$indir,OUTDIR=$outdir,LOGFILESDIR=$logfilesdir \
+
+# python -u ./pythonScript treefile outdir prefix
+python -u ${TREEPROCESS} ${FILENAME} ${OUTDIR} ${MODEL}_${REP} > ${LOGFILESDIR}/log_${JOBNAME}_${MODEL}_${REP}.out
 
 echo done processing trees 
 
