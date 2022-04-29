@@ -11,7 +11,7 @@ storagenode=/mnt/home/clarkm89 #path to top level of dir where input/output file
 # ***JOB NAME IS IN COMMAND LINE ARGUMENT*** 
 jobname=$1 #label for SLURM book-keeping, nWF or pWF 
 run_name=DC_slim #label to use on output files
-logfilesdir=logfiles_het_test #name of directory to create and then write log files to
+logfilesdir=logfiles #name of directory to create and then write log files to
 executable=$storagenode/$run_name/scripts/run_slim_all.sbatch #script to run 
 
 # *** CHANGE SLIM SCRIPT BASED ON COMMAND LINE***
@@ -19,7 +19,7 @@ slimscript=$storagenode/$run_name/slim/demo_change_${jobname}.slim #slimulation 
 outdir=$storagenode/$run_name/full_output
 
 cpus=1 #number of CPUs to request/use per dataset 
-ram_per_cpu=24G #amount of RAM to request/use per CPU 
+ram_per_cpu=8G #amount of RAM to request/use per CPU 
 
 n=$2
 p=0.2
@@ -37,7 +37,7 @@ if [ ! -d ./$logfilesdir ]; then mkdir ./$logfilesdir; fi
 		--mem-per-cpu=$ram_per_cpu \
 		--output=./$logfilesdir/${header}_${rep}_%A.out \
 		--error=./$logfilesdir/${header}_${rep}_%A.err \
-		--time=48:00:00 \
+		--time=4:00:00 \
 		$executable
 		
 		echo submitting job with prob of mortality of $p and N of $n!

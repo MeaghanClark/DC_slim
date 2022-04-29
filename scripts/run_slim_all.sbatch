@@ -18,9 +18,9 @@ echo This is rep ${REP} of ${HEADER}
 echo running with N == ${N}
 echo running with P == ${P}
 
-if [ ! -d ${OUTDIR}/${JOBNAME}_${REP} ]; then mkdir ${OUTDIR}/${JOBNAME}_${REP}; fi
+if [ ! -d ${OUTDIR} ]; then mkdir ${OUTDIR}; fi
 
-slim -d N=${N} -d P=${P} -d "O='${OUTDIR}/${JOBNAME}/tree_${HEADER}_${REP}.trees'" -d "MI='${OUTDIR}/metaInd_${JOBNAME}_${REP}.txt'" -d "MA='${OUTDIR}/metaAll_${JOBNAME}_${REP}.txt'" ${SLIMSCRIPT}
+slim -d N=${N} -d P=${P} -d "O='${OUTDIR}/tree_${HEADER}_${REP}.trees'" -d "MI='${OUTDIR}/metaInd_${JOBNAME}_${REP}.txt'" -d "MA='${OUTDIR}/metaAll_${JOBNAME}_${REP}.txt'" ${SLIMSCRIPT}
 
 echo done running the simulation
 
