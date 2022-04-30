@@ -13,14 +13,14 @@ logfilesdir=logfiles_trees_to_pi #name of directory to create and then write log
 executable=$storagenode/$run_name/scripts/run_processing.sbatch #script to run 
 treeprocess=$storagenode/$run_name/scripts/tree_2_pi.py #processing python script
 
-outdir=$storagenode/$run_name/pi
+outdir=$storagenode/$run_name/het
 indir=$storagenode/$run_name/full_output
 
 cpus=1 #number of CPUs to request/use per dataset 
 ram_per_cpu=8G #amount of RAM to request/use per CPU 
 
 model=$1 # nWF or pWF from command line
-header=full_run_42822 # from input when running wrapper-run_slim_all.sh
+header=full_run_42922 # from input when running wrapper-run_slim_all.sh
 
 #---------------------------------------------------------
 #check if logfiles directory has been created in submit dir yet; if not, make one
