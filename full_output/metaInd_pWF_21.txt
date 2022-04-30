@@ -1,0 +1,1 @@
+generation	pedigree_id	age
