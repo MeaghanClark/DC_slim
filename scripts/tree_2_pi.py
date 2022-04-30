@@ -7,7 +7,7 @@ import pandas as pd
 import random
 
 # uncomment these lines when running from command line
-#sys.argv = ['tree_processing.py', '../full_output/tree_pWF_full_run_42822_1.trees', './full_output', 'big_test']
+#sys.argv = ['tree_processing.py', '../full_output/tree_nWF_full_run_42922_75.trees', '/Users/meaghan/Desktop/DC_slim/het', 'big_test']
 
 seed=random.randint(1,1e6)
 print(f"random seed is {seed}")
@@ -42,45 +42,27 @@ before = range(0, 10000, 50)
 during = range(9955, 10005, 5)
 after = range(10050, 10250, 50)
 
-sampling = [*before, *during, *after]
-sample = {}
-x = 0
+sampling = [*before, *during, *after]    
+
 for n in sampling: 
-    sample[x] = mts.individuals_alive_at(n)
-    x= x + 1
-
-# calculate pi
-for slice in range(len(sampling)): 
-    groups = {
-    'sample' : sample[slice],} # could add more groups to this
-    group_order = ['sample'] # add in groups
-    sampled_nodes = [[] for _ in groups]
-    for j, k in enumerate(group_order):
-        for ind in groups[k]:
-            sampled_nodes[j].extend(rts.individual(ind).nodes)
-
-    #ind divergence
     ind_nodes = []
-    ind_group = []
-    ind_ids = []
-    for j, group in enumerate(group_order):
-        for ind in groups[group]:
-          ind_ids.append(ind)
-          ind_nodes.append(mts.individual(ind).nodes)
-          ind_group.append(group_order[j])
+    for i in mts.individuals_alive_at(n):
+        ind = mts.individual(i)
+        ind_nodes.append(ind.nodes)
+    # the vector of per-individual heterozygosities:
+    ind_het = mts.diversity(ind_nodes, mode="site")
+    mean_het = np.mean(ind_het)
 
-    nind = len(ind_ids)
-    pairs = [(i, j) for i in range(nind) for j in range(nind)]
-    ind_div = mts.divergence(ind_nodes, indexes=pairs) # this is what gives pi, diagonal is mean pi within population,
-    # individual level divergence (heterozygosity) 
-
-     # save output
+    # save output
     x = []
-    for i in ind_ids:
-       ind = mts.individual(i)
-       label = f"slim_{ind.metadata['pedigree_id']}"
-       x.append(label)
+    for i in mts.individuals_alive_at(n):
+        ind = mts.individual(i)
+        label = f"slim_{ind.metadata['pedigree_id']}"
+        x.append(label)
 
-    b = np.reshape(ind_div, (nind,nind))
-    panda_df = pd.DataFrame(data = b, columns = x)
-    panda_df.to_csv(outdir+"/"+prefix+"_"+str(slice)+"_pi.txt", sep=' ', index=True)
+    #b = np.reshape(ind_het, (nind,nind))
+    data = { 'pedigree_id':x, 
+            'het':ind_het 
+           }
+    panda_df = pd.DataFrame(data = data)
+    panda_df.to_csv(outdir+"/"+prefix+"_"+str(n)+"_pi.txt", sep=' ', index=True)
