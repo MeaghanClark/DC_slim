@@ -13,7 +13,7 @@ initialize() {
 		defineConstant("P", 0.2); // probability of mortaility, must be less than 0.5, expected lifespan will be (1-P)/P
 		defineConstant("K", N*((1-P)/(1-2*P)));	// carrying capacity 
 		defineConstant("B", K/75); // bottleneck carrying capacity
-		defineConstant("Q", 1000); //when to enact the bottleneck, 180000
+		defineConstant("Q", 300); //when to enact the bottleneck, 180000
 		defineConstant("END", 185000); //when to end simultion
 		
 		defineConstant("MA", "./DC_slim/het_test_output/Meta_all.csv"); 
@@ -77,7 +77,8 @@ reproduction(NULL) {
 	sim.rescheduleScriptBlock(s2, start = before_bottleneck, end = Q); // before bottleneck, e.g. 179800:180000
 	sim.rescheduleScriptBlock(s3, start = begin_decline, end = end_decline); // during bottleneck
 	sim.rescheduleScriptBlock(s4, start = after_decline, end = END); // after bottleneck
-
+	sim.rescheduleScriptBlock(s5, start = Q, end = Q);
+	
 } // end early callback 
 
 
@@ -85,6 +86,10 @@ reproduction(NULL) {
 early() {
 	p1.fitnessScaling = (1-P);
 } // end fitness scaling
+
+s5 early() {
+	p1.fitnessScaling = 1-((K-B)/K);
+}
 
 
 // Define output and remember individuals 
