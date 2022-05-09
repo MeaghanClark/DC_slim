@@ -16,10 +16,10 @@ executable=$storagenode/$run_name/scripts/run_slim_all.sbatch #script to run
 
 # *** CHANGE SLIM SCRIPT BASED ON COMMAND LINE***
 slimscript=$storagenode/$run_name/slim/demo_change_${jobname}.slim #slimulation to run
-outdir=$storagenode/$run_name/full_output
+outdir=$storagenode/$run_name/full_output_43022
 
 cpus=1 #number of CPUs to request/use per dataset 
-ram_per_cpu=8G #amount of RAM to request/use per CPU 
+ram_per_cpu=75G #amount of RAM to request/use per CPU 
 
 n=$2
 p=0.2
@@ -30,14 +30,14 @@ header=$3
 if [ ! -d ./$logfilesdir ]; then mkdir ./$logfilesdir; fi
 
 #submit job to cluster
-	for rep in {1..100} ; do 
+	for rep in {1..10} ; do 
 		sbatch --job-name=$jobname \
 		--export=JOBNAME=$jobname,SLIMSCRIPT=$slimscript,N=$n,P=$p,HEADER=$header,REP=$rep,CPUS=$cpus,RUN_NAME=$run_name,STORAGENODE=$storagenode,OUTDIR=$outdir,LOGFILESDIR=$logfilesdir \
 		--cpus-per-task=$cpus \
 		--mem-per-cpu=$ram_per_cpu \
 		--output=./$logfilesdir/${header}_${rep}_%A.out \
 		--error=./$logfilesdir/${header}_${rep}_%A.err \
-		--time=4:00:00 \
+		--time=24:00:00 \
 		$executable
 		
 		echo submitting job with prob of mortality of $p and N of $n!
