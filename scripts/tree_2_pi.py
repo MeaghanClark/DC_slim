@@ -44,6 +44,10 @@ after = range(10050, 10250, 50)
 
 sampling = [*before, *during, *after]    
 
+pedigree_id = []
+het = []
+gen = [] 
+
 for n in sampling: 
     ind_nodes = []
     for i in mts.individuals_alive_at(n):
@@ -59,10 +63,15 @@ for n in sampling:
         ind = mts.individual(i)
         label = f"slim_{ind.metadata['pedigree_id']}"
         x.append(label)
+    pedigree_id = np.append(pedigree_id, x) 
+    het = np.append(het, ind_het)
+    gen = np.append(gen, np.repeat(n, len(ind_het))) 
 
-    #b = np.reshape(ind_het, (nind,nind))
-    data = { 'pedigree_id':x, 
-            'het':ind_het 
+
+het_data = { 'pedigree_id':pedigree_id, 
+            'het':het, 
+            'gen':gen,
            }
-    panda_df = pd.DataFrame(data = data)
-    panda_df.to_csv(outdir+"/"+prefix+"_"+str(n)+"_pi.txt", sep=' ', index=True)
+
+panda_df = pd.DataFrame(data=het_data)
+panda_df.to_csv(outdir+"/"+prefix+"_pi.txt", sep=' ', index=True)
