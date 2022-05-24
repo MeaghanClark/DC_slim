@@ -22,6 +22,8 @@ print(f"prefix is {prefix}")
 # read in treefile 
 orig_ts = pyslim.load(treefile)
 
+print(f"Loaded tree file")
+
 # recapitate tree
 rts = pyslim.recapitate(orig_ts, recombination_rate = 1e-8, ancestral_Ne=4232)
 
@@ -31,8 +33,8 @@ print(f"Maximum number of roots before recapitation: {orig_max_roots}\n"
       f"After recapitation: {recap_max_roots}")
 
 # overlay mutations
-mts = pyslim.SlimTreeSequence(msprime.mutate(rts, rate=1.0e-8, random_seed = seed, keep=True)) 
-# should increase genome size to get more mutations
+mts = pyslim.SlimTreeSequence(msprime.mutate(rts, rate=2.59e-5, random_seed = seed, keep=True)) 
+# should increase genome size to get more mutations or set mutation rate to 2.59e-5
 
 print(f"The tree sequence now has {mts.num_mutations} mutations, "
       f"and mean pairwise nucleotide diversity is {mts.diversity()}.")
@@ -55,7 +57,7 @@ for n in sampling:
         ind_nodes.append(ind.nodes)
     # the vector of per-individual heterozygosities:
     ind_het = mts.diversity(ind_nodes, mode="site")
-    mean_het = np.mean(ind_het)
+   # mean_het = np.mean(ind_het)
 
     # save output
     x = []
