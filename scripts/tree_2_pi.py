@@ -44,28 +44,33 @@ after = range(10050, 10250, 50)
 
 sampling = [*before, *during, *after]    
 
+# initialize vectors
 pedigree_id = []
 het = []
 gen = [] 
 
+# loop through sampling periods... 
 for n in sampling: 
+	# for all individuals sampled at time point n, calculate individual heterozygosity
     ind_nodes = []
-    for i in mts.individuals_alive_at(n):
+    for i in mts.individuals_alive_at(n): # for each individual sampled... 
         ind = mts.individual(i)
         ind_nodes.append(ind.nodes)
     # the vector of per-individual heterozygosities:
-    ind_het = mts.diversity(ind_nodes, mode="site")
-    mean_het = np.mean(ind_het)
+    ind_het = mts.diversity(ind_nodes, mode="site") # calculate heterozygosity
+    #mean_het = np.mean(ind_het)
 
-    # save output
+    # find pedigree IDs for sampled individuals
     x = []
     for i in mts.individuals_alive_at(n):
         ind = mts.individual(i)
-        label = f"slim_{ind.metadata['pedigree_id']}"
+        label = f"slim_{ind.metadata['pedigree_id']}" 
         x.append(label)
-    pedigree_id = np.append(pedigree_id, x) 
-    het = np.append(het, ind_het)
-    gen = np.append(gen, np.repeat(n, len(ind_het))) 
+        
+    # save pedigree ID, individual heterozygosity, and sampling point/generation
+    pedigree_id = np.append(pedigree_id, x) # append pedigree ID
+    het = np.append(het, ind_het) # append het 
+    gen = np.append(gen, np.repeat(n, len(ind_het))) # append sampling point
 
 
 het_data = { 'pedigree_id':pedigree_id, 
@@ -73,5 +78,6 @@ het_data = { 'pedigree_id':pedigree_id,
             'gen':gen,
            }
 
+# save data
 panda_df = pd.DataFrame(data=het_data)
 panda_df.to_csv(outdir+"/"+prefix+"_pi.txt", sep=' ', index=True)
