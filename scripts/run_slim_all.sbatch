@@ -2,7 +2,6 @@
 
 # usage: bash run_slim.sh file.slim K-value output
 
-# importing: JOBNAME,SLIMSCRIPT,TREEPROCESS,KVALUE,BVALUE,REP,CPUS,RUN_NAME,STORAGENODE,OUTDIR,LOGFILESDIR \
 echo "before calling source: $PATH"
 source activate slim
 echo "after calling source: $PATH"
@@ -14,15 +13,48 @@ module load OpenMPI/2.1.2
 module load SLiM/2021dev
 module list
 
-echo This is rep ${REP} of ${HEADER}
+today_date=$(date +%m%d%y)
+
+# print vital variables imported from wrapper
+echo ----------------------------------------------------------------------------------------
+echo the date is $DATE (running on $today_date)
+echo runname is $RUN_NAME
+echo jobname is $JOBNAME
+echo slimscript is $SLIMSCRIPT
+echo This file is $EXECUTABLE
+echo Logs for this job are in $LOGFILESDIR
+echo logs are called: ${header}_${rep}_%A.out and ${header}_${rep}_%A.err
+
+
+echo This is rep ${REP} / ${REPS} of ${HEADER}
 echo running with N == ${N}
 echo running with P == ${P}
+echo running with R == ${R}
 
-if [ ! -d ${OUTDIR} ]; then mkdir ${OUTDIR}; fi
 
-slim -d N=${N} -d P=${P} -d "O='${OUTDIR}/tree_${HEADER}_${REP}.trees'" -d "MI='${OUTDIR}/metaInd_${JOBNAME}_${REP}.txt'" -d "MA='${OUTDIR}/metaAll_${JOBNAME}_${REP}.txt'" ${SLIMSCRIPT}
+echo datafiles created by this job will be moved to ${HOMEDIR}/${OUTDIR}
+echo output will use the header $HEADER
+echo running with $CPUS
+echo ----------------------------------------------------------------------------------------
+
+# move everything to TMPDIR
+echo navigating to $TMPDIR
+cd $TMPDIR
+pwd 
+
+if [ ! -d ./${OUTDIR} ]; then mkdir ./${OUTDIR}; fi
+
+cp ${INDIR}/${SLIMSCRIPT} $TMPDIR
+
+echo I am running ${SLIMSCRIPT} and putting the output in ${OUTDIR} 
+
+slim -d N=${N} -d P=${P} -d R=${R} -d "O='${OUTDIR}/tree_${HEADER}_${REP}.trees'" -d "MI='${OUTDIR}/metaInd_${HEADER}_${REP}.txt'" -d "MA='${OUTDIR}/metaAll_${HEADER}_${REP}.txt'" ${SLIMSCRIPT}
 
 echo done running the simulation
+
+cp -r $OUTDIR $HOMEDIR
+
+echo done copying output back to $HOMEDIR
 
 #print some environment variables to stdout for records
 echo ----------------------------------------------------------------------------------------

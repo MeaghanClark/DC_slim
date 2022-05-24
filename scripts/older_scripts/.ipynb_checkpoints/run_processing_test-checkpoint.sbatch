@@ -14,21 +14,9 @@ module list
 
 echo This is rep ${REP}
 
-# move everything to tmpdir
-cd $TMPDIR
-if [ ! -d ./$OUTDIR ]; then mkdir ./$OUTDIR; fi
-
-cp ${PYTHONDIR}/${TREEPROCESS} $TMPDIR
-cp ${INDIR}/${FILENAME} $TMPDIR
-
-# python -u ./pythonScript treefile outdir prefix
-python -u ${TREEPROCESS} ${FILENAME} ${OUTDIR} ${MODEL}_${REP} > ${LOGFILESDIR}/log_${JOBNAME}_${MODEL}_${REP}.out
+python -u ${TREEPROCESS} ${REP} ${OUTDIR}/meta_${JOBNAME}_test_small.txt test_${JOBNAME} > ${LOGFILESDIR}/log_${JOBNAME}_test_small.out
 
 echo done processing trees 
-
-cp -r $OUTDIR $HOMEDIR
-
-echo done copying files over to homedir
 
 #print some environment variables to stdout for records
 echo ----------------------------------------------------------------------------------------

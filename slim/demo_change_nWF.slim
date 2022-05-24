@@ -1,4 +1,3 @@
-//TESTING
 
 // set up a neutral nonWF simulation
 initialize() {
@@ -6,18 +5,21 @@ initialize() {
 	initializeSLiMModelType("nonWF");
 	initializeSLiMOptions(keepPedigrees=T, preventIncidentalSelfing=T);
 	initializeTreeSeq();
-	
-	// define constants
-	if(exists("slimgui")) { //
+		
+	if(exists("slimgui")) { 
+		// define constants
 		defineConstant("N", 7500); //desired census population size
 		defineConstant("P", 0.2); // probability of mortaility, must be less than 0.5, expected lifespan will be (1-P)/P
 		defineConstant("K", N*((1-P)/(1-2*P)));	// carrying capacity 
-		defineConstant("B", K/75); // bottleneck carrying capacity
-		defineConstant("Q", 300); //when to enact the bottleneck, 180000
-		defineConstant("END", 185000); //when to end simultion
-		
+		defineConstant("R", 75); // strength of bottleneck
+		defineConstant("B", K/R); // bottleneck carrying capacity
+		defineConstant("Q", 300); //when to enact the bottleneck, usually 180000
+		defineConstant("END", Q+500); //when to end simultion
+	
 		defineConstant("MA", "./DC_slim/het_test_output/Meta_all.csv"); 
 		defineConstant("MI", "./DC_slim/het_test_output/Meta_ind.csv"); 
+		
+		// set up output
 		HeaderLineInd = "generation\tpedigree_id\tage";
 		writeFile(MI,HeaderLineInd,append=T);
 		HeaderLineAll = "generation\tNc\taverage_age\tmax_age";
@@ -34,16 +36,16 @@ initialize() {
 				
 		// define constants
 		defineConstant("K", N*((1-P)/(1-2*P)));	// carrying capacity 
-		defineConstant("B", K/75); // bottleneck carrying capacity
+		defineConstant("B", K/R); // bottleneck carrying capacity
 		defineConstant("Q", 180000); //when to enact the bottleneck
-		defineConstant("END", 190000); //when to end simultion
+		defineConstant("END", Q+500); //when to end simultion
 		// define "O" (tree output) and "MI" and "MA"(metadata output) using the command line 
 	}
 
 	// set up genomes
 	initializeMutationType("m1", 0.5, "f", 0.0); // neutral mutations, which are allowed to fix
 	initializeGenomicElementType("g1", m1, 1.0);
-	initializeGenomicElement(g1, 0, 2589999999); // should be 2589999999
+	initializeGenomicElement(g1, 0, 1e8); 
 	initializeMutationRate(0); // mutations will be added in msprime
 	initializeRecombinationRate(1e-8);
 } // end initialize call 
@@ -52,9 +54,15 @@ initialize() {
 reproduction(NULL) {
 // Scaled reproduction calls		
 	if (individual.age > 0) { 
-		if(sim.generation <(Q)){	prob_offspring = max(0.0, (1-p1.individualCount/K));}	 // 1- (N/K)
+		// before bottleneck
+		if(sim.generation < Q ){	prob_offspring = max(0.0, (1-p1.individualCount/K));}	 // 1- (N/K)
+
+		// bottleneck and after
 		if(sim.generation >= (Q)){ prob_offspring = max(0.0, (1-p1.individualCount/B));}
-		offspring_count=rbinom(1, 1, prob_offspring);
+
+		offspring_count = rbinom(1, 1, prob_offspring);
+		
+		// generate offspring
 		if (offspring_count > 0) {
 			subpop.addCrossed(individual, subpop.sampleIndividuals(1, exclude=individual, minAge=1));
 		}
@@ -62,16 +70,18 @@ reproduction(NULL) {
 } // end reproduction callback
 
 
-// create an initial population of K individuals
+// create an initial population of N individuals
 1 early() {
-	sim.addSubpop("p1", asInteger(N));
-	p1.individuals.age = rdunif(asInteger(N), min=0, max=39);
-	
-	// redefine event timinig 
-	before_bottleneck = (Q - 200); 
-	begin_decline = (Q + 1);	
-	end_decline = (Q + 45); 
-	after_decline = (Q + 46); 
+	sim.addSubpop("p1", size=asInteger(K));
+	p1.individuals.age = rdunif(asInteger(K), min=0, max=39);
+}
+
+// redefine event timing
+1 early(){
+	before_bottleneck = (Q - 200); // beginning of "before" sampling, every 50 cycles 
+	begin_decline = (Q + 1);	// beginning of "during decline" sampling, every 5 cycles
+	end_decline = (Q + 45); // end of "during decline" sampling 
+	after_decline = (Q + 46); // beginning of post-decline sampling
 	
 	sim.rescheduleScriptBlock(s1, start = END, end = END); // end simulation
 	sim.rescheduleScriptBlock(s2, start = before_bottleneck, end = Q); // before bottleneck, e.g. 179800:180000
@@ -83,11 +93,12 @@ reproduction(NULL) {
 
 
 // fitness scaling
+
 early() {
 	p1.fitnessScaling = (1-P);
 } // end fitness scaling
 
-s5 early() {
+s5 180000 early() {
 	p1.fitnessScaling = 1-((K-B)/K);
 }
 
@@ -127,7 +138,7 @@ s3 180001:180022 late(){
 } // end during bottleneck output 
 
 // after bottleneck
-s4 180023:185000 late(){
+s4 180023:180500 late(){
 	if (sim.generation % 50 == 0){ //every fifty generations
 		// individual output
 		sample = p1.sampleIndividuals(100, replace = F); // if Nc < 100, will sample Nc individuals
