@@ -22,6 +22,8 @@ print(f"prefix is {prefix}")
 # read in treefile 
 orig_ts = pyslim.load(treefile)
 
+print(f"Loaded tree file")
+
 # recapitate tree
 rts = pyslim.recapitate(orig_ts, recombination_rate = 1e-8, ancestral_Ne=4232)
 
@@ -31,8 +33,8 @@ print(f"Maximum number of roots before recapitation: {orig_max_roots}\n"
       f"After recapitation: {recap_max_roots}")
 
 # overlay mutations
-mts = pyslim.SlimTreeSequence(msprime.mutate(rts, rate=1.0e-8, random_seed = seed, keep=True)) 
-# should increase genome size to get more mutations
+mts = pyslim.SlimTreeSequence(msprime.mutate(rts, rate=2.59e-5, random_seed = seed, keep=True)) 
+# should increase genome size to get more mutations or set mutation rate to 2.59e-5
 
 print(f"The tree sequence now has {mts.num_mutations} mutations, "
       f"and mean pairwise nucleotide diversity is {mts.diversity()}.")
@@ -44,33 +46,28 @@ after = range(10050, 10250, 50)
 
 sampling = [*before, *during, *after]    
 
-# initialize vectors
 pedigree_id = []
 het = []
 gen = [] 
 
-# loop through sampling periods... 
 for n in sampling: 
-	# for all individuals sampled at time point n, calculate individual heterozygosity
     ind_nodes = []
-    for i in mts.individuals_alive_at(n): # for each individual sampled... 
+    for i in mts.individuals_alive_at(n):
         ind = mts.individual(i)
         ind_nodes.append(ind.nodes)
     # the vector of per-individual heterozygosities:
-    ind_het = mts.diversity(ind_nodes, mode="site") # calculate heterozygosity
-    #mean_het = np.mean(ind_het)
+    ind_het = mts.diversity(ind_nodes, mode="site")
+   # mean_het = np.mean(ind_het)
 
-    # find pedigree IDs for sampled individuals
+    # save output
     x = []
     for i in mts.individuals_alive_at(n):
         ind = mts.individual(i)
-        label = f"slim_{ind.metadata['pedigree_id']}" 
+        label = f"slim_{ind.metadata['pedigree_id']}"
         x.append(label)
-        
-    # save pedigree ID, individual heterozygosity, and sampling point/generation
-    pedigree_id = np.append(pedigree_id, x) # append pedigree ID
-    het = np.append(het, ind_het) # append het 
-    gen = np.append(gen, np.repeat(n, len(ind_het))) # append sampling point
+    pedigree_id = np.append(pedigree_id, x) 
+    het = np.append(het, ind_het)
+    gen = np.append(gen, np.repeat(n, len(ind_het))) 
 
 
 het_data = { 'pedigree_id':pedigree_id, 
@@ -78,6 +75,5 @@ het_data = { 'pedigree_id':pedigree_id,
             'gen':gen,
            }
 
-# save data
 panda_df = pd.DataFrame(data=het_data)
 panda_df.to_csv(outdir+"/"+prefix+"_pi.txt", sep=' ', index=True)
