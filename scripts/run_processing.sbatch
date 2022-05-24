@@ -14,12 +14,21 @@ module list
 
 echo This is rep ${REP}
 
-#export=JOBNAME=$jobname,TREEPROCESS=$treeprocess,MODEL=$model,FILENAME=$filename,REP=$rep,CPUS=$cpus,RUN_NAME=$run_name,STORAGENODE=$storagenode,INDIR=$indir,OUTDIR=$outdir,LOGFILESDIR=$logfilesdir \
+# move everything to tmpdir
+cd $TMPDIR
+if [ ! -d ./$OUTDIR ]; then mkdir ./$OUTDIR; fi
+
+cp ${PYTHONDIR}/${TREEPROCESS} $TMPDIR
+cp ${INDIR}/${FILENAME} $TMPDIR
 
 # python -u ./pythonScript treefile outdir prefix
 python -u ${TREEPROCESS} ${FILENAME} ${OUTDIR} ${MODEL}_${REP} > ${LOGFILESDIR}/log_${JOBNAME}_${MODEL}_${REP}.out
 
 echo done processing trees 
+
+cp -r $OUTDIR $HOMEDIR
+
+echo done copying files over to homedir
 
 #print some environment variables to stdout for records
 echo ----------------------------------------------------------------------------------------
