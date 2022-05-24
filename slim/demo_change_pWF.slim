@@ -11,9 +11,10 @@ initialize() {
 	if(exists("slimgui")) { //
 		defineConstant("N", 4232); //desired census population size
 		defineConstant("K", N+1);	// carrying capacity 
-		defineConstant("B", K/75); // bottleneck carrying capacity
+		defineConstant("R", 75); // strength of bottleneck
+		defineConstant("B", K/R); // bottleneck carrying capacity
 		defineConstant("Q", 300); //when to enact the bottleneck, 180000
-		defineConstant("END", 185000); //when to end simultion
+		defineConstant("END", Q+500); //when to end simultion
 		defineConstant("MA", "./DC_slim/het_test_output/Meta_all.csv"); 
 		defineConstant("MI", "./DC_slim/het_test_output/Meta_ind.csv"); 
 		
@@ -35,9 +36,9 @@ initialize() {
 				
 		// define constants
 		defineConstant("K", N+1);	// carrying capacity 
-		defineConstant("B", K/75); // bottleneck carrying capacity
+		defineConstant("B", K/R); // bottleneck carrying capacity
 		defineConstant("Q", 180000); //when to enact the bottleneck
-		defineConstant("END", 190000); //when to end simultion
+		defineConstant("END", Q+500); //when to end simultion
 		
 		age_table = c(0,1.0); // probability of mortailty
 		defineConstant("L", age_table);
@@ -48,7 +49,7 @@ initialize() {
 	// set up genomes
 	initializeMutationType("m1", 0.5, "f", 0.0); // neutral mutations, which are allowed to fix
 	initializeGenomicElementType("g1", m1, 1.0);
-	initializeGenomicElement(g1, 0, 2589999999); // should be 2589999999
+	initializeGenomicElement(g1, 0, 1e8); // previously 2589999999
 	initializeMutationRate(0); // mutations will be added in msprime
 	initializeRecombinationRate(1e-8);
 } // end initialize call 
@@ -66,37 +67,26 @@ reproduction(NULL) {
 		}	 
 		
 		//bottleneck
-		//if(sim.generation == Q | sim.generation > Q & sim.generation <= (Q + 19)){
-				//prob_offspring = ((N*exp(1)^(-0.223006*(sim.generation-Q))/p1.individualCount));
 		if(sim.generation >= Q){
 				prob_offspring = (B/p1.individualCount); 
 				offspring_count = rpois(1, prob_offspring);
 				for (offspring in seqLen(offspring_count)){
 					subpop.addCrossed(individual, subpop.sampleIndividuals(1, exclude=individual, minAge=1));
-
 				}
 		}
 		
-		//post-bottleneck
-		if(sim.generation > (Q+19)){	
-			prob_offspring = (B/p1.individualCount); // always 1
-			offspring_count= rpois(1, prob_offspring);
-			for (offspring in seqLen(offspring_count)){ 
-				subpop.addCrossed(individual, subpop.sampleIndividuals(1, exclude=individual, minAge=1));
-			}
-		}	 
 } // end reproduction callback
 
 
-// create an initial population of K individuals
+// create an initial population of N individuals
 1 early() {
 	sim.addSubpop("p1", asInteger(N));	
 	
 	// redefine event timinig 
-	before_bottleneck = (Q - 200); 
-	begin_decline = (Q + 1);	
-	end_decline = (Q + 45); 
-	after_decline = (Q + 46); 
+	before_bottleneck = (Q - 200); // beginning of "before" sampling period
+	begin_decline = (Q + 1); // beginning of the "during decline" sampling, every 5 cycles
+	end_decline = (Q + 45); // end of the "during decline" sampling period
+	after_decline = (Q + 46); // beginning of the "post decline" sampling period
 	
 	sim.rescheduleScriptBlock(s1, start = END, end = END); // end simulation
 	sim.rescheduleScriptBlock(s2, start = before_bottleneck, end = Q); // before bottleneck, e.g. 179800:180000
@@ -137,7 +127,7 @@ s2 179800:180000 late(){
 
 // during bottleneck
 s3 180001:180022 late(){
-	if (sim.generation % 5 == 0){ //every ten generations
+	if (sim.generation % 5 == 0){ //every five generations
 		// individual output
 		sample = p1.sampleIndividuals(100, replace = F); // if Nc < 100, will sample Nc individuals
 		sim.treeSeqRememberIndividuals(sample);
