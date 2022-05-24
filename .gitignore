@@ -1,3 +1,4 @@
 ./logfiles/
 ./full_output/
 ./full_output/full_run_42822_grad_decline/
+./logfiles*

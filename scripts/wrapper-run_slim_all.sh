@@ -11,7 +11,7 @@ jobname=$1 #label for SLURM book-keeping, nWF or pWF
 
 # slim specific variables
 n=7500 # census pop size
-reps=100 # reps of slimulation to run 
+reps=1 # reps of slimulation to run 
 p=0.2 # probability of mortality
 r=75 # factor to reduce pop size by
 
@@ -40,7 +40,7 @@ ram_per_cpu=75G #amount of RAM to request/use per CPU
 
 #---------------------------------------------------------
 #check if logfiles directory has been created in submit dir yet; if not, make one
-if [ ! -d ./$logfilesdir ]; then mkdir ./$logfilesdir; fi
+if [ ! -d $logfilesdir ]; then mkdir $logfilesdir; fi
 
 #submit job to cluster
 	for rep in $(seq 1 $reps) ; do 
