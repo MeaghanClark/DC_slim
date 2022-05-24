@@ -16,10 +16,16 @@ echo This is rep ${REP}
 
 #export=JOBNAME=$jobname,TREEPROCESS=$treeprocess,MODEL=$model,FILENAME=$filename,REP=$rep,CPUS=$cpus,RUN_NAME=$run_name,STORAGENODE=$storagenode,INDIR=$indir,OUTDIR=$outdir,LOGFILESDIR=$logfilesdir \
 
+# cd $TMPDIR
+# cp ${TREEPROCESS} ./
+# cp 
+
 # python -u ./pythonScript treefile outdir prefix
 python -u ${TREEPROCESS} ${FILENAME} ${OUTDIR} ${MODEL}_${REP} > ${LOGFILESDIR}/log_${JOBNAME}_${MODEL}_${REP}.out
 
 echo done processing trees 
+
+
 
 #print some environment variables to stdout for records
 echo ----------------------------------------------------------------------------------------
