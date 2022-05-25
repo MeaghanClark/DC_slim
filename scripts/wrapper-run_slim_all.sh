@@ -18,20 +18,20 @@ r=75 # factor to reduce pop size by
 
 #define upper-level variables:
 date=$(date +%m%d%Y)
-header=${jobname}_test # header name, can change
+header=${jobname}_gen_time # header name, can change
 run_name=DC_slim #label to use on output files
 
 # define dirs
 storagenode=/mnt/home/clarkm89 #path to top level of dir where input/output files live
-logfilesdir=$storagenode/$run_name/slim_logfiles_${date} #name of directory to create and then write log files to
-outdir=slim_output_${date}
+logfilesdir=$storagenode/$run_name/gen_logfiles_${date} #name of directory to create and then write log files to
+outdir=gen_time_output_${date}
 indir=$storagenode/$run_name/slim
 homedir=$storagenode/$run_name
 
 executable=$storagenode/$run_name/scripts/run_slim_all.sbatch #script to run 
 
 # *** CHANGE SLIM SCRIPT BASED ON COMMAND LINE***
-slimscript=demo_change_${jobname}.slim #slimulation to run
+slimscript=gen_time_${jobname}.slim #slimulation to run
 
 cpus=1 #number of CPUs to request/use per dataset 
 ram_per_cpu=4G #amount of RAM to request/use per CPU 
@@ -43,7 +43,7 @@ ram_per_cpu=4G #amount of RAM to request/use per CPU
 if [ ! -d $logfilesdir ]; then mkdir $logfilesdir; fi
 
 #submit job to cluster
-	for rep in $(seq 2 $reps) ; do 
+	for rep in $(seq 1 $reps) ; do 
 		sbatch --job-name=$jobname \
 		--export=JOBNAME=$jobname,DATE=$date,SLIMSCRIPT=$slimscript,N=$n,P=$p,R=$r,HEADER=$header,REPS=${reps},REP=$rep,CPUS=$cpus,RUN_NAME=$run_name,STORAGENODE=$storagenode,OUTDIR=$outdir,INDIR=$indir,HOMEDIR=$homedir,LOGFILESDIR=$logfilesdir,EXECUTABLE=$executable \
 		--cpus-per-task=$cpus \

@@ -1,0 +1,78 @@
+
+// set up a neutral nonWF simulation
+initialize() {
+	// define model characteristics 
+	initializeSLiMModelType("nonWF");
+	initializeSLiMOptions(preventIncidentalSelfing=T);
+		
+	if(exists("slimgui")) { 
+		// define constants
+		defineConstant("N", 7500); //desired census population size
+		defineConstant("P", 0.2); // probability of mortaility, must be less than 0.5, expected lifespan will be (1-P)/P
+		defineConstant("K", N*((1-P)/(1-2*P)));	// carrying capacity 
+	
+		defineConstant("MA", "./DC_slim/het_test_output/parent_age.csv");
+		
+		// set up output
+		HeaderLineAll = "generation\tparent1Age\tparent2Age";
+		writeFile(MA,HeaderLineAll,append=T);
+
+	}
+	if(!exists("slimgui")) { //
+		// set up output
+		HeaderLineAll = "generation\tparent1Age\tparent2Age";
+		writeFile(MA,HeaderLineAll,append=T);
+				
+		// define constants
+		defineConstant("K", N*((1-P)/(1-2*P)));	// carrying capacity 
+	}
+
+	// set up genomes
+	initializeMutationType("m1", 0.5, "f", 0.0); // neutral mutations, which are allowed to fix
+	initializeGenomicElementType("g1", m1, 1.0);
+	initializeGenomicElement(g1, 0, 1e2); 
+	initializeMutationRate(0); // mutations will be added in msprime
+	initializeRecombinationRate(1e-8);
+} // end initialize call 
+
+
+reproduction(NULL) {
+// Scaled reproduction calls		
+	if (individual.age > 0) { 
+		// before bottleneck
+		prob_offspring = max(0.0, (1-p1.individualCount/K));	 // 1- (N/K)
+		
+		offspring_count = rbinom(1, 1, prob_offspring);
+		
+		// generate offspring
+		if (offspring_count > 0) {
+			mate = subpop.sampleIndividuals(1, exclude=individual, minAge=1);
+			subpop.addCrossed(individual, mate);
+			
+			// output parental age information
+			if(sim.generation > 1000) {
+				OutputLine = paste(sim.generation, individual.age, mate.age, sep = "\t");
+				writeFile(MA, OutputLine, append = T);
+			}
+
+		}
+	}
+} // end reproduction callback
+
+
+// create an initial population of N individuals
+1 early() {
+	sim.addSubpop("p1", size=asInteger(K));
+	p1.individuals.age = rdunif(asInteger(K), min=0, max=39);
+}
+
+
+// fitness scaling
+
+early() {
+	p1.fitnessScaling = (1-P);
+} // end fitness scaling
+
+1200 late() {
+	sim.simulationFinished();
+} 
