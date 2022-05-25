@@ -17,21 +17,21 @@ today_date=$(date +%m%d%y)
 
 # print vital variables imported from wrapper
 echo ----------------------------------------------------------------------------------------
-echo the date is $DATE (running on $today_date)
+echo the date is $DATE but running on ${today_date}
 echo runname is $RUN_NAME
 echo jobname is $JOBNAME
 echo slimscript is $SLIMSCRIPT
 echo This file is $EXECUTABLE
 echo Logs for this job are in $LOGFILESDIR
-echo logs are called: ${header}_${rep}_%A.out and ${header}_${rep}_%A.err
-
-
+echo logs are called: ${HEADER}_${REP}_%A.out and ${HEADER}_${REP}_%A.err
+echo
+echo
 echo This is rep ${REP} / ${REPS} of ${HEADER}
 echo running with N == ${N}
 echo running with P == ${P}
 echo running with R == ${R}
-
-
+echo
+echo
 echo datafiles created by this job will be moved to ${HOMEDIR}/${OUTDIR}
 echo output will use the header $HEADER
 echo running with $CPUS
@@ -40,10 +40,11 @@ echo ---------------------------------------------------------------------------
 # move everything to TMPDIR
 echo navigating to $TMPDIR
 cd $TMPDIR
-pwd 
 
 if [ ! -d ./${OUTDIR} ]; then mkdir ./${OUTDIR}; fi
 
+
+echo copying ${INDIR}/${SLIMSCRIPT} to $TMPDIR
 cp ${INDIR}/${SLIMSCRIPT} $TMPDIR
 
 echo I am running ${SLIMSCRIPT} and putting the output in ${OUTDIR} 
