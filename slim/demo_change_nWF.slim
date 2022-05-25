@@ -13,7 +13,7 @@ initialize() {
 		defineConstant("K", N*((1-P)/(1-2*P)));	// carrying capacity 
 		defineConstant("R", 75); // strength of bottleneck
 		defineConstant("B", K/R); // bottleneck carrying capacity
-		defineConstant("Q", 300); //when to enact the bottleneck, usually 180000
+		defineConstant("Q", 180000); //when to enact the bottleneck, usually 180000
 		defineConstant("END", Q+500); //when to end simultion
 	
 		defineConstant("MA", "./DC_slim/het_test_output/Meta_all.csv"); 
@@ -45,7 +45,7 @@ initialize() {
 	// set up genomes
 	initializeMutationType("m1", 0.5, "f", 0.0); // neutral mutations, which are allowed to fix
 	initializeGenomicElementType("g1", m1, 1.0);
-	initializeGenomicElement(g1, 0, 1e8); 
+	initializeGenomicElement(g1, 0, 2); 
 	initializeMutationRate(0); // mutations will be added in msprime
 	initializeRecombinationRate(1e-8);
 } // end initialize call 
