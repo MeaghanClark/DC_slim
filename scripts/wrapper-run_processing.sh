@@ -4,40 +4,54 @@
 
 #  run from project directory (where you want output directory to be created)
 
-#define variables:
-storagenode=/mnt/home/clarkm89 #path to top level of dir where input/output files live
-
-jobname=run-trees_to_pi #label for SLURM book-keeping 
-run_name=DC_slim #label to use on output files
-logfilesdir=logfiles_trees_to_pi #name of directory to create and then write log files to
-executable=$storagenode/$run_name/scripts/run_processing.sbatch #script to run 
-treeprocess=$storagenode/$run_name/scripts/tree_2_pi.py #processing python script
-
-outdir=$storagenode/$run_name/het_43022
-indir=$storagenode/$run_name/full_output_43022
-
-cpus=1 #number of CPUs to request/use per dataset 
-ram_per_cpu=200G #amount of RAM to request/use per CPU 
-
+# command line variables: 
 model=$1 # nWF or pWF from command line
-header=full_run_5922 # from input when running wrapper-run_slim_all.sh
+
+# tree processing variables: 
+mu=1x10e-8
+gen=5.00363475332601 # from gen_time_output_05252022
+
+
+# define upper level variables:
+jobname=run-trees #label for SLURM book-keeping 
+run_name=DC_slim #label to use on output files
+date=$(date +%m%d%Y)
+header=${model}_${date} # from input when running wrapper-run_slim_all.sh
+
+# define dirs:
+storagenode=/mnt/home/clarkm89 #path to top level of dir where input/output files live
+logfilesdir=$storagenode/$run_name/py_logfiles_${date} #name of directory to create and then write log files to
+indir=$storagenode/$run_name/slim_output_05252022 # where tree files live
+pythondir=$storagenode/$run_name/scripts # where the python file lives
+outdir=het_output_${date}
+homedir=$storagenode/$run_name/
+
+# define files
+executable=$storagenode/$run_name/scripts/run_processing.sbatch #script to run 
+treeprocess=tree_2_pi_inc_mu.py #processing python script
+dataprefix=test
+
+# running variables
+cpus=1 #number of CPUs to request/use per dataset 
+ram_per_cpu=50G #amount of RAM to request/use per CPU 
+reps=10
 
 #---------------------------------------------------------
 #check if logfiles directory has been created in submit dir yet; if not, make one
-if [ ! -d ./$logfilesdir ]; then mkdir ./$logfilesdir; fi
+if [ ! -d $logfilesdir ]; then mkdir $logfilesdir; fi
 
     #submit job to cluster
-    for rep in {1..10} ; do 
-        filename=${indir}/tree_${model}_${header}_${rep}.trees
+for rep in $(seq 1 $reps) ; do 
+        filename=tree_${model}_${dataprefix}_${rep}.trees
 		sbatch --job-name=$jobname \
-		--export=JOBNAME=$jobname,TREEPROCESS=$treeprocess,MODEL=$model,FILENAME=$filename,REP=$rep,CPUS=$cpus,RUN_NAME=$run_name,STORAGENODE=$storagenode,INDIR=$indir,OUTDIR=$outdir,LOGFILESDIR=$logfilesdir \
+		--export=JOBNAME=$jobname,TREEPROCESS=$treeprocess,MODEL=$model,FILENAME=$filename,REP=$rep,CPUS=$cpus,RUN_NAME=$run_name,STORAGENODE=$storagenode,INDIR=$indir,OUTDIR=$outdir,HOMEDIR=$homedir,PYTHONDIR=$pythondir,MU=$mu,GEN=$gen,LOGFILESDIR=$logfilesdir \
 		--cpus-per-task=$cpus \
 		--mem-per-cpu=$ram_per_cpu \
-		--output=./$logfilesdir/${jobname}_${model}_${rep}_%A.out \
-		--error=./$logfilesdir/${jobname}_${model}_${rep}_%A.err \
-		--time=168:00:00 \
+		--output=$logfilesdir/${header}_${rep}_%A.out \
+		--error=$logfilesdir/${header}_${rep}_%A.err \
+		--time=4:00:00 \
 		$executable
-    done	
+done	
 
 echo ----------------------------------------------------------------------------------------
 echo My executable is $executable		
