@@ -4,14 +4,14 @@
 
 #  run from project directory (where you want output directory to be created)
 
-# usage: ./scripts/wrapper-run_slim_het_test.sh [pWF or nWF]
+# usage: ./scripts/wrapper-run_slim_het_test.sh [pWF or nWF] [Nc]
 
 # command line variables: 
 jobname=$1 #label for SLURM book-keeping, nWF or pWF 
 
 # slim specific variables
-n=7500 # census pop size
-reps=1 # reps of slimulation to run 
+n=$2 # census pop size
+reps=10 # reps of slimulation to run 
 p=0.2 # probability of mortality
 r=75 # factor to reduce pop size by
 
@@ -31,10 +31,10 @@ homedir=$storagenode/$run_name
 executable=$storagenode/$run_name/scripts/run_slim_all.sbatch #script to run 
 
 # *** CHANGE SLIM SCRIPT BASED ON COMMAND LINE***
-slimscript=slim/demo_change_${jobname}.slim #slimulation to run
+slimscript=demo_change_${jobname}.slim #slimulation to run
 
 cpus=1 #number of CPUs to request/use per dataset 
-ram_per_cpu=75G #amount of RAM to request/use per CPU 
+ram_per_cpu=4G #amount of RAM to request/use per CPU 
 
 
 
@@ -43,14 +43,14 @@ ram_per_cpu=75G #amount of RAM to request/use per CPU
 if [ ! -d $logfilesdir ]; then mkdir $logfilesdir; fi
 
 #submit job to cluster
-	for rep in $(seq 1 $reps) ; do 
+	for rep in $(seq 2 $reps) ; do 
 		sbatch --job-name=$jobname \
-		--export=JOBNAME=$jobname,DATE=$date,SLIMSCRIPT=$slimscript,N=$n,P=$p,R=$r,HEADER=$header,REPS=${reps},REP=$rep,CPUS=$cpus,RUN_NAME=$run_name,STORAGENODE=$storagenode,OUTDIR=$outdir,LOGFILESDIR=$logfilesdir,EXECUTABLE=$executable \
+		--export=JOBNAME=$jobname,DATE=$date,SLIMSCRIPT=$slimscript,N=$n,P=$p,R=$r,HEADER=$header,REPS=${reps},REP=$rep,CPUS=$cpus,RUN_NAME=$run_name,STORAGENODE=$storagenode,OUTDIR=$outdir,INDIR=$indir,HOMEDIR=$homedir,LOGFILESDIR=$logfilesdir,EXECUTABLE=$executable \
 		--cpus-per-task=$cpus \
 		--mem-per-cpu=$ram_per_cpu \
 		--output=$logfilesdir/${header}_${rep}_%A.out \
 		--error=$logfilesdir/${header}_${rep}_%A.err \
-		--time=24:00:00 \
+		--time=4:00:00 \
 		$executable
 		
 		echo submitting job with prob of mortality of $p and N of $n!
