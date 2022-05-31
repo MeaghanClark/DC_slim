@@ -9,8 +9,13 @@ model=$1 # nWF or pWF from command line
 
 # tree processing variables: 
 mu=1e-8
-#gen=5.00363475332601 # from gen_time_output_05252022
-gen=1.00
+
+if [[ $model == nWF ]]
+then
+	gen=5.00363475332601
+else
+	gen=1.00
+fi
 
 # define upper level variables:
 jobname=run-trees #label for SLURM book-keeping 
@@ -21,7 +26,7 @@ header=${model}_${date} # from input when running wrapper-run_slim_all.sh
 # define dirs:
 storagenode=/mnt/home/clarkm89 #path to top level of dir where input/output files live
 logfilesdir=$storagenode/$run_name/py_logfiles_${date} #name of directory to create and then write log files to
-indir=$storagenode/$run_name/slim_output_05252022 # where tree files live
+indir=$storagenode/$run_name/slim_output_05312022 # where tree files live
 pythondir=$storagenode/$run_name/scripts # where the python file lives
 outdir=het_output_${date}
 homedir=$storagenode/$run_name/
@@ -29,7 +34,7 @@ homedir=$storagenode/$run_name/
 # define files
 executable=$storagenode/$run_name/scripts/run_processing.sbatch #script to run 
 treeprocess=tree_2_het.py #processing python script
-dataprefix=test
+# dataprefix=test
 
 # running variables
 cpus=1 #number of CPUs to request/use per dataset 
@@ -41,16 +46,19 @@ reps=10
 if [ ! -d $logfilesdir ]; then mkdir $logfilesdir; fi
 
     #submit job to cluster
-for rep in $(seq 1 $reps) ; do 
-        filename=tree_${model}_${dataprefix}_${rep}.trees
-		sbatch --job-name=$jobname \
-		--export=JOBNAME=$jobname,TREEPROCESS=$treeprocess,MODEL=$model,FILENAME=$filename,REP=$rep,CPUS=$cpus,RUN_NAME=$run_name,STORAGENODE=$storagenode,INDIR=$indir,OUTDIR=$outdir,HOMEDIR=$homedir,PYTHONDIR=$pythondir,MU=$mu,GEN=$gen,DATE=$date,EXECUTABLE=$executable,HEADER=$header,REPS=$reps,LOGFILESDIR=$logfilesdir \
-		--cpus-per-task=$cpus \
-		--mem-per-cpu=$ram_per_cpu \
-		--output=$logfilesdir/${header}_${rep}_%A.out \
-		--error=$logfilesdir/${header}_${rep}_%A.err \
-		--time=4:00:00 \
-		$executable
+for r in {2 10 100}; do 
+
+	for rep in $(seq 1 $reps) ; do 
+        	filename=tree_${model}_${r}_${rep}.trees
+			sbatch --job-name=$jobname \
+			--export=JOBNAME=$jobname,TREEPROCESS=$treeprocess,MODEL=$model,FILENAME=$filename,REP=$rep,CPUS=$cpus,RUN_NAME=$run_name,STORAGENODE=$storagenode,INDIR=$indir,OUTDIR=$outdir,HOMEDIR=$homedir,PYTHONDIR=$pythondir,MU=$mu,R=$r,GEN=$gen,DATE=$date,EXECUTABLE=$executable,HEADER=$header,REPS=$reps,LOGFILESDIR=$logfilesdir \
+			--cpus-per-task=$cpus \
+			--mem-per-cpu=$ram_per_cpu \
+			--output=$logfilesdir/${header}_${r}_${rep}_%A.out \
+			--error=$logfilesdir/${header}_${r}_${rep}_%A.err \
+			--time=4:00:00 \
+			$executable
+	done
 done	
 
 echo ----------------------------------------------------------------------------------------

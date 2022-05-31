@@ -21,7 +21,7 @@ echo runname is $RUN_NAME
 echo jobname is $JOBNAME
 echo This file is $EXECUTABLE
 echo Logs for this job are in $LOGFILESDIR
-echo logs are called: ${HEADER}_${REP}_%A.out and ${HEADER}_${REP}_%A.err
+echo logs are called: ${HEADER}_${R}_${REP}_%A.out and ${HEADER}_${R}_${REP}_%A.err
 echo
 echo
 echo This is rep ${REP} / ${REPS} of ${HEADER}
