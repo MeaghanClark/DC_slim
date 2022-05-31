@@ -8,9 +8,9 @@
 model=$1 # nWF or pWF from command line
 
 # tree processing variables: 
-mu=1x10e-8
-gen=5.00363475332601 # from gen_time_output_05252022
-
+mu=1e-8
+#gen=5.00363475332601 # from gen_time_output_05252022
+gen=1.00
 
 # define upper level variables:
 jobname=run-trees #label for SLURM book-keeping 
@@ -28,12 +28,12 @@ homedir=$storagenode/$run_name/
 
 # define files
 executable=$storagenode/$run_name/scripts/run_processing.sbatch #script to run 
-treeprocess=tree_2_pi_inc_mu.py #processing python script
+treeprocess=tree_2_het.py #processing python script
 dataprefix=test
 
 # running variables
 cpus=1 #number of CPUs to request/use per dataset 
-ram_per_cpu=50G #amount of RAM to request/use per CPU 
+ram_per_cpu=4G #amount of RAM to request/use per CPU 
 reps=10
 
 #---------------------------------------------------------
@@ -44,7 +44,7 @@ if [ ! -d $logfilesdir ]; then mkdir $logfilesdir; fi
 for rep in $(seq 1 $reps) ; do 
         filename=tree_${model}_${dataprefix}_${rep}.trees
 		sbatch --job-name=$jobname \
-		--export=JOBNAME=$jobname,TREEPROCESS=$treeprocess,MODEL=$model,FILENAME=$filename,REP=$rep,CPUS=$cpus,RUN_NAME=$run_name,STORAGENODE=$storagenode,INDIR=$indir,OUTDIR=$outdir,HOMEDIR=$homedir,PYTHONDIR=$pythondir,MU=$mu,GEN=$gen,LOGFILESDIR=$logfilesdir \
+		--export=JOBNAME=$jobname,TREEPROCESS=$treeprocess,MODEL=$model,FILENAME=$filename,REP=$rep,CPUS=$cpus,RUN_NAME=$run_name,STORAGENODE=$storagenode,INDIR=$indir,OUTDIR=$outdir,HOMEDIR=$homedir,PYTHONDIR=$pythondir,MU=$mu,GEN=$gen,DATE=$date,EXECUTABLE=$executable,HEADER=$header,REPS=$reps,LOGFILESDIR=$logfilesdir \
 		--cpus-per-task=$cpus \
 		--mem-per-cpu=$ram_per_cpu \
 		--output=$logfilesdir/${header}_${rep}_%A.out \

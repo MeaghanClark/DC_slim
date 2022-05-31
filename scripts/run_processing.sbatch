@@ -19,7 +19,6 @@ echo ---------------------------------------------------------------------------
 echo the date is $DATE but running on ${today_date}
 echo runname is $RUN_NAME
 echo jobname is $JOBNAME
-echo slimscript is $SLIMSCRIPT
 echo This file is $EXECUTABLE
 echo Logs for this job are in $LOGFILESDIR
 echo logs are called: ${HEADER}_${REP}_%A.out and ${HEADER}_${REP}_%A.err

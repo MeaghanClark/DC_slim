@@ -3,9 +3,11 @@
 # M.I. Clark, 5/25/2022
 
 # define file paths
-filePath <- "../het_test_output"
- 
-files <- list.files(filePath, full.names = TRUE)
+filePath <- "../gen_time_output_05252022"
+searchTerm <- "metaAll"
+
+files <- list.files(filePath, full.names = TRUE) 
+files <- files[grepl(paste0("*", searchTerm, "*"), files)] 
 data <- vector(mode = "list", length = length(filePath))
 
 # load in metadata
@@ -24,7 +26,7 @@ for (i in 1:length(files)){
 write.table(mean(avg[,1]), paste0(filePath, "/gen_time.txt"), sep = "\t", row.names=FALSE, col.names=FALSE)
 
 # plot distribution
-pdf("gen_time_nWF_hist.pdf")
+pdf(paste0(filePath, "/gen_time_nWF_hist.pdf"))
 hist(avg[,1])
 dev.off()
 
