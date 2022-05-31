@@ -4,21 +4,21 @@
 
 #  run from project directory (where you want output directory to be created)
 
-# usage: ./scripts/wrapper-run_slim_het_test.sh [pWF or nWF] [Nc]
+# usage: ./scripts/wrapper-run_slim_het_test.sh [pWF or nWF] [Nc] [R]
 
 # command line variables: 
 jobname=$1 #label for SLURM book-keeping, nWF or pWF 
 
 # slim specific variables
 n=$2 # census pop size
-reps=10 # reps of slimulation to run 
+reps=100 # reps of slimulation to run 
 p=0.2 # probability of mortality
-r=75 # factor to reduce pop size by
+r=$3 # factor to reduce pop size by
 
 
 #define upper-level variables:
 date=$(date +%m%d%Y)
-header=${jobname}_gen_time # header name, can change
+header=${jobname}_${r} # header name, can change
 run_name=DC_slim #label to use on output files
 
 # define dirs
@@ -34,7 +34,7 @@ executable=$storagenode/$run_name/scripts/run_slim_all.sbatch #script to run
 slimscript=gen_time_${jobname}.slim #slimulation to run
 
 cpus=1 #number of CPUs to request/use per dataset 
-ram_per_cpu=4G #amount of RAM to request/use per CPU 
+ram_per_cpu=6G #amount of RAM to request/use per CPU 
 
 
 

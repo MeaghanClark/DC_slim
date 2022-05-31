@@ -8,7 +8,7 @@ initialize() {
 		
 	if(exists("slimgui")) { 
 		// define constants
-		defineConstant("N", 7500); //desired census population size
+		defineConstant("N", 10000); //desired census population size
 		defineConstant("P", 0.2); // probability of mortaility, must be less than 0.5, expected lifespan will be (1-P)/P
 		defineConstant("K", N*((1-P)/(1-2*P)));	// carrying capacity 
 		defineConstant("R", 75); // strength of bottleneck
