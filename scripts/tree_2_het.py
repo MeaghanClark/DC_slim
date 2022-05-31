@@ -44,6 +44,8 @@ print(f"Maximum number of roots before recapitation: {orig_max_roots}\n"
 
 # overlay mutations
 rate = float(mu)/float(gen_time)
+print(f"using rate {rate}")
+
 mts = pyslim.SlimTreeSequence(msprime.mutate(rts, rate=rate, random_seed = seed, keep=True)) 
 # should increase genome size to get more mutations or set mutation rate to 2.59e-5
 
