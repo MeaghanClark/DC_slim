@@ -23,15 +23,15 @@ run_name=DC_slim #label to use on output files
 
 # define dirs
 storagenode=/mnt/home/clarkm89 #path to top level of dir where input/output files live
-logfilesdir=$storagenode/$run_name/gen_logfiles_${date} #name of directory to create and then write log files to
-outdir=gen_time_output_${date}
+logfilesdir=$storagenode/$run_name/slim_${date} #name of directory to create and then write log files to
+outdir=slim_output_${date}
 indir=$storagenode/$run_name/slim
 homedir=$storagenode/$run_name
 
 executable=$storagenode/$run_name/scripts/run_slim_all.sbatch #script to run 
 
 # *** CHANGE SLIM SCRIPT BASED ON COMMAND LINE***
-slimscript=gen_time_${jobname}.slim #slimulation to run
+slimscript=demo_change_${jobname}.slim #slimulation to run
 
 cpus=1 #number of CPUs to request/use per dataset 
 ram_per_cpu=6G #amount of RAM to request/use per CPU 
