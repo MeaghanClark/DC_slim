@@ -54,7 +54,7 @@ cp ${INDIR}/${FILENAME} $TMPDIR
 # [5] -- gen time
 
 # python -u ./pythonScript treefile outdir prefix mu gen_time
-python -u ${TREEPROCESS} ${FILENAME} ${OUTDIR} ${MODEL}_${REP}_${DATE} ${MU} ${GEN} > ${LOGFILESDIR}/log_${JOBNAME}_${MODEL}_${REP}.out
+python -u ${TREEPROCESS} ${FILENAME} ${OUTDIR} ${MODEL}_${R}_${REP}_${DATE} ${MU} ${GEN} > ${LOGFILESDIR}/log_${JOBNAME}_${MODEL}_${R}_${REP}.out
 
 echo done processing trees 
 

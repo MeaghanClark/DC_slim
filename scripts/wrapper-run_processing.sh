@@ -20,7 +20,7 @@ fi
 # define upper level variables:
 jobname=run-trees #label for SLURM book-keeping 
 run_name=DC_slim #label to use on output files
-date=$(date +%m%d%Y)
+date=05312022 #$(date +%m%d%Y)
 header=${model}_${date} # from input when running wrapper-run_slim_all.sh
 
 # define dirs:
@@ -38,15 +38,15 @@ treeprocess=tree_2_het.py #processing python script
 
 # running variables
 cpus=1 #number of CPUs to request/use per dataset 
-ram_per_cpu=4G #amount of RAM to request/use per CPU 
-reps=10
+ram_per_cpu=12G #amount of RAM to request/use per CPU 
+reps=100
 
 #---------------------------------------------------------
 #check if logfiles directory has been created in submit dir yet; if not, make one
 if [ ! -d $logfilesdir ]; then mkdir $logfilesdir; fi
 
     #submit job to cluster
-for r in {2 10 100}; do 
+for r in 2 10 100; do 
 
 	for rep in $(seq 1 $reps) ; do 
         	filename=tree_${model}_${r}_${rep}.trees
