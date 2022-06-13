@@ -38,7 +38,7 @@ treeprocess=tree_2_het.py #processing python script
 
 # running variables
 cpus=1 #number of CPUs to request/use per dataset 
-ram_per_cpu=12G #amount of RAM to request/use per CPU 
+ram_per_cpu=8G #amount of RAM to request/use per CPU 
 reps=100
 
 #---------------------------------------------------------
@@ -46,7 +46,7 @@ reps=100
 if [ ! -d $logfilesdir ]; then mkdir $logfilesdir; fi
 
     #submit job to cluster
-for r in 2 10 100; do 
+for r in 2; do # 10 100 
 
 	for rep in $(seq 1 $reps) ; do 
         	filename=tree_${model}_${r}_${rep}.trees
@@ -56,7 +56,7 @@ for r in 2 10 100; do
 			--mem-per-cpu=$ram_per_cpu \
 			--output=$logfilesdir/${header}_${r}_${rep}_%A.out \
 			--error=$logfilesdir/${header}_${r}_${rep}_%A.err \
-			--time=4:00:00 \
+			--time=48:00:00 \
 			$executable
 	done
 done	
