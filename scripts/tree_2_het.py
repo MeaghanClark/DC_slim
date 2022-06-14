@@ -5,7 +5,7 @@ import pyslim
 import numpy as np
 import pandas as pd
 import random
-#np.set_printoptions(threshold=sys.maxsize)
+np.set_printoptions(threshold=sys.maxsize)
 
 
 # uncomment these lines when running from command line
@@ -68,7 +68,6 @@ het = []
 gen = [] 
 rel = []
 
-sampling = [0]
 for n in sampling: 
     ind_nodes = []
     for i in mts.individuals_alive_at(n):
