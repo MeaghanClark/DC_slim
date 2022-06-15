@@ -7,7 +7,6 @@ import pandas as pd
 import random
 np.set_printoptions(threshold=sys.maxsize)
 
-
 # uncomment these lines when running from command line
 #sys.argv = ['tree_processing.py', '../slim_output_05312022/tree_nWF_100_1.trees', '/Users/meaghan/Desktop/DC_slim/het', 'relatedness_test', 1e-8, 5]
 # [0] -- python script name
@@ -68,34 +67,40 @@ het = []
 gen = [] 
 rel = []
 
+pi = []
+
+%%time
 for n in sampling: 
+    # make array of individuals alive at sampling time
     ind_nodes = []
     for i in mts.individuals_alive_at(n):
         ind = mts.individual(i)
         ind_nodes.append(ind.nodes)
+
         
     # make vector of per-individual heterozygosities:
     ind_het = mts.diversity(ind_nodes, mode="site")
    
     # make vector of pedigree_ids 
-    x = []
-    for i in mts.individuals_alive_at(n):
-        ind = mts.individual(i)
-        label = f"slim_{ind.metadata['pedigree_id']}"
-        x.append(label)
-        
+    x = [f"slim_{mts.individual(i).metadata['pedigree_id']}" for i in mts.individuals_alive_at(n)]   
+
     # save het output for nth sampling point
     pedigree_id = np.append(pedigree_id, x) 
     het = np.append(het, ind_het)
     gen = np.append(gen, np.repeat(n, len(ind_het))) # generation
 
-    # make matrix of genetic relatedness for this sampling point
+    # define pairs
     nind = len(mts.individuals_alive_at(n))
     pairs = [(i, j) for i in range(nind) for j in range(nind)]
-    ind_rel = mts.genetic_relatedness(ind_nodes, indexes=pairs)
-    #ind_rel = np.append(n, ind_rel)
+    
+    # make matrix of genetic relatedness for this sampling point
+    ind_rel = mts.divergence(ind_nodes, indexes=pairs)
     rel = np.append(rel, str(ind_rel)) # convert relatedness into a string so there aren't issue with different numbers of individuals
-        
+    
+    # make matrix of pairwise pi for this sampling point
+    ind_pi = mts.divergence(ind_nodes, indexes=pairs)
+    pi = np.append(pi, str(ind_pi)) # convert relatedness into a string so there aren't issue with different numbers of individuals
+
 
 # Output HET data for all sampling points
 # assemble into dictionary for het data
@@ -112,3 +117,6 @@ het_df.to_csv(outdir+"/"+prefix+"_het.txt", sep=' ', index=True)
 rel_df = pd.DataFrame(data=rel)
 rel_df.to_csv(outdir+"/"+prefix+"_relatedness.txt", sep=',', index=True)
 
+# Output pairwise pi data for all sampling points
+pi_df = pd.DataFrame(data=pi)
+pi_df.to_csv(outdir+"/"+prefix+"_pi.txt", sep=',', index=True)
