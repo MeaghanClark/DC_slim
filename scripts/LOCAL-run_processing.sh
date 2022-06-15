@@ -9,10 +9,6 @@ source activate slim
 echo "after calling source: $PATH"
 
 #load programs we want to use
-module purge
-module load GCC/6.4.0-2.28
-module load OpenMPI/2.1.2
-module list
 
 # command line variables: 
 model=$1 # nWF or pWF from command line
@@ -34,7 +30,7 @@ date=05312022 #$(date +%m%d%Y)
 header=${model}_${date} # from input when running wrapper-run_slim_all.sh
 
 # define dirs:
-storagenode=/mnt/home/clarkm89 #path to top level of dir where input/output files live
+storagenode=/Users/meaghan/Desktop #path to top level of dir where input/output files live
 logfilesdir=$storagenode/$run_name/py_logfiles_${date} #name of directory to create and then write log files to
 indir=$storagenode/$run_name/slim_output_05312022 # where tree files live
 pythondir=$storagenode/$run_name/scripts # where the python file lives
@@ -42,8 +38,7 @@ outdir=het_output_${date}
 homedir=$storagenode/$run_name/
 
 # define files
-executable=$storagenode/$run_name/scripts/run_processing.sbatch #script to run 
-treeprocess=tree_2_het.py #processing python script
+treeprocess=LOCAL-tree_2_het.py #processing python script
 # dataprefix=test
 
 # running variables
