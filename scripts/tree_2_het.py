@@ -19,19 +19,19 @@ np.set_printoptions(threshold=sys.maxsize)
 seed=random.randint(1,1e6)
 print(f"random seed is {seed}")
 
-treefile = sys.argv[0]
+treefile = sys.argv[1]
 print(f"treefile is {treefile}")
 
-outdir = sys.argv[1]
+outdir = sys.argv[2]
 print(f"outdir is {outdir}")
 
-prefix = sys.argv[2]
+prefix = sys.argv[3]
 print(f"prefix is {prefix}")
 
-mu = sys.argv[3]
+mu = sys.argv[4]
 print(f"mu is {mu}")
 
-gen_time = sys.argv[4]
+gen_time = sys.argv[5]
 print(f"gen time is {gen_time}")
 
 # read in treefile 

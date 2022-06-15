@@ -1,7 +1,7 @@
 #!/bin/bash
 		
 # Last updated 04/28/2022 by MI Clark, script format by R Toczydlowski 
-
+# written to run on hpcc dev-node
 #  run from project directory (where you want output directory to be created)
 
 echo "before calling source: $PATH"
@@ -54,6 +54,7 @@ if [ ! -d $logfilesdir ]; then mkdir $logfilesdir; fi
 for r in 2 10 100; do  
 
 	for rep in $(seq 1 $reps) ; do 
+		filename=${indir}/tree_${model}_${r}_${rep}.trees
 		python -u ${pythondir}/${treeprocess} ${filename} ${outdir} ${model}_${r}_${rep}_${date} ${mu} ${gen}
 	
 
