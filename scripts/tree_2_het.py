@@ -76,7 +76,7 @@ pi = []
 for n in sampling: 
     # make array of individuals alive at sampling time
     print(f"make array of individuals alive at sampling time {n}")
-    print('Timestamp: {%H:%M:%S}'.format(datetime.datetime.now()))
+    print('Timestamp: {:%H:%M:%S}'.format(datetime.datetime.now()))
     
     ind_nodes = []
     for i in mts.individuals_alive_at(n):
@@ -96,7 +96,7 @@ for n in sampling:
     gen = np.append(gen, np.repeat(n, len(ind_het))) # generation
 
     print(f"done calculating het for sampling point {n}")
-    print('Timestamp: {%H:%M:%S}'.format(datetime.datetime.now()))
+    print('Timestamp: {:%H:%M:%S}'.format(datetime.datetime.now()))
 
 
     # define pairs
@@ -104,21 +104,21 @@ for n in sampling:
     pairs = [(i, j) for i in range(nind) for j in range(nind)]
     
     print(f"done defining pairs at sampling time {n}")
-    print('Timestamp: {%H:%M:%S}'.format(datetime.datetime.now()))
+    print('Timestamp: {:%H:%M:%S}'.format(datetime.datetime.now()))
 
     # make matrix of genetic relatedness for this sampling point
     ind_rel = mts.divergence(ind_nodes, indexes=pairs)
     rel = np.append(rel, str(ind_rel)) # convert relatedness into a string so there aren't issue with different numbers of individuals
     
     print(f"done calculating relatedness for sampling time {n}")
-    print('Timestamp: {%H:%M:%S}'.format(datetime.datetime.now()))
+    print('Timestamp: {:%H:%M:%S}'.format(datetime.datetime.now()))
 
     # make matrix of pairwise pi for this sampling point
     ind_pi = mts.divergence(ind_nodes, indexes=pairs)
     pi = np.append(pi, str(ind_pi)) # convert relatedness into a string so there aren't issue with different numbers of individuals
 
     print(f"done calculating pi for sampling time {n}")
-    print('Timestamp: {%H:%M:%S}'.format(datetime.datetime.now()))
+    print('Timestamp: {:%H:%M:%S}'.format(datetime.datetime.now()))
 
 
 # Output HET data for all sampling points
@@ -141,4 +141,4 @@ pi_df = pd.DataFrame(data=pi)
 pi_df.to_csv(outdir+"/"+prefix+"_pi.txt", sep=',', index=True)
 
 print(f"done outputting files!")
-print('Timestamp: {%H:%M:%S}'.format(datetime.datetime.now()))
+print('Timestamp: {:%H:%M:%S}'.format(datetime.datetime.now()))

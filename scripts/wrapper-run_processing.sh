@@ -25,7 +25,7 @@ header=${model}_${date} # from input when running wrapper-run_slim_all.sh
 
 # define dirs:
 storagenode=/mnt/home/clarkm89 #path to top level of dir where input/output files live
-logfilesdir=$storagenode/$run_name/py_logfiles_${date} #name of directory to create and then write log files to
+logfilesdir=$storagenode/$run_name/py_logfiles_${date} #CHANGED name of directory to create and then write log files to
 indir=$storagenode/$run_name/slim_output_05312022 # where tree files live
 pythondir=$storagenode/$run_name/scripts # where the python file lives
 outdir=het_output_${date}
@@ -39,25 +39,34 @@ treeprocess=tree_2_het.py #processing python script
 # running variables
 cpus=1 #number of CPUs to request/use per dataset 
 ram_per_cpu=24G #amount of RAM to request/use per CPU 
-reps=100
+reps=100 # 100 CHANGED
 
 #---------------------------------------------------------
 #check if logfiles directory has been created in submit dir yet; if not, make one
 if [ ! -d $logfilesdir ]; then mkdir $logfilesdir; fi
 
     #submit job to cluster
-for r in 2 10 100; do  
-
+for r in 2 10 100; do
 	for rep in $(seq 1 $reps) ; do 
         	filename=tree_${model}_${r}_${rep}.trees
+		output_file=${homedir}${outdir}/${model}_${r}_${rep}_${date}_pi.txt
+
+		if [ ! -f "$output_file" ] 
+		then 
+				
+			echo Starting job ${model}_${r}_${rep}_${date}
+				
 			sbatch --job-name=$jobname \
 			--export=JOBNAME=$jobname,TREEPROCESS=$treeprocess,MODEL=$model,FILENAME=$filename,REP=$rep,CPUS=$cpus,RUN_NAME=$run_name,STORAGENODE=$storagenode,INDIR=$indir,OUTDIR=$outdir,HOMEDIR=$homedir,PYTHONDIR=$pythondir,MU=$mu,R=$r,GEN=$gen,DATE=$date,EXECUTABLE=$executable,HEADER=$header,REPS=$reps,LOGFILESDIR=$logfilesdir \
 			--cpus-per-task=$cpus \
 			--mem-per-cpu=$ram_per_cpu \
 			--output=$logfilesdir/${header}_${r}_${rep}_%A.out \
 			--error=$logfilesdir/${header}_${r}_${rep}_%A.err \
-			--time=72:00:00 \
+			--time=168:00:00 \
 			$executable
+		else
+			echo output files for ${model}_${r}_${rep}_${date} already exist in ${outdir}
+		fi		
 	done
 done	
 
