@@ -45,16 +45,21 @@ cp ${PYTHONDIR}/${TREEPROCESS} $TMPDIR
 # move tree file
 cp ${INDIR}/${FILENAME} $TMPDIR
 
+# move metafile
+cp ${INDIR}/${METAFILE} $TMPDIR
+
+
 # arguments: 
 # [0] -- python script name
 # [1] -- tree file
-# [2] -- outdir
-# [3] -- prefix
-# [4] -- mu
-# [5] -- gen time
+# [2] -- meta file
+# [3] -- outdir
+# [4] -- prefix
+# [5] -- mu
+# [6] -- gen time
 
 # python -u ./pythonScript treefile outdir prefix mu gen_time
-python -u ${TREEPROCESS} ${FILENAME} ${OUTDIR} ${MODEL}_${R}_${REP}_${DATE} ${MU} ${GEN} > ${LOGFILESDIR}/log_${JOBNAME}_${MODEL}_${R}_${REP}.out
+python -u ${TREEPROCESS} ${FILENAME} ${METAFILE} ${OUTDIR} ${MODEL}_${R}_${REP}_${DATE} ${MU} ${GEN} > ${LOGFILESDIR}/log_${JOBNAME}_${MODEL}_${R}_${REP}.out
 
 echo done processing trees 
 
