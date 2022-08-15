@@ -13,7 +13,6 @@ jobname=nWF #label for SLURM book-keeping, nWF or pWF
 n=$1 # census pop size
 reps=10 # reps of slimulation to run 
 avg_age=$2
-#p=1/(avg_age+1) # probability of mortality
 
 #define upper-level variables:
 date=$(date +%m%d%Y)
