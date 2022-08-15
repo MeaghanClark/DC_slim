@@ -33,12 +33,12 @@ homedir=$storagenode/$run_name/
 
 # define files
 executable=$storagenode/$run_name/scripts/run_processing.sbatch #script to run 
-treeprocess=tree_2_het.py #processing python script
+treeprocess=tree_2_rel.py #processing python script # CHANGED TO JUST RELATEDNESS SCRIPT
 # dataprefix=test
 
 # running variables
 cpus=1 #number of CPUs to request/use per dataset 
-ram_per_cpu=16G #amount of RAM to request/use per CPU 
+ram_per_cpu=4G #amount of RAM to request/use per CPU 
 reps=100 # 100 CHANGED
 
 #---------------------------------------------------------
@@ -51,7 +51,7 @@ for r in 2 10 100; do
         	filename=tree_${model}_${r}_${rep}.trees
             metafile=metaInd_${model}_${r}_${rep}.txt
             
-            output_file=${homedir}${outdir}/${model}_${r}_${rep}_${date}_pi.txt
+            output_file=${homedir}${outdir}/${model}_${r}_${rep}_${date}_relatedness.txt
 
 		if [ ! -f "$output_file" ] # don't start job if output files (pairwise pi specifically) already exists
 		then 

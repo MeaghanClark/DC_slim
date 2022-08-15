@@ -150,7 +150,7 @@ for n in [*range(0, 24, 1)]:
     print(f"there are {len(pairs)} pairs")
         
     # make matrix of genetic relatedness for this sampling point
-    ind_rel = mts.divergence(ind_nodes, indexes=pairs)
+    ind_rel = mts.genetic_relatedness(ind_nodes, indexes=pairs)
     rel = np.append(rel, str(ind_rel)) # convert relatedness into a string so there aren't issue with different numbers of individuals
     print(f"there are {len(ind_rel)} relatedness values")
     print(f"done calculating relatedness for sampling time {n}")
