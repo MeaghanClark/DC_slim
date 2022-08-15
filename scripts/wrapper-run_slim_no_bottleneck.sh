@@ -13,7 +13,7 @@ jobname=$1 #label for SLURM book-keeping, nWF or pWF
 n=$2 # census pop size
 reps=10 # reps of slimulation to run 
 avg_age=$3
-p=1/(avg_age+1) # probability of mortality
+#p=1/(avg_age+1) # probability of mortality
 
 # define upper-level variables:
 date=$(date +%m%d%Y)
@@ -42,7 +42,7 @@ if [ ! -d ./$logfilesdir ]; then mkdir ./$logfilesdir; fi
 #submit job to cluster
 	for rep in $(seq 1 $reps) ; do 
 		sbatch --job-name=$jobname \
-		--export=JOBNAME=$jobname,SLIMSCRIPT=$slimscript,HEADER=$header,N=$n,P=$p,AVG_AGE=$avg_age,REP=$rep,CPUS=$cpus,RUN_NAME=$run_name,DATE=$date,STORAGENODE=$storagenode,OUTDIR=$outdir,LOGFILESDIR=$logfilesdir \
+		--export=JOBNAME=$jobname,SLIMSCRIPT=$slimscript,HEADER=$header,N=$n,AVG_AGE=$avg_age,REP=$rep,CPUS=$cpus,RUN_NAME=$run_name,DATE=$date,STORAGENODE=$storagenode,OUTDIR=$outdir,LOGFILESDIR=$logfilesdir \
 		--cpus-per-task=$cpus \
 		--mem-per-cpu=$ram_per_cpu \
 		--output=./$logfilesdir/${jobname}_${rep}_%A.out \

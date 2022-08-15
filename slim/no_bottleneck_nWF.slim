@@ -1,4 +1,3 @@
-// mini-model for troubleshooting
 
 // set up a neutral nonWF simulation
 initialize() {
@@ -9,7 +8,7 @@ initialize() {
 		defineConstant("N", 7500); //desired census population size
 		defineConstant("P", 0.2); // probability of mortaility, must be less than 0.5, expected lifespan will be (1-P)/P
 		defineConstant("K", N*((1-P)/(1-2*P)));	// carrying capacity 
-		defineConstant("B", K/75); // bottleneck carrying capacity
+		//defineConstant("B", K/75); // bottleneck carrying capacity
 		}
 	
 	initializeMutationType("m1", 0.5, "f", 0.0); // neutral mutations, which are allowed to fix
@@ -24,8 +23,9 @@ initialize() {
 	HeaderLine = "generation\tNc\taverage_age\tmax_age\thet";
 	writeFile(M,HeaderLine,append=T);
 	
+	defineConstant("P", (1/(AVG_AGE+1)));	// carrying capacity 
 	defineConstant("K", N*((1-P)/(1-2*P)));	// carrying capacity 
-	defineConstant("B", K/75); // bottleneck carrying capacity
+	//defineConstant("B", K/75); // bottleneck carrying capacity
 	}
 
 }

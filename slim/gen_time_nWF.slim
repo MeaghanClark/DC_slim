@@ -24,6 +24,7 @@ initialize() {
 		writeFile(MA,HeaderLineAll,append=T);
 				
 		// define constants
+		defineConstant("P", (1/(AVG_AGE+1)));	// carrying capacity 
 		defineConstant("K", N*((1-P)/(1-2*P)));	// carrying capacity 
 	}
 

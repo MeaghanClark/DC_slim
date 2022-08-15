@@ -28,7 +28,7 @@ echo
 echo
 echo This is rep ${REP} / ${REPS} of ${HEADER}
 echo running with N == ${N}
-echo running with P == ${P}
+echo running with AVG_AGE == ${AVG_AGE}
 echo running with R == ${R}
 echo
 echo
@@ -49,7 +49,7 @@ cp ${INDIR}/${SLIMSCRIPT} $TMPDIR
 
 echo I am running ${SLIMSCRIPT} and putting the output in ${OUTDIR} 
 
-slim -d N=${N} -d P=${P} -d "MA='${OUTDIR}/${HEADER}_${REP}.txt'" ${SLIMSCRIPT}
+slim -d N=${N} -d AVG_AGE=${AVG_AGE} -d "MA='${OUTDIR}/${HEADER}_${REP}.txt'" ${SLIMSCRIPT}
 
 echo done running the simulation
 
