@@ -1,12 +1,10 @@
 #!/bin/bash
 
-# usage: bash run_slim.sh file.slim K-value output
-
 echo "before calling source: $PATH"
 source activate slim
 echo "after calling source: $PATH"
 
-# load programs we want to use
+#load programs we want to use
 module purge
 module load GCC/6.4.0-2.28
 module load OpenMPI/2.1.2
@@ -49,9 +47,7 @@ cp ${INDIR}/${SLIMSCRIPT} $TMPDIR
 
 echo I am running ${SLIMSCRIPT} and putting the output in ${OUTDIR} 
 
-slim -d N=${N} -d P=${P} -d "MA='${OUTDIR}/${HEADER}_${REP}.txt'" ${SLIMSCRIPT}
-
-echo done running the simulation
+slim -d P=${P} -d N=${N} -d "M='${OUTDIR}/${HEADER}_${REP}.txt'" ${SLIMSCRIPT}
 
 cp -r $OUTDIR $HOMEDIR
 
@@ -63,3 +59,5 @@ echo PRINTING SUBSET OF ENVIRONMENT VARIABLES:
 (set -o posix ; set | grep -v ^_ | grep -v ^EB | grep -v ^BASH | grep -v PATH | grep -v LS_COLORS)
 
 echo ----------------------------------------------------------------------------------------
+
+

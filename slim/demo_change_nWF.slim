@@ -9,11 +9,11 @@ initialize() {
 	if(exists("slimgui")) { 
 		// define constants
 		defineConstant("N", 10000); //desired census population size
-		defineConstant("P", 0.2); // probability of mortaility, must be less than 0.5, expected lifespan will be (1-P)/P
+		defineConstant("P", (1/21)); // probability of mortaility, must be less than 0.5, expected lifespan will be (1-P)/P
 		defineConstant("K", N*((1-P)/(1-2*P)));	// carrying capacity 
 		defineConstant("R", 75); // strength of bottleneck
 		defineConstant("B", K/R); // bottleneck carrying capacity
-		defineConstant("Q", 180000); //when to enact the bottleneck, usually 180000
+		defineConstant("Q", 5000); //when to enact the bottleneck, usually 180000
 		defineConstant("END", Q+500); //when to end simultion
 	
 		defineConstant("MA", "./DC_slim/het_test_output/Meta_all.csv"); 
@@ -104,6 +104,13 @@ s5 180000 early() {
 
 
 // Define output and remember individuals 
+
+// ** TESTING **
+late(){		
+		catn("Average age: " + mean(p1.individuals.age));
+		catn(range(p1.individuals.age)); 		
+}
+// ** END TESTING **
 
 // before bottleneck
 s2 179800:180000 late(){
