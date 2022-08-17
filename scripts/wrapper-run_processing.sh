@@ -4,15 +4,24 @@
 
 #  run from project directory (where you want output directory to be created)
 
+# usage: ./scripts/wrapper-run_processing [model] [avg_age]
 # command line variables: 
 model=$1 # nWF or pWF from command line
+avg_age=$2
 
 # tree processing variables: 
 mu=1e-8
 
 if [[ $model == nWF ]]
 then
-	gen=5.00363475332601
+	if [[ $avg_age == 2 ]]
+		gen=2.999165
+	if [[ $avg_age == 5 ]]
+		gen=6.006728
+	if [[ $avg_age == 10 ]] 
+		gen=11.01567
+	if [[ $avg_age == 20 ]] 
+		gen=20.97633
 else
 	gen=1.00
 fi
@@ -59,7 +68,7 @@ for r in 2 10 100; do
 			echo Starting job ${model}_${r}_${rep}_${date}
 				
 			sbatch --job-name=$jobname \
-			--export=JOBNAME=$jobname,TREEPROCESS=$treeprocess,MODEL=$model,FILENAME=$filename,METAFILE=$metafile,REP=$rep,CPUS=$cpus,RUN_NAME=$run_name,STORAGENODE=$storagenode,INDIR=$indir,OUTDIR=$outdir,HOMEDIR=$homedir,PYTHONDIR=$pythondir,MU=$mu,R=$r,GEN=$gen,DATE=$date,EXECUTABLE=$executable,HEADER=$header,REPS=$reps,LOGFILESDIR=$logfilesdir \
+			--export=JOBNAME=$jobname,TREEPROCESS=$treeprocess,MODEL=$model,FILENAME=$filename,METAFILE=$metafile,REP=$rep,CPUS=$cpus,RUN_NAME=$run_name,STORAGENODE=$storagenode,INDIR=$indir,OUTDIR=$outdir,HOMEDIR=$homedir,PYTHONDIR=$pythondir,MU=$mu,R=$r,AVG_AGE=$avg_age,GEN=$gen,DATE=$date,EXECUTABLE=$executable,HEADER=$header,REPS=$reps,LOGFILESDIR=$logfilesdir \
 			--cpus-per-task=$cpus \
 			--mem-per-cpu=$ram_per_cpu \
 			--output=$logfilesdir/${header}_${r}_${rep}_%A.out \

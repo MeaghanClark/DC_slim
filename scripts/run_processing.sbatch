@@ -27,7 +27,7 @@ echo
 echo This is rep ${REP} / ${REPS} of ${HEADER}
 echo running with mu == ${MU}
 echo running with gen == ${GEN}
-echo
+echo Average age is ${AVG_AGE}
 echo
 echo datafiles created by this job will be moved to ${HOMEDIR}/${OUTDIR}
 echo output will use the prefix ${MODEL}_${REP}
@@ -57,9 +57,10 @@ cp ${INDIR}/${METAFILE} $TMPDIR
 # [4] -- prefix
 # [5] -- mu
 # [6] -- gen time
+# [7] -- avg age
 
 # python -u ./pythonScript treefile outdir prefix mu gen_time
-python -u ${TREEPROCESS} ${FILENAME} ${METAFILE} ${OUTDIR} ${MODEL}_${R}_${REP}_${DATE} ${MU} ${GEN} > ${LOGFILESDIR}/log_${JOBNAME}_${MODEL}_${R}_${REP}.out
+python -u ${TREEPROCESS} ${FILENAME} ${METAFILE} ${OUTDIR} ${MODEL}_${AVG_AGE}_${R}_${REP}_${DATE} ${MU} ${GEN} ${AVG_AGE} > ${LOGFILESDIR}/log_${JOBNAME}_${MODEL}_${R}_${REP}.out
 
 echo done processing trees 
 
