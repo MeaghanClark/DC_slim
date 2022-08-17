@@ -32,7 +32,7 @@ executable=$storagenode/$run_name/scripts/run_slim_no_bottleneck.sbatch #script 
 slimscript=$storagenode/$run_name/slim/no_bottleneck_${jobname}.slim #slimulation to run
 
 cpus=1 #number of CPUs to request/use per dataset 
-ram_per_cpu=12G #amount of RAM to request/use per CPU 
+ram_per_cpu=18G #amount of RAM to request/use per CPU 
 
 #---------------------------------------------------------
 #check if logfiles directory has been created in submit dir yet; if not, make one
@@ -46,7 +46,7 @@ if [ ! -d $logfilesdir ]; then mkdir $logfilesdir; fi
 		--mem-per-cpu=$ram_per_cpu \
 		--output=$logfilesdir/no_bottleneck_${avg_age}_${rep}_%A.out \
 		--error=$logfilesdir/no_bottleneck_${avg_age}_${rep}_%A.err \
-		--time=12:00:00 \
+		--time=24:00:00 \
 		$executable
 		
 		echo submitting job with an average age of $avg_age and N of $n!
