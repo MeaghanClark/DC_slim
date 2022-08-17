@@ -7,7 +7,7 @@
 # usage: ./scripts/wrapper-run_slim_gen_time.sh [Nc] [avg_age]
 
 # command line variables: 
-jobname=nWF #label for SLURM book-keeping, nWF or pWF 
+jobname=genTime #label for SLURM book-keeping, nWF or pWF 
 
 # slim specific variables
 n=$1 # census pop size
@@ -29,7 +29,7 @@ homedir=$storagenode/$run_name
 executable=$storagenode/$run_name/scripts/run_slim_gen_time.sbatch #script to run 
 
 # *** CHANGE SLIM SCRIPT BASED ON COMMAND LINE***
-slimscript=demo_change_${jobname}.slim #slimulation to run
+slimscript=gen_time_nWF.slim #slimulation to run
 
 cpus=1 #number of CPUs to request/use per dataset 
 ram_per_cpu=6G #amount of RAM to request/use per CPU 
@@ -49,7 +49,7 @@ if [ ! -d $logfilesdir ]; then mkdir $logfilesdir; fi
 		--time=4:00:00 \
 		$executable
 		
-		echo submitting job with prob of mortality of $p and N of $n!
+		echo submitting job with an average age of $avg_age and N of $n!
 	done	
 #done
 

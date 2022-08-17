@@ -36,20 +36,20 @@ ram_per_cpu=12G #amount of RAM to request/use per CPU
 
 #---------------------------------------------------------
 #check if logfiles directory has been created in submit dir yet; if not, make one
-if [ ! -d ./$logfilesdir ]; then mkdir ./$logfilesdir; fi
+if [ ! -d $logfilesdir ]; then mkdir $logfilesdir; fi
 
 #submit job to cluster
 	for rep in $(seq 1 $reps) ; do 
 		sbatch --job-name=$jobname \
-		--export=JOBNAME=$jobname,SLIMSCRIPT=$slimscript,HEADER=$header,N=$n,AVG_AGE=$avg_age,REP=$rep,CPUS=$cpus,RUN_NAME=$run_name,DATE=$date,STORAGENODE=$storagenode,OUTDIR=$outdir,LOGFILESDIR=$logfilesdir \
+		--export=JOBNAME=$jobname,SLIMSCRIPT=$slimscript,HEADER=$header,N=$n,AVG_AGE=$avg_age,REP=$rep,REPS=$reps,CPUS=$cpus,RUN_NAME=$run_name,DATE=$date,STORAGENODE=$storagenode,OUTDIR=$outdir,HOMEDIR=$homedir,LOGFILESDIR=$logfilesdir \
 		--cpus-per-task=$cpus \
 		--mem-per-cpu=$ram_per_cpu \
-		--output=./$logfilesdir/${jobname}_${rep}_%A.out \
-		--error=./$logfilesdir/${jobname}_${rep}_%A.err \
+		--output=$logfilesdir/no_bottleneck_${avg_age}_${rep}_%A.out \
+		--error=$logfilesdir/no_bottleneck_${avg_age}_${rep}_%A.err \
 		--time=12:00:00 \
 		$executable
 		
-		echo submitting job with prob of mortality of $p and N of $n!
+		echo submitting job with an average age of $avg_age and N of $n!
 	done	
 #done
 
