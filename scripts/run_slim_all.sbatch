@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# usage: bash run_slim.sh file.slim K-value output
+# call from wrapper script
+# last updated 08/22/2022 by M. Clark
 
 echo "before calling source: $PATH"
 source activate slim
@@ -30,7 +31,7 @@ echo This is rep ${REP} / ${REPS} of ${HEADER}
 echo running with N == ${N}
 echo running with P == ${P}
 echo running with R == ${R}
-echo
+echo running with Q == ${BURN}
 echo
 echo datafiles created by this job will be moved to ${HOMEDIR}/${OUTDIR}
 echo output will use the header $HEADER
@@ -49,7 +50,7 @@ cp ${INDIR}/${SLIMSCRIPT} $TMPDIR
 
 echo I am running ${SLIMSCRIPT} and putting the output in ${OUTDIR} 
 
-slim -d N=${N} -d P=${P} -d R=${R} -d "O='${OUTDIR}/tree_${HEADER}_${REP}.trees'" -d "MI='${OUTDIR}/metaInd_${HEADER}_${REP}.txt'" -d "MA='${OUTDIR}/metaAll_${HEADER}_${REP}.txt'" ${SLIMSCRIPT}
+slim -d N=${N} -d P=${P} -d R=${R} -d Q=${BURN} -d "O='${OUTDIR}/tree_${HEADER}_${REP}.trees'" -d "MI='${OUTDIR}/metaInd_${HEADER}_${REP}.txt'" -d "MA='${OUTDIR}/metaAll_${HEADER}_${REP}.txt'" ${SLIMSCRIPT}
 
 echo done running the simulation
 
