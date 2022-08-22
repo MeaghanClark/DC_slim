@@ -35,7 +35,7 @@ fi
 
 
 #define upper-level variables:
-date=05312022 #$(date +%m%d%Y)
+date=$(date +%m%d%Y)
 header=${jobname}_${avg_age}_${r} # header name, can change
 run_name=DC_slim #label to use on output files
 
