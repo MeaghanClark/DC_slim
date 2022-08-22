@@ -35,10 +35,10 @@ initialize() {
 		writeFile(MA,HeaderLineAll,append=T);
 				
 		// define constants
+		defineConstant("P", (1/(AVG_AGE+1)));	// probability of mortlity
 		defineConstant("K", N*((1-P)/(1-2*P)));	// carrying capacity 
 		defineConstant("B", K/R); // bottleneck carrying capacity
 		//defineConstant("Q", 180000); //when to enact the bottleneck
-		defineConstant("P", (1/(AVG_AGE+1)));	// probability of mortlity
 		defineConstant("END", Q+500); //when to end simultion
 		// define "O" (tree output) and "MI" and "MA"(metadata output) using the command line 
 	}
