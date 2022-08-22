@@ -13,7 +13,6 @@ jobname=$1 #label for SLURM book-keeping, nWF or pWF
 n=$2 # census pop size
 reps=100 # reps of slimulation to run 
 avg_age=$3
-p=1/(avg_age+1) # probability of mortality
 r=$4 # factor to reduce pop size by
 
 # select burn-in based on avg_age (Ne will change with age, so burn in must also change!) burn-in = avg_age * 10 * Ne
@@ -86,7 +85,7 @@ if [ ! -d $logfilesdir ]; then mkdir $logfilesdir; fi
 		--time=$time \
 		$executable
 		
-		echo submitting job with prob of mortality of $p and N of $n to run for $time!
+		echo submitting job with an average age of $avg_age and N of $n to run for $time!
 	done	
 #done
 

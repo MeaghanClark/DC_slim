@@ -29,7 +29,7 @@ echo
 echo
 echo This is rep ${REP} / ${REPS} of ${HEADER}
 echo running with N == ${N}
-echo running with P == ${P}
+echo running with AVG_AGE = ${AVG_AGE}
 echo running with R == ${R}
 echo running with Q == ${BURN}
 echo
@@ -50,7 +50,7 @@ cp ${INDIR}/${SLIMSCRIPT} $TMPDIR
 
 echo I am running ${SLIMSCRIPT} and putting the output in ${OUTDIR} 
 
-slim -d N=${N} -d P=${P} -d R=${R} -d Q=${BURN} -d "O='${OUTDIR}/tree_${HEADER}_${REP}.trees'" -d "MI='${OUTDIR}/metaInd_${HEADER}_${REP}.txt'" -d "MA='${OUTDIR}/metaAll_${HEADER}_${REP}.txt'" ${SLIMSCRIPT}
+slim -d N=${N} -d AVG_AGE=${AVG_AGE} -d R=${R} -d Q=${BURN} -d "O='${OUTDIR}/tree_${HEADER}_${REP}.trees'" -d "MI='${OUTDIR}/metaInd_${HEADER}_${REP}.txt'" -d "MA='${OUTDIR}/metaAll_${HEADER}_${REP}.txt'" ${SLIMSCRIPT}
 
 echo done running the simulation
 
