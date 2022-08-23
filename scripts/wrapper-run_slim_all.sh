@@ -41,7 +41,7 @@ run_name=DC_slim #label to use on output files
 
 # define dirs
 storagenode=/mnt/home/clarkm89 #path to top level of dir where input/output files live
-logfilesdir=$storagenode/$run_name/slim_${date} #name of directory to create and then write log files to
+logfilesdir=$storagenode/$run_name/slim_log_${date} #name of directory to create and then write log files to
 outdir=slim_output_${date}
 indir=$storagenode/$run_name/slim
 homedir=$storagenode/$run_name
