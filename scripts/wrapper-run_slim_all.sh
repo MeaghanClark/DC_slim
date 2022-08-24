@@ -75,7 +75,8 @@ fi
 if [ ! -d $logfilesdir ]; then mkdir $logfilesdir; fi
 
 #submit job to cluster
-	for rep in $(seq 1 $reps) ; do 
+#	for rep in $(seq 1 $reps) ; do 
+	for rep in 49 50 ; do 
 		sbatch --job-name=$jobname \
 		--export=JOBNAME=$jobname,DATE=$date,SLIMSCRIPT=$slimscript,N=$n,AVG_AGE=$avg_age,BURN=$burn,P=$p,R=$r,HEADER=$header,REPS=${reps},REP=$rep,CPUS=$cpus,RUN_NAME=$run_name,STORAGENODE=$storagenode,OUTDIR=$outdir,INDIR=$indir,HOMEDIR=$homedir,LOGFILESDIR=$logfilesdir,EXECUTABLE=$executable \
 		--cpus-per-task=$cpus \
