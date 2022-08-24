@@ -53,7 +53,7 @@ reproduction(NULL) {
 
 
 // fitness scaling
-1:1000000 early() {
+1:3000000 early() {
 	p1.fitnessScaling = (1-P);
 	
 } // end fitness callback
@@ -61,7 +61,7 @@ reproduction(NULL) {
 
 
 // text output
-1:1000000 late(){
+1:3000000 late(){
 	if(exists("slimgui")) {
 //	//troubleshooting
 //		catn("actual new Nc " + p1.individualCount);
@@ -69,12 +69,13 @@ reproduction(NULL) {
 //		catn("---");
 //		catn();
 	//	
-		if (sim.generation % 10 == 0){ //every ten generations
+		if (sim.generation % 100 == 0){ //every ten generations
+			sample=sample(p1.individuals, 1000);
 			catn("Generation " + sim.generation + ": ");
 			catn("No. Individuals: " + p1.individualCount);
 			catn("Average age: " + mean(p1.individuals.age));
 			catn("Age range: " + range(p1.individuals.age)[0] + ", " + range(p1.individuals.age)[1]);
-			catn("Heterozygosity: " + calcHeterozygosity(p1.individuals.genomes));
+			catn("Heterozygosity: " + calcHeterozygosity(sample.genomes));
 
 			catn("---");
 		}
@@ -82,12 +83,13 @@ reproduction(NULL) {
 	//
 	if(!exists("slimgui")) {
 		if (sim.generation % 100 == 0){ //every ten generations
-			OutputLine = paste(sim.generation, p1.individualCount, mean(p1.individuals.age), range(p1.individuals.age)[1], calcHeterozygosity(p1.individuals.genomes), sep = "\t");
+			sample=sample(p1.individuals, 1000);
+			OutputLine = paste(sim.generation, p1.individualCount, mean(p1.individuals.age), range(p1.individuals.age)[1], calcHeterozygosity(sample.genomes), sep = "\t");
 			writeFile(M, OutputLine, append = T);
 		}
 	}
 }
 
-1000000 late() {
+3000000 late() {
 	sim.simulationFinished();
 } 
