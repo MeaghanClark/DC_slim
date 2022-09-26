@@ -1,6 +1,6 @@
 #!/bin/bash
 		
-# Last updated 08/15/2022 by MI Clark, script format by R Toczydlowski 
+# Last updated 08/24/2022 by MI Clark, script format by R Toczydlowski 
 
 #  run from project directory (where you want output directory to be created)
 
@@ -46,7 +46,7 @@ if [ ! -d $logfilesdir ]; then mkdir $logfilesdir; fi
 		--mem-per-cpu=$ram_per_cpu \
 		--output=$logfilesdir/no_bottleneck_${avg_age}_${rep}_%A.out \
 		--error=$logfilesdir/no_bottleneck_${avg_age}_${rep}_%A.err \
-		--time=24:00:00 \
+		--time=168:00:00 \
 		$executable
 		
 		echo submitting job with an average age of $avg_age and N of $n!
