@@ -1,0 +1,128 @@
+
+// set up a neutral nonWF simulation
+initialize() {
+	// define model characteristics 
+	initializeSLiMModelType("nonWF");
+	initializeSLiMOptions(keepPedigrees = T, preventIncidentalSelfing=T);
+		
+	if(exists("slimgui")) { 
+		// define constants
+		defineConstant("N", 1000); //desired census population size
+		defineConstant("AVG_AGE", 2); // define average age
+		defineConstant("P", (1/(AVG_AGE+1))); // probability of mortaility, must be less than 0.5, expected lifespan will be (1-P)/P
+		defineConstant("K", N*((1-P)/(1-2*P)));	// carrying capacity 
+
+		// set up output
+		// family size information
+		defineConstant("MA", "./DC_slim/Ne_test_output/family_size.csv");
+		HeaderLineAll = "generation\tparentid\tparentAge\toffspringCount";
+		writeFile(MA,HeaderLineAll,append=T);
+		
+		// tagged individuals 
+		defineConstant("MI", "./DC_slim/Ne_test_output/tagged_inds.csv");
+
+
+	}
+	if(!exists("slimgui")) { 
+		// define constants 
+		// defineConstant("N", 1000); // desired census population size set via command line
+		// defineConstant("AVG_AGE", 2); // define average age set via command line
+		defineConstant("P", (1/(AVG_AGE+1))); // probability of mortaility, must be less than 0.5, expected lifespan will be (1-P)/P
+		defineConstant("K", N*((1-P)/(1-2*P)));	// carrying capacity 
+
+		// set up output
+		// family size information
+		// defineConstant("MA", "./DC_slim/Ne_test_output/family_size.csv"); // set via command line
+		HeaderLineAll = "generation\tparentid\tparentAge\toffspringCount";
+		writeFile(MA,HeaderLineAll,append=T);
+		
+		// tagged individuals 
+		// defineConstant("MI", "./DC_slim/Ne_test_output/tagged_inds.csv"); // set via command line
+	}
+
+	// set up genomes
+	initializeMutationType("m1", 0.5, "f", 0.0); // neutral mutations, which are allowed to fix
+	initializeGenomicElementType("g1", m1, 1.0);
+	initializeGenomicElement(g1, 0, 1e2); 
+	initializeMutationRate(0); // mutations will be added in msprime
+	initializeRecombinationRate(1e-8);
+} // end initialize call 
+
+
+reproduction(NULL) {
+// Scaled reproduction calls		
+	if (individual.age > 0) { 
+		// before bottleneck
+		prob_offspring = max(0.0, (1-p1.individualCount/K));	 // 1- (N/K)
+		
+		offspring_count = rbinom(1, 1, prob_offspring);
+		
+		// generate offspring
+		if (offspring_count > 0) {
+			mate = subpop.sampleIndividuals(1, exclude=individual, minAge=1);
+			subpop.addCrossed(individual, mate);
+			
+			// output parental age information
+			//if(sim.generation > 1000) {
+			//	OutputLine = paste(sim.generation, individual.age, mate.age, sep = "\t");
+			//	writeFile(MA, OutputLine, append = T);
+			//}
+			if(sim.generation > 1000){
+				if(individual.tag == 1) {
+					OutputLine = paste(sim.generation, individual.pedigreeID, individual.age, offspring_count, sep = "\t");
+					writeFile(MA, OutputLine, append = T);
+					catn("oh hey a reproduction event we care about!");
+				} 
+				if(mate.tag == 1) {
+					OutputLine = paste(sim.generation, mate.pedigreeID, mate.age, offspring_count, sep = "\t");
+					writeFile(MA, OutputLine, append = T);
+					catn("oh hey a reproduction event we care about!");
+				}
+			} // record reproduction of tagged individuals
+		}
+	}
+} // end reproduction callback
+
+
+// create an initial population of N individuals
+1 early() {
+	sim.addSubpop("p1", size=asInteger(K));
+	p1.individuals.age = rdunif(asInteger(K), min=0, max=39);
+	p1.individuals.tag = 0; 
+}
+
+
+1001:12000 late(){
+		p1.individuals[p1.individuals.age == 0].tag=0;
+		cohort = p1.individuals[p1.individuals.tag == 1];
+		catn(length(cohort) + " individuals from our cohort survive");
+}
+
+// fitness scaling
+
+early() {
+	p1.fitnessScaling = (1-P);
+} // end fitness scaling
+
+
+
+1000:12000 early() { // measure cohort size
+	cohort = p1.individuals[p1.individuals.age == 0];
+	catn(length(cohort));
+
+	
+} // cohort size
+
+1000 early(){
+ 		p1.individuals.tag = 0;
+		cohort = p1.individuals[p1.individuals.age == 0];
+		cohort.tag = 1;
+		catn("We tagged " + length(cohort) + " individuals");
+		OutputLine = paste(cohort, sep = "\n");
+		writeFile(MI, OutputLine, append = T);
+}
+
+
+12000 late() {
+	sim.simulationFinished();
+}  // end simulation
