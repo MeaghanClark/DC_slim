@@ -131,7 +131,7 @@ s2 179800:180000 late(){
 
 // during bottleneck
 s3 180001:180022 late(){
-	if (sim.generation % 5 == 0){ //every ten generations
+	if (sim.generation % 5 == 0){ //every five generations
 		// individual output
 		sample = p1.sampleIndividuals(100, replace = F); // if Nc < 100, will sample Nc individuals
 		sim.treeSeqRememberIndividuals(sample);
