@@ -1,6 +1,6 @@
 #!/bin/bash
 		
-# Last updated 08/22/2022 by MI Clark, script format by R Toczydlowski 
+# Last updated 10/26/2022 by MI Clark, script format by R Toczydlowski 
 
 #  run from project directory (where you want output directory to be created)
 
@@ -19,16 +19,16 @@ r=$4 # factor to reduce pop size by
 	# Ne estimated in estimate_Ne.R
 if [[ $avg_age == 2 ]]
 then
-	burn=127423
+	burn=126260
 elif [[ $avg_age == 5 ]]
 then
-	burn=279830
+	burn=315890
 elif [[ $avg_age == 10 ]] 
 then
-	burn=530274
+	burn=635576
 elif [[ $avg_age == 20 ]] 
 then
-	burn=1023566
+	burn=1264558
 else
 	echo average age is invalid
 fi
@@ -75,8 +75,7 @@ fi
 if [ ! -d $logfilesdir ]; then mkdir $logfilesdir; fi
 
 #submit job to cluster
-#	for rep in $(seq 1 $reps) ; do 
-	for rep in 49 50 ; do 
+	for rep in $(seq 1 $reps) ; do 
 		sbatch --job-name=$jobname \
 		--export=JOBNAME=$jobname,DATE=$date,SLIMSCRIPT=$slimscript,N=$n,AVG_AGE=$avg_age,BURN=$burn,P=$p,R=$r,HEADER=$header,REPS=${reps},REP=$rep,CPUS=$cpus,RUN_NAME=$run_name,STORAGENODE=$storagenode,OUTDIR=$outdir,INDIR=$indir,HOMEDIR=$homedir,LOGFILESDIR=$logfilesdir,EXECUTABLE=$executable \
 		--cpus-per-task=$cpus \

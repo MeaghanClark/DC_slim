@@ -11,7 +11,7 @@
 # slim specific variables 
 jobname=Ne_test
 n=$1 # census pop size
-reps=10 # reps of slimulation to run 
+reps=100 # reps of slimulation to run 
 avg_age=$2
 
 # define upper-level variables:
