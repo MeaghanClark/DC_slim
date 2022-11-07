@@ -16,7 +16,7 @@ avg_age=$3
 
 # define upper-level variables:
 date=$(date +%m%d%Y)
-header=${jobname}_no_bln_${avg_age} # header name, can change
+header=${jobname}_no_bln_${n}_${avg_age} # header name, can change
 run_name=DC_slim #label to use on output files
 
 # define dirs
