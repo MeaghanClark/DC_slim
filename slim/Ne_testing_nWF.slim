@@ -7,19 +7,22 @@ initialize() {
 		
 	if(exists("slimgui")) { 
 		// define constants
-		defineConstant("N", 1000); //desired census population size
-		defineConstant("AVG_AGE", 2); // define average age
+		defineConstant("N", 10000); //desired census population size
+		defineConstant("AVG_AGE", 35); // define average age
 		defineConstant("P", (1/(AVG_AGE+1))); // probability of mortaility, must be less than 0.5, expected lifespan will be (1-P)/P
 		defineConstant("K", N*((1-P)/(1-2*P)));	// carrying capacity 
 
 		// set up output
 		// family size information
-		defineConstant("MA", "./DC_slim/Ne_test_output/family_size.csv");
+		defineConstant("MA", "./DC_slim/Ne_test_output/Ne_test_35_10000_family_size.txt"); // CHANGE
 		HeaderLineAll = "generation\tparentid\tparentAge\toffspringCount";
 		writeFile(MA,HeaderLineAll,append=T);
 		
 		// tagged individuals 
-		defineConstant("MI", "./DC_slim/Ne_test_output/tagged_inds.csv");
+		defineConstant("MI", "./DC_slim/Ne_test_output/Ne_test_35_10000_tagged_inds.txt"); //CHANGE
+		
+		// cohort size
+		defineConstant("CO", "./DC_slim/Ne_test_output/cohort_size_35_10000.txt"); // CHANGE
 
 
 	}
@@ -92,7 +95,7 @@ reproduction(NULL) {
 }
 
 
-1001:12000 late(){
+1001:2500 late(){
 		p1.individuals[p1.individuals.age == 0].tag=0;
 		cohort = p1.individuals[p1.individuals.tag == 1];
 		catn(length(cohort) + " individuals from our cohort survive");
@@ -105,10 +108,9 @@ early() {
 } // end fitness scaling
 
 
-
-1000:12000 early() { // measure cohort size
+1000:2500 early() { 
 	cohort = p1.individuals[p1.individuals.age == 0];
-	catn(length(cohort));
+	writeFile(CO, asString(length(cohort)), append = T);
 
 	
 } // cohort size
@@ -123,6 +125,6 @@ early() {
 }
 
 
-12000 late() {
+2500 late() {
 	sim.simulationFinished();
 }  // end simulation
