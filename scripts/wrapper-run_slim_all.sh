@@ -19,16 +19,20 @@ r=$4 # factor to reduce pop size by
 	# Ne estimated in estimate_Ne.R
 if [[ $avg_age == 2 ]]
 then
-	burn=126260
+#	burn=126260
+	burn=126300
 elif [[ $avg_age == 5 ]]
 then
-	burn=315890
+#	burn=315890
+	burn=315900
 elif [[ $avg_age == 10 ]] 
 then
-	burn=635576
+#	burn=635576
+	burn=635600
 elif [[ $avg_age == 20 ]] 
 then
-	burn=1264558
+#	burn=1264558
+	burn=1264600
 else
 	echo average age is invalid
 fi
