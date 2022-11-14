@@ -1,6 +1,6 @@
 #!/bin/bash
 		
-# Last updated 04/28/2022 by MI Clark, script format by R Toczydlowski 
+# Last updated 11/14/2022 by MI Clark, script format by R Toczydlowski 
 
 #  run from project directory (where you want output directory to be created)
 
@@ -29,12 +29,12 @@ fi
 # define upper level variables:
 jobname=run-trees #label for SLURM book-keeping 
 run_name=DC_slim #label to use on output files
-date=05312022 #$(date +%m%d%Y)
-header=${model}_${date} # from input when running wrapper-run_slim_all.sh
+date=11082022 #$(date +%m%d%Y)
+header=${model}_${avg_age} # from input when running wrapper-run_slim_all.sh
 
 # define dirs:
 storagenode=/mnt/home/clarkm89 #path to top level of dir where input/output files live
-logfilesdir=$storagenode/$run_name/py_logfiles_${date} #CHANGED name of directory to create and then write log files to
+logfilesdir=$storagenode/$run_name/py_logfiles_${date} # name of directory to create and then write log files to
 indir=$storagenode/$run_name/slim_output_05312022 # where tree files live
 pythondir=$storagenode/$run_name/scripts # where the python file lives
 outdir=het_output_${date}
@@ -42,13 +42,12 @@ homedir=$storagenode/$run_name/
 
 # define files
 executable=$storagenode/$run_name/scripts/run_processing.sbatch #script to run 
-treeprocess=tree_2_rel.py #processing python script # CHANGED TO JUST RELATEDNESS SCRIPT
-# dataprefix=test
+treeprocess=tree_2_sum.py #processing python script 
 
 # running variables
 cpus=1 #number of CPUs to request/use per dataset 
 ram_per_cpu=4G #amount of RAM to request/use per CPU 
-reps=100 # 100 CHANGED
+reps=1 # testing with 1 rep, should be 100 
 
 #---------------------------------------------------------
 #check if logfiles directory has been created in submit dir yet; if not, make one
@@ -57,10 +56,10 @@ if [ ! -d $logfilesdir ]; then mkdir $logfilesdir; fi
     #submit job to cluster
 for r in 2 10 100; do
 	for rep in $(seq 1 $reps) ; do 
-        	filename=tree_${model}_${r}_${rep}.trees
-            metafile=metaInd_${model}_${r}_${rep}.txt
+        	filename=tree_${model}_${avg_age}_${r}_${rep}.trees
+            metafile=metaInd_${model}_${avg_age}_${r}_${rep}.txt
             
-            output_file=${homedir}${outdir}/${model}_${r}_${rep}_${date}_relatedness.txt
+            output_file=${homedir}${outdir}/${model}_${avg_age}_${r}_${rep}_${date}_relatedness.txt
 
 		if [ ! -f "$output_file" ] # don't start job if output files (pairwise pi specifically) already exists
 		then 
@@ -71,8 +70,8 @@ for r in 2 10 100; do
 			--export=JOBNAME=$jobname,TREEPROCESS=$treeprocess,MODEL=$model,FILENAME=$filename,METAFILE=$metafile,REP=$rep,CPUS=$cpus,RUN_NAME=$run_name,STORAGENODE=$storagenode,INDIR=$indir,OUTDIR=$outdir,HOMEDIR=$homedir,PYTHONDIR=$pythondir,MU=$mu,R=$r,AVG_AGE=$avg_age,GEN=$gen,DATE=$date,EXECUTABLE=$executable,HEADER=$header,REPS=$reps,LOGFILESDIR=$logfilesdir \
 			--cpus-per-task=$cpus \
 			--mem-per-cpu=$ram_per_cpu \
-			--output=$logfilesdir/${header}_${r}_${rep}_%A.out \
-			--error=$logfilesdir/${header}_${r}_${rep}_%A.err \
+			--output=$logfilesdir/${header}_${r}_${rep}_${date}_%A.out \
+			--error=$logfilesdir/${header}_${r}_${rep}_${date}_%A.err \
 			--time=4:00:00 \
 			$executable
 		else
