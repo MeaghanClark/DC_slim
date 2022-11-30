@@ -136,9 +136,9 @@ for n in [*range(0, 24, 1)]:
         
     # make list of nodes for individuals sampled in slim
     ind_nodes = []
-    for i in samp_pdids.to_numpy():                          # for each individual sampled in slim
-        focal_ind = mts.individual(x.index(i))               # get inidvidual id by matching pedigree id to tskit id
-        ind_nodes.append(focal_ind.nodes)                    # make list of nodes
+    for i in samp_pdids.to_numpy():                            # for each individual sampled in slim
+        focal_ind = mts.individual(int(alive[np.where(x==i)])) # get inidvidual id by matching pedigree id to tskit id
+        ind_nodes.append(focal_ind.nodes)                      # make list of nodes
     print(f"length of ind_nodes is {len(ind_nodes)}")
     
         # make vector of per-individual heterozygosities:

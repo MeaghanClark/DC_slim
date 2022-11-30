@@ -13,7 +13,7 @@ initialize() {
 		defineConstant("K", N*((1-P)/(1-2*P)));	// carrying capacity 
 		defineConstant("R", 75); // strength of bottleneck
 		defineConstant("B", K/R); // bottleneck carrying capacity
-		defineConstant("Q", 5000); //when to enact the bottleneck, usually 180000
+		defineConstant("Q", 5000); //when to enact the bottleneck, depends on average age
 		defineConstant("END", Q+500); //when to end simultion
 	
 		defineConstant("MA", "./DC_slim/het_test_output/Meta_all.csv"); 
