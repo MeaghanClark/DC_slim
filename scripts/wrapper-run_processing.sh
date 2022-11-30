@@ -14,15 +14,11 @@ mu=1e-8
 
 if [[ $model == nWF ]]
 then
-	if [[ $avg_age == 2 ]]
-		gen=2.999165
-	if [[ $avg_age == 5 ]]
-		gen=6.006728
-	if [[ $avg_age == 10 ]] 
-		gen=11.01567
-	if [[ $avg_age == 20 ]] 
-		gen=20.97633
-else
+	if [[ $avg_age == 2 ]]; then gen=2.999165; fi
+	if [[ $avg_age == 5 ]]; then gen=6.006728; fi 
+	if [[ $avg_age == 10 ]]; then gen=11.01567; fi 
+	if [[ $avg_age == 20 ]]; then gen=20.97633; fi 
+else 
 	gen=1.00
 fi
 
@@ -35,7 +31,7 @@ header=${model}_${avg_age} # from input when running wrapper-run_slim_all.sh
 # define dirs:
 storagenode=/mnt/home/clarkm89 #path to top level of dir where input/output files live
 logfilesdir=$storagenode/$run_name/py_logfiles_${date} # name of directory to create and then write log files to
-indir=$storagenode/$run_name/slim_output_05312022 # where tree files live
+indir=$storagenode/$run_name/slim_output_${date} # where tree files live
 pythondir=$storagenode/$run_name/scripts # where the python file lives
 outdir=het_output_${date}
 homedir=$storagenode/$run_name/
@@ -47,7 +43,7 @@ treeprocess=tree_2_sum.py #processing python script
 # running variables
 cpus=1 #number of CPUs to request/use per dataset 
 ram_per_cpu=4G #amount of RAM to request/use per CPU 
-reps=1 # testing with 1 rep, should be 100 
+reps=100 # testing with 1 rep, should be 100 
 
 #---------------------------------------------------------
 #check if logfiles directory has been created in submit dir yet; if not, make one
@@ -56,10 +52,10 @@ if [ ! -d $logfilesdir ]; then mkdir $logfilesdir; fi
     #submit job to cluster
 for r in 2 10 100; do
 	for rep in $(seq 1 $reps) ; do 
-        	filename=tree_${model}_${avg_age}_${r}_${rep}.trees
-            metafile=metaInd_${model}_${avg_age}_${r}_${rep}.txt
+             filename=tree_${model}_${avg_age}_${r}_${rep}.trees
+             metafile=metaInd_${model}_${avg_age}_${r}_${rep}.txt
             
-            output_file=${homedir}${outdir}/${model}_${avg_age}_${r}_${rep}_${date}_relatedness.txt
+             output_file=${homedir}${outdir}/${model}_${avg_age}_${r}_${rep}_${date}_relatedness.txt
 
 		if [ ! -f "$output_file" ] # don't start job if output files (pairwise pi specifically) already exists
 		then 
@@ -83,4 +79,3 @@ done
 echo ----------------------------------------------------------------------------------------
 echo My executable is $executable		
 	
-

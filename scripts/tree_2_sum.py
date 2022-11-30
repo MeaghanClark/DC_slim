@@ -42,8 +42,9 @@ print(f"mu is {mu}")
 gen_time = sys.argv[6]
 print(f"gen time is {gen_time}")
 
-avg_age = sys.argv[7]
+avg_age = int(sys.argv[7])
 print(f"average age is {avg_age}")
+print(f"the type of avg_age is {type(avg_age)}")
 
 # read in treefile 
 orig_ts = pyslim.load(treefile)
@@ -82,6 +83,11 @@ print(sampling)
 
 # make cycle key
 # needs to change for different lifespans
+# debug line: 
+
+print(f"average age is {avg_age}")
+print(f"the type of avg_age is {type(avg_age)}")
+
 if avg_age == 2: 
     burn = 126300
 elif avg_age == 5: 
@@ -90,6 +96,8 @@ elif avg_age == 10:
     burn = 635600
 elif avg_age == 20: 
     burn = 1264600
+
+print(f"Using a burn-in time of {burn}")
 
 before = range(burn-200, burn, 50)
 during = range(burn, burn+50, 5)
