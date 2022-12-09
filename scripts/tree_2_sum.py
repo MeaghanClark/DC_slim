@@ -172,17 +172,19 @@ for n in [*range(0, 24, 1)]:
         
     # make matrix of genetic relatedness for this sampling point
     ind_rel = mts.divergence(ind_nodes, indexes=pairs)
-    rel = np.append(rel, str(ind_rel)) # convert relatedness into a string so there aren't issue with different numbers of individuals
-    print(f"there are {len(ind_rel)} relatedness values")
+    rel = np.append(rel, ind_rel) # convert relatedness into a string so there aren't issue with different numbers of individuals
+    print(f"there are {ind_rel.size} relatedness values")
     print(f"done calculating relatedness for sampling time {n}")
     print('Timestamp: {:%H:%M:%S}'.format(datetime.datetime.now()))
     
     # make matrix of pairwise pi for this sampling point
     ind_pi = mts.divergence(ind_nodes, indexes=pairs)
-    pi = np.append(pi, str(ind_pi)) # convert relatedness into a string so there aren't issue with different numbers of individuals
+    pi = np.append(pi, ind_pi) # convert relatedness into a string so there aren't issue with different numbers of individuals
     
     print(f"done calculating pi for sampling time {n}")
     print('Timestamp: {:%H:%M:%S}'.format(datetime.datetime.now()))
+    print(f"time is {n}, length of pi array is {pi.size}, length of het is {len(het)}")
+
 
 # Output data for all sampling points
 # assemble into dictionary for het data
