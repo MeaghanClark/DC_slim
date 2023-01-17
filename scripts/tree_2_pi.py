@@ -111,17 +111,16 @@ convert_time = pd.DataFrame({'tskit_time':sampling, 'slim_time':cycles}, columns
 # initalize data lists
 
 # object to store overall pi and upper and lower 10% pi
-pi_data_bins = pd.DataFrame(columns = ['timepoint', 'overall_pi', 'lower_pi', 'upper_pi'])
+pi_data_bins = pd.DataFrame(columns = ['timepoint', 'overall_pi', 'lower_pi', 'upper_pi', 'overall_theta', 'lower_theta', 'upper_theta'])
 
 # object to store cohort pi
-pi_by_cohort = pd.DataFrame(columns = ['timepoint', 'age', 'cohort_pi'])
-
+pi_by_cohort = pd.DataFrame(columns = ['timepoint', 'age', 'cohort_pi', 'cohort_theta'])
 
 # loop through time points to calculate pi using tskit
 
 for n in [*range(0, 24, 1)]: 
     # initialize data object to store pi values that are calculated once per time point
-    binned_pi = pd.DataFrame(columns = ['timepoint', 'overall_pi', 'lower_pi', 'upper_pi'])
+    binned_pi = pd.DataFrame(columns = ['timepoint', 'overall_pi', 'lower_pi', 'upper_pi''overall_theta', 'lower_theta', 'upper_theta'])
     
     # define tskit time
     tskit_time = convert_time.iloc[n][0]
@@ -151,12 +150,13 @@ for n in [*range(0, 24, 1)]:
     print(f"length of ind_nodes is {len(ind_nodes)}")
     all_nodes = [item for sublist in ind_nodes for item in sublist]
     binned_pi.loc[0, 'overall_pi'] = mts.diversity(sample_sets = all_nodes) # calculate pi and save to dataframe
-            
+    binned_pi.loc[0, 'overall_theta'] = mts.segregating_sites(sample_sets = all_nodes) / np.sum([1/i for i in np.arange(1,len(all_nodes))])
+
     #### measure overall pi within age cohorts 
     
     unique_ages = list(set(all_ages))
     
-    cohort_pi_df = pd.DataFrame(index=[*range(0, len(unique_ages), 1)], columns = ['timepoint', 'age', 'cohort_pi'])
+    cohort_pi_df = pd.DataFrame(index=[*range(0, len(unique_ages), 1)], columns = ['timepoint', 'age', 'cohort_pi', 'cohort_theta'])
     pi_from_cohorts = [] 
     for a in [*range(0, len(unique_ages), 1)]:
         cohort_nodes = [] 
@@ -168,9 +168,11 @@ for n in [*range(0, 24, 1)]:
         cohort_pi_df.loc[a, 'timepoint'] = n
         cohort_pi_df.loc[a, 'age'] = unique_ages[a] # record focal age in dataframe
         cohort_pi_df.loc[a, 'cohort_pi'] = mts.diversity(sample_sets = cohort_nodes) # calculate pi and save to dataframe
-        
+        cohort_pi_df.loc[a, 'cohort_theta'] = mts.segregating_sites(sample_sets = cohort_nodes) / np.sum([1/i for i in np.arange(1,len(cohort_nodes))])
+
     # end product: cohort_pi_df
-    
+
+  
     #### measure overall pi within age bins
 
     meta_sorted = meta.sort_values(by='age', ascending=True) # sort metadata by age
@@ -194,7 +196,8 @@ for n in [*range(0, 24, 1)]:
         lower_nodes.append(focal_ind.nodes.tolist())
     lower_nodes = [item for sublist in lower_nodes for item in sublist] 
     binned_pi.loc[0, 'lower_pi'] = mts.diversity(sample_sets = lower_nodes) # calculate pi and save to dataframe
-    
+    binned_pi.loc[0, 'lower_theta'] = mts.segregating_sites(sample_sets = lower_nodes) / np.sum([1/i for i in np.arange(1,len(lower_nodes))])
+
     # upper 10%
     upper_ids = upper_10_percent["pedigree_id"] 
     upper_nodes = []
@@ -203,7 +206,8 @@ for n in [*range(0, 24, 1)]:
         upper_nodes.append(focal_ind.nodes.tolist())
     upper_nodes = [item for sublist in upper_nodes for item in sublist] 
     binned_pi.loc[0, 'upper_pi'] = mts.diversity(sample_sets = upper_nodes) # calculate pi and save to dataframe
-        
+    binned_pi.loc[0, 'upper_theta'] = mts.segregating_sites(sample_sets = upper_nodes) / np.sum([1/i for i in np.arange(1,len(upper_nodes))])
+
     #### add information from this timepoint to final dataframes
     binned_pi.loc[0, 'timepoint'] = n
 
