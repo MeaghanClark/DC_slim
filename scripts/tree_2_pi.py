@@ -7,10 +7,11 @@ import pandas as pd
 import random
 import datetime # FOR DEBUGGING 
 import csv
+import math
 np.set_printoptions(threshold=sys.maxsize)
 
 # uncomment these lines when running from command line
-# sys.argv = ['tree_processing.py', '../slim_output_11082022/tree_nWF_5_10_89.trees','../slim_output_11082022/metaInd_nWF_5_10_89.txt', '/Users/meaghan/Desktop/DC_slim/het', '11_8_test', 1e-8, 5, 5]
+sys.argv = ['tree_processing.py', '../slim_output_11082022/tree_nWF_5_10_89.trees','../slim_output_11082022/metaInd_nWF_5_10_89.txt', '/Users/meaghan/Desktop/DC_slim/het', '11_8_test', 1e-8, 5, 5]
 # arguments: 
 # [0] -- python script name
 # [1] -- tree file
@@ -111,16 +112,17 @@ convert_time = pd.DataFrame({'tskit_time':sampling, 'slim_time':cycles}, columns
 # initalize data lists
 
 # object to store overall pi and upper and lower 10% pi
-pi_data_bins = pd.DataFrame(columns = ['timepoint', 'overall_pi', 'lower_pi', 'upper_pi', 'overall_theta', 'lower_theta', 'upper_theta'])
+pi_data_bins = pd.DataFrame(columns = ['timepoint', 'overall_pi', 'lower_pi', 'lower_pi_sd', 'upper_pi', 'upper_pi_sd', 'overall_theta', 'lower_theta', 'lower_theta_sd', 'upper_theta', 'upper_theta_sd'])
 
 # object to store cohort pi
 pi_by_cohort = pd.DataFrame(columns = ['timepoint', 'age', 'cohort_pi', 'cohort_theta'])
 
 # loop through time points to calculate pi using tskit
 
+#for n in [*range(0, 24, 1)]: 
 for n in [*range(0, 24, 1)]: 
     # initialize data object to store pi values that are calculated once per time point
-    binned_pi = pd.DataFrame(columns = ['timepoint', 'overall_pi', 'lower_pi', 'upper_pi''overall_theta', 'lower_theta', 'upper_theta'])
+    binned_pi = pd.DataFrame(columns = ['timepoint', 'overall_pi', 'lower_pi', 'lower_pi_sd', 'upper_pi', 'upper_pi_sd', 'overall_theta', 'lower_theta', 'lower_theta_sd', 'upper_theta', 'upper_theta_sd'])
     
     # define tskit time
     tskit_time = convert_time.iloc[n][0]
@@ -172,7 +174,6 @@ for n in [*range(0, 24, 1)]:
 
     # end product: cohort_pi_df
 
-  
     #### measure overall pi within age bins
 
     meta_sorted = meta.sort_values(by='age', ascending=True) # sort metadata by age
@@ -197,6 +198,17 @@ for n in [*range(0, 24, 1)]:
     lower_nodes = [item for sublist in lower_nodes for item in sublist] 
     binned_pi.loc[0, 'lower_pi'] = mts.diversity(sample_sets = lower_nodes) # calculate pi and save to dataframe
     binned_pi.loc[0, 'lower_theta'] = mts.segregating_sites(sample_sets = lower_nodes) / np.sum([1/i for i in np.arange(1,len(lower_nodes))])
+    
+    # get uncertainty for lower 10% 
+    pi_uncert = []
+    theta_uncert = [] 
+    for i in [*range(0, 10, 1)]:
+        sample = random.sample(lower_nodes, 2)
+        pi_uncert.append(mts.diversity(sample_sets = sample))
+        theta_uncert.append(mts.segregating_sites(sample_sets = sample) / np.sum([1/i for i in np.arange(1,len(sample))]))
+    
+    binned_pi.loc[0, 'lower_pi_sd'] = math.sqrt(sum((pi_uncert - binned_pi.loc[0, 'lower_pi'])**2)/len(pi_uncert))
+    binned_pi.loc[0, 'lower_theta_sd'] = math.sqrt(sum((theta_uncert - binned_pi.loc[0, 'lower_theta'])**2)/len(theta_uncert))
 
     # upper 10%
     upper_ids = upper_10_percent["pedigree_id"] 
@@ -208,13 +220,25 @@ for n in [*range(0, 24, 1)]:
     binned_pi.loc[0, 'upper_pi'] = mts.diversity(sample_sets = upper_nodes) # calculate pi and save to dataframe
     binned_pi.loc[0, 'upper_theta'] = mts.segregating_sites(sample_sets = upper_nodes) / np.sum([1/i for i in np.arange(1,len(upper_nodes))])
 
+    # get uncertainty for uppper 10% 
+    pi_uncert = []
+    theta_uncert = [] 
+    for i in [*range(0, 5, 1)]:
+        sample = random.sample(upper_nodes, 2)
+        pi_uncert.append(mts.diversity(sample_sets = sample))
+        theta_uncert.append(mts.segregating_sites(sample_sets = sample) / np.sum([1/i for i in np.arange(1,len(sample))]))
+    
+    binned_pi.loc[0, 'upper_pi_sd'] = math.sqrt(sum((pi_uncert - binned_pi.loc[0, 'upper_pi'])**2)/len(pi_uncert))
+    binned_pi.loc[0, 'upper_theta_sd'] = math.sqrt(sum((theta_uncert - binned_pi.loc[0, 'upper_theta'])**2)/len(theta_uncert))
+    
     #### add information from this timepoint to final dataframes
     binned_pi.loc[0, 'timepoint'] = n
 
     pi_data_bins = pd.concat([pi_data_bins, binned_pi], axis=0)
 
-    # object to store cohort pi
+    ## object to store cohort pi
     pi_by_cohort = pd.concat([pi_by_cohort, cohort_pi_df], axis = 0)
+
 
 # save dataframes: pi_data_bins, pi_by_cohort
 
