@@ -38,7 +38,7 @@ homedir=$storagenode/$run_name/
 
 # define files
 executable=$storagenode/$run_name/scripts/run_processing.sbatch #script to run 
-treeprocess=tree_2_sum.py #processing python script 
+treeprocess=tree_2_pi.py #processing python script 
 
 # running variables
 cpus=1 #number of CPUs to request/use per dataset 
@@ -55,7 +55,7 @@ for r in 2 10 100; do
              filename=tree_${model}_${avg_age}_${r}_${rep}.trees
              metafile=metaInd_${model}_${avg_age}_${r}_${rep}.txt
             
-             output_file=${homedir}${outdir}/${model}_${avg_age}_${r}_${rep}_${date}_relatedness.txt
+             output_file=${homedir}${outdir}/${model}_${avg_age}_${r}_${rep}_${date}_pi_bins.txt
 
 		if [ ! -f "$output_file" ] # don't start job if output files (pairwise pi specifically) already exists
 		then 
