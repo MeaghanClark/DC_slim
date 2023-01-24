@@ -119,8 +119,7 @@ pi_by_cohort = pd.DataFrame(columns = ['timepoint', 'age', 'cohort_pi', 'cohort_
 
 # loop through time points to calculate pi using tskit
 
-#for n in [*range(0, 24, 1)]: 
-for n in [*range(0, 2, 1)]: 
+for n in [*range(0, 24, 1)]: 
 
     # initialize data object to store pi values that are calculated once per time point
     binned_pi = pd.DataFrame(columns = ['timepoint', 'overall_pi', 'lower_pi', 'upper_pi', 'overall_theta', 'lower_theta', 'upper_theta', 'theta_bootstraps'])
