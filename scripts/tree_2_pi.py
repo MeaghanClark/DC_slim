@@ -122,7 +122,7 @@ pi_by_cohort = pd.DataFrame(columns = ['timepoint', 'age', 'cohort_pi', 'cohort_
 for n in [*range(0, 24, 1)]: 
 
     # initialize data object to store pi values that are calculated once per time point
-    binned_pi = pd.DataFrame(columns = ['timepoint', 'overall_pi', 'lower_pi', 'upper_pi', 'overall_theta', 'lower_theta', 'upper_theta', 'theta_bootstraps'])
+    binned_pi = pd.DataFrame(columns = ['timepoint', 'overall_pi', 'lower_pi', 'upper_pi', 'overall_theta', 'lower_theta', 'upper_theta', 'theta_bootstraps_lower', 'theta_bootstraps_upper'])
     
     # define tskit time
     tskit_time = convert_time.iloc[n][0]
@@ -156,21 +156,21 @@ for n in [*range(0, 24, 1)]:
 
     #### measure overall pi within age cohorts 
     
-    unique_ages = list(set(all_ages))
-    
-    cohort_pi_df = pd.DataFrame(index=[*range(0, len(unique_ages), 1)], columns = ['timepoint', 'age', 'cohort_pi', 'cohort_theta'])
-    pi_from_cohorts = [] 
-    for a in [*range(0, len(unique_ages), 1)]:
-        cohort_nodes = [] 
-        ids = meta[meta['age'] == unique_ages[a]][["pedigree_id"]]
-        for i in ids.to_numpy():
-            focal_ind = mts.individual(int(alive[np.where(x==i)])) # get inidvidual id by matching pedigree id to tskit id
-            cohort_nodes.append(focal_ind.nodes.tolist())   # make list of nodes
-        cohort_nodes = [item for sublist in cohort_nodes for item in sublist] # get rid of sub-lists to get overall pi 
-        cohort_pi_df.loc[a, 'timepoint'] = n
-        cohort_pi_df.loc[a, 'age'] = unique_ages[a] # record focal age in dataframe
-        cohort_pi_df.loc[a, 'cohort_pi'] = mts.diversity(sample_sets = cohort_nodes) # calculate pi and save to dataframe
-        cohort_pi_df.loc[a, 'cohort_theta'] = mts.segregating_sites(sample_sets = cohort_nodes) / np.sum([1/i for i in np.arange(1,len(cohort_nodes))])
+    # unique_ages = list(set(all_ages))
+    # 
+    # cohort_pi_df = pd.DataFrame(index=[*range(0, len(unique_ages), 1)], columns = ['timepoint', 'age', 'cohort_pi', 'cohort_theta'])
+    # pi_from_cohorts = [] 
+    # for a in [*range(0, len(unique_ages), 1)]:
+    #     cohort_nodes = [] 
+    #     ids = meta[meta['age'] == unique_ages[a]][["pedigree_id"]]
+    #     for i in ids.to_numpy():
+    #         focal_ind = mts.individual(int(alive[np.where(x==i)])) # get inidvidual id by matching pedigree id to tskit id
+    #         cohort_nodes.append(focal_ind.nodes.tolist())   # make list of nodes
+    #     cohort_nodes = [item for sublist in cohort_nodes for item in sublist] # get rid of sub-lists to get overall pi 
+    #     cohort_pi_df.loc[a, 'timepoint'] = n
+    #     cohort_pi_df.loc[a, 'age'] = unique_ages[a] # record focal age in dataframe
+    #     cohort_pi_df.loc[a, 'cohort_pi'] = mts.diversity(sample_sets = cohort_nodes) # calculate pi and save to dataframe
+    #     cohort_pi_df.loc[a, 'cohort_theta'] = mts.segregating_sites(sample_sets = cohort_nodes) / np.sum([1/i for i in np.arange(1,len(cohort_nodes))])
 
     # end product: cohort_pi_df
 
@@ -210,20 +210,59 @@ for n in [*range(0, 24, 1)]:
     binned_pi.loc[0, 'upper_theta'] = mts.segregating_sites(sample_sets = upper_nodes) / np.sum([1/i for i in np.arange(1,len(upper_nodes))])
 
     #### bootstrapping
-    bootstraps = []
-    for i in [*range(0, 100, 1)]: 
+    bootstraps_upper = []
+    bootstraps_lower = []
+    
+    lower_samples = []
+    upper_samples = []
+    no_straps = 1000
+    for i in [*range(0, no_straps, 1)]: 
         # sample nodes
-        lower_sample = random.sample(lower_nodes, 4)
-        upper_sample = random.sample(upper_nodes, 4)
+        lower_sample = random.sample(lower_nodes, 6)
+        upper_sample = random.sample(upper_nodes, 6)
+        
+        # remember sampled nodes
+        lower_samples.append(lower_sample)
+        upper_samples.append(upper_sample)
+
         # calculate theta
         lower_theta = mts.segregating_sites(sample_sets = lower_sample) / np.sum([1/i for i in np.arange(1,len(lower_sample))])
         upper_theta = mts.segregating_sites(sample_sets = upper_sample) / np.sum([1/i for i in np.arange(1,len(upper_sample))])
         # take difference
-        difference = lower_theta - upper_theta
+        # difference = lower_theta - upper_theta
         # add to data storage object
-        bootstraps.append(difference)
+        bootstraps_upper.append(upper_theta)
+        bootstraps_lower.append(lower_theta)
+    
+    # determine number of duplicates in lower bootstraps
+    seen = set()
+    duplicates_lower = []
+    for lst in lower_samples:
+        t = frozenset(lst)
+        if t in seen:
+            duplicates_lower.append(list(t))
+        else:
+            seen.add(t)
+
+    print(f"There are {len(duplicates_lower)} duplicate samples in the lower bin")
+
+    # determine number of duplicates in upper bootstraps
+    seen = set()
+    duplicates_upper = []
+    for lst in upper_samples:
+        t = frozenset(lst)
+        if t in seen:
+            duplicates_upper.append(list(t))
+        else:
+            seen.add(t)
+
+    print(f"There are {len(duplicates_upper)} duplicate samples in the upper bin")
+
+    
     # add to dataframe
-    binned_pi.loc[0,'theta_bootstraps'] = bootstraps
+    binned_pi.loc[0,'theta_bootstraps_lower'] = bootstraps_lower
+    binned_pi.loc[0,'theta_bootstraps_upper'] = bootstraps_upper
+
     
     #### add information from this timepoint to final dataframes
     binned_pi.loc[0, 'timepoint'] = n
