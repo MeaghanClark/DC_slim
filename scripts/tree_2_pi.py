@@ -156,21 +156,21 @@ for n in [*range(0, 24, 1)]:
 
     #### measure overall pi within age cohorts 
     
-    # unique_ages = list(set(all_ages))
-    # 
-    # cohort_pi_df = pd.DataFrame(index=[*range(0, len(unique_ages), 1)], columns = ['timepoint', 'age', 'cohort_pi', 'cohort_theta'])
-    # pi_from_cohorts = [] 
-    # for a in [*range(0, len(unique_ages), 1)]:
-    #     cohort_nodes = [] 
-    #     ids = meta[meta['age'] == unique_ages[a]][["pedigree_id"]]
-    #     for i in ids.to_numpy():
-    #         focal_ind = mts.individual(int(alive[np.where(x==i)])) # get inidvidual id by matching pedigree id to tskit id
-    #         cohort_nodes.append(focal_ind.nodes.tolist())   # make list of nodes
-    #     cohort_nodes = [item for sublist in cohort_nodes for item in sublist] # get rid of sub-lists to get overall pi 
-    #     cohort_pi_df.loc[a, 'timepoint'] = n
-    #     cohort_pi_df.loc[a, 'age'] = unique_ages[a] # record focal age in dataframe
-    #     cohort_pi_df.loc[a, 'cohort_pi'] = mts.diversity(sample_sets = cohort_nodes) # calculate pi and save to dataframe
-    #     cohort_pi_df.loc[a, 'cohort_theta'] = mts.segregating_sites(sample_sets = cohort_nodes) / np.sum([1/i for i in np.arange(1,len(cohort_nodes))])
+    unique_ages = list(set(all_ages))
+    
+    cohort_pi_df = pd.DataFrame(index=[*range(0, len(unique_ages), 1)], columns = ['timepoint', 'age', 'cohort_pi', 'cohort_theta'])
+    pi_from_cohorts = [] 
+    for a in [*range(0, len(unique_ages), 1)]:
+        cohort_nodes = [] 
+        ids = meta[meta['age'] == unique_ages[a]][["pedigree_id"]]
+        for i in ids.to_numpy():
+            focal_ind = mts.individual(int(alive[np.where(x==i)])) # get inidvidual id by matching pedigree id to tskit id
+            cohort_nodes.append(focal_ind.nodes.tolist())   # make list of nodes
+        cohort_nodes = [item for sublist in cohort_nodes for item in sublist] # get rid of sub-lists to get overall pi 
+        cohort_pi_df.loc[a, 'timepoint'] = n
+        cohort_pi_df.loc[a, 'age'] = unique_ages[a] # record focal age in dataframe
+        cohort_pi_df.loc[a, 'cohort_pi'] = mts.diversity(sample_sets = cohort_nodes) # calculate pi and save to dataframe
+        cohort_pi_df.loc[a, 'cohort_theta'] = mts.segregating_sites(sample_sets = cohort_nodes) / np.sum([1/i for i in np.arange(1,len(cohort_nodes))])
 
     # end product: cohort_pi_df
 
