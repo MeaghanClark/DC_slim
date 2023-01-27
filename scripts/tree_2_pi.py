@@ -215,11 +215,11 @@ for n in [*range(0, 24, 1)]:
     
     lower_samples = []
     upper_samples = []
-    no_straps = 1000
+    no_straps = 500
     for i in [*range(0, no_straps, 1)]: 
         # sample nodes
-        lower_sample = random.sample(lower_nodes, 6)
-        upper_sample = random.sample(upper_nodes, 6)
+        lower_sample = random.choices(lower_nodes, k = 6)
+        upper_sample = random.choices(upper_nodes, k = 6)
         
         # remember sampled nodes
         lower_samples.append(lower_sample)
