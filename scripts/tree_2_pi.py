@@ -112,7 +112,7 @@ convert_time = pd.DataFrame({'tskit_time':sampling, 'slim_time':cycles}, columns
 # initalize data lists
 
 # object to store overall pi and upper and lower 10% pi
-pi_data_bins = pd.DataFrame(columns = ['timepoint', 'overall_pi', 'lower_pi', 'upper_pi', 'overall_theta', 'lower_theta', 'upper_theta', 'theta_bootstraps'])
+pi_data_bins = pd.DataFrame(columns = ['timepoint', 'overall_pi', 'lower_pi', 'upper_pi', 'overall_theta', 'lower_theta', 'upper_theta', 'overall_theta_dist', 'lower_theta_dist', 'upper_theta_dist'])
 
 # object to store cohort pi
 pi_by_cohort = pd.DataFrame(columns = ['timepoint', 'age', 'cohort_pi', 'cohort_theta'])
@@ -122,7 +122,7 @@ pi_by_cohort = pd.DataFrame(columns = ['timepoint', 'age', 'cohort_pi', 'cohort_
 for n in [*range(0, 24, 1)]: 
 
     # initialize data object to store pi values that are calculated once per time point
-    binned_pi = pd.DataFrame(columns = ['timepoint', 'overall_pi', 'lower_pi', 'upper_pi', 'overall_theta', 'lower_theta', 'upper_theta', 'theta_bootstraps_lower', 'theta_bootstraps_upper'])
+    binned_pi = pd.DataFrame(columns = ['timepoint', 'overall_pi', 'lower_pi', 'upper_pi', 'overall_theta', 'lower_theta', 'upper_theta', 'overall_theta_dist', 'lower_theta_dist', 'upper_theta_dist'])
     
     # define tskit time
     tskit_time = convert_time.iloc[n][0]
@@ -209,60 +209,44 @@ for n in [*range(0, 24, 1)]:
     binned_pi.loc[0, 'upper_pi'] = mts.diversity(sample_sets = upper_nodes) # calculate pi and save to dataframe
     binned_pi.loc[0, 'upper_theta'] = mts.segregating_sites(sample_sets = upper_nodes) / np.sum([1/i for i in np.arange(1,len(upper_nodes))])
 
-    #### bootstrapping
-    bootstraps_upper = []
-    bootstraps_lower = []
+    #### get DISTRIBUTIONS of theta
+    ### changing so that I break the genome up into windows and caclulate theta within 
+    ### window to get a distribution of thetas 
     
-    lower_samples = []
-    upper_samples = []
-    no_straps = 500
-    for i in [*range(0, no_straps, 1)]: 
-        # sample nodes
-        lower_sample = random.choices(lower_nodes, k = 6)
-        upper_sample = random.choices(upper_nodes, k = 6)
-        
-        # remember sampled nodes
-        lower_samples.append(lower_sample)
-        upper_samples.append(upper_sample)
-
-        # calculate theta
-        lower_theta = mts.segregating_sites(sample_sets = lower_sample) / np.sum([1/i for i in np.arange(1,len(lower_sample))])
-        upper_theta = mts.segregating_sites(sample_sets = upper_sample) / np.sum([1/i for i in np.arange(1,len(upper_sample))])
-        # take difference
-        # difference = lower_theta - upper_theta
-        # add to data storage object
-        bootstraps_upper.append(upper_theta)
-        bootstraps_lower.append(lower_theta)
+    #### OVERALL theta -- all nodes
+    ### define windows
+    num_windows = 10000
     
-    # determine number of duplicates in lower bootstraps
-    seen = set()
-    duplicates_lower = []
-    for lst in lower_samples:
-        t = frozenset(lst)
-        if t in seen:
-            duplicates_lower.append(list(t))
-        else:
-            seen.add(t)
-
-    print(f"There are {len(duplicates_lower)} duplicate samples in the lower bin")
-
-    # determine number of duplicates in upper bootstraps
-    seen = set()
-    duplicates_upper = []
-    for lst in upper_samples:
-        t = frozenset(lst)
-        if t in seen:
-            duplicates_upper.append(list(t))
-        else:
-            seen.add(t)
-
-    print(f"There are {len(duplicates_upper)} duplicate samples in the upper bin")
+    ### calculate segregating sites for all individuals in windows
+    s_sites = mts.segregating_sites(sample_sets = all_nodes, windows = np.linspace(0, mts.sequence_length, num_windows + 1))
+    
+    ### calculate distribution of overall thetas from segregating sites
+    theta_dist = s_sites / np.sum([1/i for i in np.arange(1,len(all_nodes))])
+    
+    ### save to dataframe
+    binned_pi.loc[0,'overall_theta_dist'] = theta_dist
 
     
-    # add to dataframe
-    binned_pi.loc[0,'theta_bootstraps_lower'] = bootstraps_lower
-    binned_pi.loc[0,'theta_bootstraps_upper'] = bootstraps_upper
+    #### LOWER theta
+    ### calculate segregating sites for all individuals in windows
+    s_sites = mts.segregating_sites(sample_sets = lower_nodes, windows = np.linspace(0, mts.sequence_length, num_windows + 1))
+    
+    ### calculate distribution of overall thetas from segregating sites
+    lower_theta_dist = s_sites / np.sum([1/i for i in np.arange(1,len(lower_nodes))])
+    
+    ### save to dataframe
+    binned_pi.loc[0,'lower_theta_dist'] = lower_theta_dist
 
+    
+    #### UPPER theta
+    ### calculate segregating sites for all individuals in windows
+    s_sites = mts.segregating_sites(sample_sets = upper_nodes, windows = np.linspace(0, mts.sequence_length, num_windows + 1))
+    
+    ### calculate distribution of overall thetas from segregating sites
+    upper_theta_dist = s_sites / np.sum([1/i for i in np.arange(1,len(upper_nodes))])
+    
+    ### save to dataframe
+    binned_pi.loc[0,'upper_theta_dist'] = upper_theta_dist
     
     #### add information from this timepoint to final dataframes
     binned_pi.loc[0, 'timepoint'] = n
