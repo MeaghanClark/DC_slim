@@ -11,18 +11,21 @@ date <- format(Sys.Date(), "%m%d%Y")
 args <- commandArgs(trailingOnly = TRUE)
 print(c("My args are ", args))
 
+if (length(args)==0) {
+  stop("At least one argument must be supplied (input file).n", call.=FALSE)
+}
 # args[1] is filepath, "../theta_output_dist_11082022"
 # args[2] is outdir for Robj
 
-indir <- args[1]
-outdir <- args[2]
+indir <- args[2]
+outdir <- args[3]
 reps <- 100
 ages <- c(2, 5, 10, 20)
 rVals <- c(2, 10, 100)
 
-if (length(args)==0) {
-  stop("At least one argument must be supplied (input file).n", call.=FALSE)
-}
+print(paste0("using file path ", indir))
+print(paste0("output dir is ", outdir)) 
+
 
 # Load custom functions ------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
@@ -70,6 +73,7 @@ load_ind_data <- function(filePath, model, reps, rVals, age_vec, keyword = "*het
       }
       ind_data[[which(age_vec == a)]][[which(rVals == r)]] <- data
     }
+    print(paste0("Finished loading data from avg age ", a))
     names(ind_data[[which(age_vec == a)]]) <- sapply(rVals, FUN = function(x){paste0("rVal_", x)})
   }
   names(ind_data) <- sapply(age_vec, FUN = function(x){paste0("avg_age_", x)})

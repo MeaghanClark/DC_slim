@@ -9,7 +9,7 @@ date=$(date +%m%d%Y)
 storagenode=/mnt/home/clarkm89 #path to top level of dir where input/output files live
 jobname=load_theta #label for SLURM book-keeping 
 run_name=DC_slim #label to use on output files
-logfilesdir=logfiles_theta #name of directory to create and then write log files to
+logfilesdir=R_log_theta_${date} #name of directory to create and then write log files to
 indir=$storagenode/$run_name/theta_output_11082022/
 outdir=$storagenode/$run_name/theta_data_obj_${date}
 executable=$storagenode/$run_name/scripts/load_theta_into_R.sbatch #script to run 
@@ -17,7 +17,7 @@ rscript=$storagenode/$run_name/scripts/load_into.R #R script called by executabl
 
 
 cpus=1 #number of CPUs to request/use per dataset 
-ram_per_cpu=16G #amount of RAM to request/use per CPU; 6 G 
+ram_per_cpu=32G #amount of RAM to request/use per CPU; 6 G 
 
 
 #---------------------------------------------------------
@@ -31,9 +31,9 @@ sbatch --job-name=$jobname \
 --export=JOBNAME=$jobname,LOGFILESDIR=$logfilesdir,INDIR=$indir,OUTDIR=$outdir,RSCRIPT=$rscript \
 --cpus-per-task=$cpus \
 --mem-per-cpu=$ram_per_cpu \
---output=./$logfilesdir/${jobname}_${kvalue}_${spatial}_%A.out \
---error=./$logfilesdir/${jobname}_${kvalue}_${spatial}_%A.err \
---time=8:00:00 \
+--output=./$logfilesdir/${jobname}_%A.out \
+--error=./$logfilesdir/${jobname}_%A.err \
+--time=72:00:00 \
 $executable
 
 echo ----------------------------------------------------------------------------------------
