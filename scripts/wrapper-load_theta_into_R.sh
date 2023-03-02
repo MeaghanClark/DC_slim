@@ -21,7 +21,7 @@ rscript=load_into.R #R script called by executable
 
 
 cpus=1 #number of CPUs to request/use per dataset 
-ram_per_cpu=32G #amount of RAM to request/use per CPU; 6 G 
+ram_per_cpu=40G #amount of RAM to request/use per CPU; 6 G 
 
 
 #---------------------------------------------------------

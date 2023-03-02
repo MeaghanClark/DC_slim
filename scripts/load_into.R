@@ -103,7 +103,7 @@ extract_dist <- function(bins, rVals, age_vec, reps, column, niter){
     hold_straps <- vector(mode = "list", length = length(rVals)) 
     for (r in 1:length(rVals)){
       for (i in 1:reps){
-        data <- pi_bins[[a]][[r]][[i]][,column]
+        data <- bins[[a]][[r]][[i]][,column]
         data <- gsub(",", "", data)
         data <- gsub("\\[", "", data)
         data <- gsub("\\]", "", data)
@@ -133,12 +133,12 @@ lower_theta_dist <- extract_dist(theta_bins, rVals = rVals, age_vec = ages, reps
 upper_theta_dist <- extract_dist(theta_bins, rVals = rVals, age_vec = ages, reps = 100, column = "upper_theta_dist", niter = 1e4)
 
 
-theta_sum <-  vector(mode = "list", length = length(args[5]))
+theta_sum <-  vector(mode = "list", length = length(ages))
 # save summary stats for each rep 
-for(a in 1:length(args[5])){
-  for(r in 1:length(args[4])){
-    hold <- vector(mode = "list", length = args[3])
-    for(i in 1:args[3]){
+for(a in 1:length(ages)){
+  for(r in 1:length(rVals)){
+    hold <- vector(mode = "list", length = 100)
+    for(i in 1:100){
       hold[[i]] <- theta_bins[[a]][[r]][[i]][,c("timepoint", "overall_pi", "lower_pi", "upper_pi", "overall_theta", "lower_theta", "upper_theta")]
     }
     theta_sum[[a]][[r]] <- hold
@@ -149,7 +149,7 @@ for(a in 1:length(args[5])){
 # ------------------------------------------------------------------------------------------
 theta_results <- list(overall_theta_dist, lower_theta_dist, upper_theta_dist, theta_sum, date)
 
-save(theta_results, file = paste0(outdir, "_", date, ".Robj"))
+save(theta_results, file = paste0(outdir, "/results_", date, ".Robj"))
 
 # ------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
