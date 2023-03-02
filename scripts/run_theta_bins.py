@@ -278,4 +278,4 @@ for n in [*range(0, 24, 1)]:
 
 # save dataframes: pi_data_bins, pi_by_cohort
 
-theta_breakdown.to_csv(outdir+"/"+prefix+"_03022023.txt", sep=',', index=False)
+theta_breakdown.to_csv(outdir+"/"+prefix+"bin_tests.txt", sep=',', index=False)
