@@ -124,9 +124,18 @@ theta_bins <- load_ind_data(filePath = indir, model = "nWF", reps = reps, rVals 
 # Process data into correct format------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 
-overall_theta_dist <- extract_dist(theta_bins, rVals = rVals, age_vec = ages, reps = 100, column = "overall_theta_dist", niter = 1e4)
-lower_theta_dist <- extract_dist(theta_bins, rVals = rVals, age_vec = ages, reps = 100, column = "lower_theta_dist", niter = 1e4)
-upper_theta_dist <- extract_dist(theta_bins, rVals = rVals, age_vec = ages, reps = 100, column = "upper_theta_dist", niter = 1e4)
+# for original run
+# overall_theta_dist <- extract_dist(theta_bins, rVals = rVals, age_vec = ages, reps = 100, column = "overall_theta_dist", niter = 1e4)
+# lower_theta_dist <- extract_dist(theta_bins, rVals = rVals, age_vec = ages, reps = 100, column = "lower_theta_dist", niter = 1e4)
+# upper_theta_dist <- extract_dist(theta_bins, rVals = rVals, age_vec = ages, reps = 100, column = "upper_theta_dist", niter = 1e4)
+
+# for theta bin test runs 
+upper_ten <- extract_dist(theta_bins, rVals = rVals, age_vec = ages, reps = 100, column = "upper_ten", niter = 1e4)
+lower_ten <- extract_dist(theta_bins, rVals = rVals, age_vec = ages, reps = 100, column = "lower_ten", niter = 1e4)
+upper_five <- extract_dist(theta_bins, rVals = rVals, age_vec = ages, reps = 100, column = "upper_five", niter = 1e4)
+lower_five <- extract_dist(theta_bins, rVals = rVals, age_vec = ages, reps = 100, column = "lower_five", niter = 1e4)
+max_age <- extract_dist(theta_bins, rVals = rVals, age_vec = ages, reps = 100, column = "max_age", niter = 1e4)
+min_age <- extract_dist(theta_bins, rVals = rVals, age_vec = ages, reps = 100, column = "min_age", niter = 1e4)
 
 
 theta_sum <-  vector(mode = "list", length = length(ages))
@@ -135,17 +144,20 @@ for(a in 1:length(ages)){
   for(r in 1:length(rVals)){
     hold <- vector(mode = "list", length = 100)
     for(i in 1:100){
-      hold[[i]] <- theta_bins[[a]][[r]][[i]][,c("timepoint", "overall_pi", "lower_pi", "upper_pi", "overall_theta", "lower_theta", "upper_theta")]
+      hold[[i]] <- theta_bins[[a]][[r]][[i]][,c("timepoint", "upper_ten", "lower_ten", "upper_five", "lower_five", "max_age", "min_age")]
+#       hold[[i]] <- theta_bins[[a]][[r]][[i]][,c("timepoint", "overall_pi", "lower_pi", "upper_pi", "overall_theta", "lower_theta", "upper_theta")]
+      
     }
     theta_sum[[a]][[r]] <- hold
   }
 }
 
+
 # Save as R object------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 theta_results <- list(overall_theta_dist, lower_theta_dist, upper_theta_dist, theta_sum, date)
 
-save(theta_results, file = paste0(outdir, "/results_", date, ".Robj"))
+save(theta_results, file = paste0(outdir, "/bin_test_results_", date, ".Robj"))
 
 # ------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
