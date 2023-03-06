@@ -30,15 +30,15 @@ header=${model}_${avg_age} # from input when running wrapper-run_slim_all.sh
 
 # define dirs:
 storagenode=/mnt/home/clarkm89 #path to top level of dir where input/output files live
-logfilesdir=$storagenode/$run_name/py_logfiles_${date} # name of directory to create and then write log files to
+logfilesdir=$storagenode/$run_name/py_logfiles_bintests_${date} # name of directory to create and then write log files to
 indir=$storagenode/$run_name/slim_output_${date} # where tree files live
 pythondir=$storagenode/$run_name/scripts # where the python file lives
-outdir=theta_output_${date}
+outdir=theta_output_bins_${date}
 homedir=$storagenode/$run_name/
 
 # define files
 executable=$storagenode/$run_name/scripts/run_processing.sbatch #script to run 
-treeprocess=tree_2_pi.py #processing python script 
+treeprocess=run_theta_bins.py #processing python script 
 
 # running variables
 cpus=1 #number of CPUs to request/use per dataset 
@@ -48,6 +48,7 @@ reps=100 # testing with 1 rep, should be 100
 #---------------------------------------------------------
 #check if logfiles directory has been created in submit dir yet; if not, make one
 if [ ! -d $logfilesdir ]; then mkdir $logfilesdir; fi
+if [ ! -d $outdir ]; then mkdir ./$outdir; fi
 
     #submit job to cluster
 for r in 2 10 100; do
@@ -55,9 +56,9 @@ for r in 2 10 100; do
              filename=tree_${model}_${avg_age}_${r}_${rep}.trees
              metafile=metaInd_${model}_${avg_age}_${r}_${rep}.txt
             
-             output_file=${homedir}${outdir}/${model}_${avg_age}_${r}_${rep}_${date}_pi_bins.txt
+             output_file=${homedir}${outdir}/${model}_${avg_age}_${r}_${rep}_${date}_bin_tests.txt
 
-		if [ ! -f "$output_file" ] # don't start job if output files (pairwise pi specifically) already exists
+		if [ ! -f "$output_file" ] # don't start job if output files already exists
 		then 
 				
 			echo Starting job ${model}_${r}_${rep}_${date}

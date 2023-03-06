@@ -11,7 +11,7 @@ import math
 np.set_printoptions(threshold=sys.maxsize)
 
 # uncomment these lines when running from command line
-sys.argv = ['tree_processing.py', '../slim_output_11082022/tree_nWF_5_10_89.trees','../slim_output_11082022/metaInd_nWF_5_10_89.txt', '/Users/meaghan/Desktop/DC_slim/het', 's_sites_test', 1e-8, 5, 5]
+# sys.argv = ['tree_processing.py', '../slim_output_11082022/tree_nWF_5_10_89.trees','../slim_output_11082022/metaInd_nWF_5_10_89.txt', '/Users/meaghan/Desktop/DC_slim/het', 's_sites_test', 1e-8, 5, 5]
 # arguments: 
 # [0] -- python script name
 # [1] -- tree file
@@ -249,7 +249,7 @@ for n in [*range(0, 24, 1)]:
     max_age = meta_sorted[meta_sorted["age"] == max(meta_sorted["age"])]
     
     print(f"min age is {min_age}; max age is {max_age}")
-    print(f"there are {len(meta_sorted[meta_sorted["age"] == min(meta_sorted["age"])])} individuals of min age; there are {len(meta_sorted[meta_sorted["age"] == max(meta_sorted["age"])])} individuals of max age")
+    print(f"there are {len(meta_sorted[meta_sorted['age'] == min(meta_sorted['age'])])} individuals of min age; there are {len(meta_sorted[meta_sorted['age'] == max(meta_sorted['age'])])} individuals of max age")
 
     # get lists of nodes and generate theta distributions
     
