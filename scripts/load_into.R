@@ -27,7 +27,7 @@ if (length(args)==0) {
 # Load custom functions ------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 
-load_ind_data <- function(filePath, model, reps, rVals, age_vec, keyword = "*het.txt", separator = " ", index = TRUE){
+load_ind_data <- function(filePath, model, reps, rVals, age_vec, keyword = "*bin_tests.txt", separator = " ", index = TRUE){
   # testing
   # filePath <- "../theta_output_dist_11082022"
   # model <- "nWF"
@@ -119,7 +119,7 @@ extract_dist <- function(bins, rVals, age_vec, reps, column, niter){
 # ------------------------------------------------------------------------------------------
 
 theta_bins <- load_ind_data(filePath = indir, model = "nWF", reps = reps, rVals = rVals, age_vec = ages, 
-              keyword = "*bins.txt", separator = ",", index = FALSE)
+              keyword = "*bin_tests.txt", separator = ",", index = FALSE)
 
 # Process data into correct format------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
@@ -155,7 +155,8 @@ for(a in 1:length(ages)){
 
 # Save as R object------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
-theta_results <- list(overall_theta_dist, lower_theta_dist, upper_theta_dist, theta_sum, date)
+#theta_results <- list(overall_theta_dist, lower_theta_dist, upper_theta_dist, theta_sum, date)
+theta_results <- list(theta_sum, date)
 
 save(theta_results, file = paste0(outdir, "/bin_test_results_", date, ".Robj"))
 

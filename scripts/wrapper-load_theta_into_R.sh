@@ -13,7 +13,7 @@ run_name=DC_slim #label to use on output files
 # define directories
 logfilesdir=R_log_theta_${date} #name of directory to create and then write log files to
 homedir=$storagenode/$run_name
-indir=theta_output_11082022/
+indir=theta_output_bins_11082022/
 outdir=theta_data_obj_${date}
 
 executable=$storagenode/$run_name/scripts/load_theta_into_R.sbatch #script to run 
@@ -21,7 +21,7 @@ rscript=load_into.R #R script called by executable
 
 
 cpus=1 #number of CPUs to request/use per dataset 
-ram_per_cpu=40G #amount of RAM to request/use per CPU; 6 G 
+ram_per_cpu=75G #amount of RAM to request/use per CPU; 6 G 
 
 
 #---------------------------------------------------------
@@ -37,7 +37,7 @@ sbatch --job-name=$jobname \
 --mem-per-cpu=$ram_per_cpu \
 --output=./$logfilesdir/${jobname}_%A.out \
 --error=./$logfilesdir/${jobname}_%A.err \
---time=72:00:00 \
+--time=168:00:00 \
 $executable
 
 echo ----------------------------------------------------------------------------------------
