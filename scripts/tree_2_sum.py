@@ -275,10 +275,10 @@ for n in [*range(0, 24, 1)]:
     upper_index_ten = int(len(meta_sorted) * 0.9)
 
     # Get the lower 10% of data points
-    lower_10_percent = meta_sorted[:lower_index]
+    lower_10_percent = meta_sorted[:lower_index_ten]
     
     # Get the upper 10% of data points
-    upper_10_percent = meta_sorted[upper_index:]
+    upper_10_percent = meta_sorted[upper_index_ten:]
     
     # lower 10%
     lower_ids = lower_10_percent["pedigree_id"] 
@@ -309,14 +309,14 @@ for n in [*range(0, 24, 1)]:
     
     ## [2] upper/lower 5%
     
-    lower_index_ten = int(len(meta_sorted) * 0.05)
-    upper_index_ten = int(len(meta_sorted) * 0.95)
+    lower_index_five = int(len(meta_sorted) * 0.05)
+    upper_index_five = int(len(meta_sorted) * 0.95)
 
     # Get the lower 5% of data points
-    lower_5_percent = meta_sorted[:lower_index]
+    lower_5_percent = meta_sorted[:lower_index_five]
     
     # Get the upper 5% of data points
-    upper_5_percent = meta_sorted[upper_index:]
+    upper_5_percent = meta_sorted[upper_index_five:]
     
     # lower 5%
     lower_ids = lower_5_percent["pedigree_id"] 
