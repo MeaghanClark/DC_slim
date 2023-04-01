@@ -184,7 +184,7 @@ df_random_samp = pd.DataFrame(columns = ['timepoint', 'pi_ten', 'theta_ten', 'pi
 # loop through time points to calculate pi using tskit
 
 for n in [*range(0, 24, 1)]: 
-#for n in [*range(0, 1, 1)]: 
+# for n in [*range(0, 2, 1)]: 
 
     # initialize data object to store pi values that are calculated once per time point
     tp_age_cohort = pd.DataFrame(columns = ['timepoint', 'age', 'pi', 'theta'])
@@ -254,9 +254,9 @@ for n in [*range(0, 24, 1)]:
             focal_ind = mts.individual(int(alive[np.where(x==i)])) # get inidvidual id by matching pedigree id to tskit id
             cohort_nodes.append(focal_ind.nodes.tolist())   # make list of nodes
         cohort_nodes = [item for sublist in cohort_nodes for item in sublist] # get rid of sub-lists to get overall pi 
-        tp_age_cohort.loc[0, 'age'] = unique_ages[a]
-        tp_age_cohort.loc[0, 'pi'] = mts.diversity(sample_sets = cohort_nodes)
-        tp_age_cohort.loc[0, 'theta'] = mts.segregating_sites(sample_sets = cohort_nodes) / np.sum([1/i for i in np.arange(1,len(cohort_nodes))])
+        tp_age_cohort.loc[a, 'age'] = unique_ages[a]
+        tp_age_cohort.loc[a, 'pi'] = mts.diversity(sample_sets = cohort_nodes)
+        tp_age_cohort.loc[a, 'theta'] = mts.segregating_sites(sample_sets = cohort_nodes) / np.sum([1/i for i in np.arange(1,len(cohort_nodes))])
         #tp_age_cohort.loc[0, 'LD'] =
    
     print(f"done with age cohort sampling for sampling point {n} representing tskit time {tskit_time}")
@@ -347,6 +347,9 @@ for n in [*range(0, 24, 1)]:
     df_age_bins = pd.concat([df_age_bins, tp_age_bins], axis=0)
     df_random_samp = pd.concat([df_random_samp, tp_random_samp], axis=0)
 
+    
 df_age_cohort.to_csv(outdir+"/"+prefix+"_age_cohort.txt", sep=',', index=False)
 df_age_bins.to_csv(outdir+"/"+prefix+"_age_bins.txt", sep=',', index=False)
 df_random_samp.to_csv(outdir+"/"+prefix+"_rand_samp.txt", sep=',', index=False)
+
+print(f"done saving output")
