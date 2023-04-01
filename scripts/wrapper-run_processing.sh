@@ -26,19 +26,20 @@ fi
 jobname=run-trees #label for SLURM book-keeping 
 run_name=DC_slim #label to use on output files
 date=11082022 #$(date +%m%d%Y)
+#date=05312022 # for pWF sim
 header=${model}_${avg_age} # from input when running wrapper-run_slim_all.sh
 
 # define dirs:
 storagenode=/mnt/home/clarkm89 #path to top level of dir where input/output files live
-logfilesdir=$storagenode/$run_name/py_logfiles_bintests_${date} # name of directory to create and then write log files to
+logfilesdir=$storagenode/$run_name/py_logfiles_sumstats_${date} # name of directory to create and then write log files to
 indir=$storagenode/$run_name/slim_output_${date} # where tree files live
 pythondir=$storagenode/$run_name/scripts # where the python file lives
-outdir=theta_output_bins_${date}
+outdir=sum_stat_output_${date}
 homedir=$storagenode/$run_name/
 
 # define files
 executable=$storagenode/$run_name/scripts/run_processing.sbatch #script to run 
-treeprocess=run_theta_bins.py #processing python script 
+treeprocess=tree_2_sum.py #processing python script 
 
 # running variables
 cpus=1 #number of CPUs to request/use per dataset 
