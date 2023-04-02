@@ -124,7 +124,7 @@ elif avg_age == 10:
     burn = 635600
 elif avg_age == 20: 
     burn = 1264600
-elif avg_Age ==1:
+elif avg_age ==1:
     burn=180000
 
 print(f"Using a burn-in time of {burn}")
