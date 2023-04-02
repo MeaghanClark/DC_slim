@@ -25,8 +25,8 @@ fi
 # define upper level variables:
 jobname=run-trees #label for SLURM book-keeping 
 run_name=DC_slim #label to use on output files
-date=11082022 #$(date +%m%d%Y)
-#date=05312022 # for pWF sim
+#date=11082022  # from nWF sim #$(date +%m%d%Y)
+date=05312022 # for pWF sim
 header=${model}_${avg_age} # from input when running wrapper-run_slim_all.sh
 
 # define dirs:
@@ -57,7 +57,7 @@ for r in 2 10 100; do
              filename=tree_${model}_${avg_age}_${r}_${rep}.trees
              metafile=metaInd_${model}_${avg_age}_${r}_${rep}.txt
             
-             output_file=${homedir}${outdir}/${model}_${avg_age}_${r}_${rep}_${date}_bin_tests.txt
+             output_file=${homedir}${outdir}/${model}_${avg_age}_${r}_${rep}_${date}_age_bins.txt
 
 		if [ ! -f "$output_file" ] # don't start job if output files already exists
 		then 
@@ -70,7 +70,7 @@ for r in 2 10 100; do
 			--mem-per-cpu=$ram_per_cpu \
 			--output=$logfilesdir/${header}_${r}_${rep}_${date}_%A.out \
 			--error=$logfilesdir/${header}_${r}_${rep}_${date}_%A.err \
-			--time=6:00:00 \
+			--time=12:00:00 \
 			$executable
 		else
 			echo output files for ${model}_${r}_${rep}_${date} already exist in ${outdir}
