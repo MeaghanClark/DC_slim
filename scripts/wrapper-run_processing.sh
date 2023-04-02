@@ -68,6 +68,7 @@ for r in 2 10 100; do
              metafile=metaInd_${model}_${avg_age}_${r}_${rep}.txt
              output_file=${homedir}${outdir}/${model}_${avg_age}_${r}_${rep}_${date}_age_bins.txt
         elif [[ $model == pWF ]]
+	then
              filename=tree_${model}_${r}_${rep}.trees
              metafile=metaInd_${model}_${r}_${rep}.txt
              output_file=${homedir}${outdir}/${model}_${r}_${rep}_${date}_age_bins.txt
