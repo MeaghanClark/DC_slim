@@ -67,8 +67,10 @@ for r in 2 10 100; do
              filename=tree_${model}_${avg_age}_${r}_${rep}.trees
              metafile=metaInd_${model}_${avg_age}_${r}_${rep}.txt
              output_file=${homedir}${outdir}/${model}_${avg_age}_${r}_${rep}_${date}_age_bins.txt
-        elif [[ $model == pWF ]]
-	then
+        fi
+        
+        if [[ $model == pWF ]]
+		then
              filename=tree_${model}_${r}_${rep}.trees
              metafile=metaInd_${model}_${r}_${rep}.txt
              output_file=${homedir}${outdir}/${model}_${r}_${rep}_${date}_age_bins.txt
@@ -77,7 +79,7 @@ for r in 2 10 100; do
 		if [ ! -f "$output_file" ] # don't start job if output files already exists
 		then 
 				
-			echo Starting job ${model}_${r}_${rep}_${date}
+			echo Starting job ${model}_${r}_${rep}_${date} with $filename and $metafile
 				
 			sbatch --job-name=$jobname \
 			--export=JOBNAME=$jobname,TREEPROCESS=$treeprocess,MODEL=$model,FILENAME=$filename,METAFILE=$metafile,REP=$rep,CPUS=$cpus,RUN_NAME=$run_name,STORAGENODE=$storagenode,INDIR=$indir,OUTDIR=$outdir,HOMEDIR=$homedir,PYTHONDIR=$pythondir,MU=$mu,R=$r,AVG_AGE=$avg_age,GEN=$gen,DATE=$date,EXECUTABLE=$executable,HEADER=$header,REPS=$reps,LOGFILESDIR=$logfilesdir \
