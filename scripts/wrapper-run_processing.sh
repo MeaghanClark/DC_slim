@@ -19,16 +19,24 @@ then
 	if [[ $avg_age == 10 ]]; then gen=11.01567; fi 
 	if [[ $avg_age == 20 ]]; then gen=20.97633; fi 
 else 
-	gen=1.00
+	gen=1.00 # for pWF model
 fi
 
 # define upper level variables:
 jobname=run-trees #label for SLURM book-keeping 
 run_name=DC_slim #label to use on output files
-#date=11082022  # from nWF sim #$(date +%m%d%Y)
-date=05312022 # for pWF sim
-header=${model}_${avg_age} # from input when running wrapper-run_slim_all.sh
 
+if [[ $model == nWF ]]
+then
+    date=11082022 
+    header=${model}_${avg_age} # from input when running wrapper-run_slim_all.sh
+fi
+
+if [[ $model == pWF ]]
+then
+    date=05312022
+    header=${model}
+fi
 # define dirs:
 storagenode=/mnt/home/clarkm89 #path to top level of dir where input/output files live
 logfilesdir=$storagenode/$run_name/py_logfiles_sumstats_${date} # name of directory to create and then write log files to
@@ -54,10 +62,16 @@ if [ ! -d $outdir ]; then mkdir ./$outdir; fi
     #submit job to cluster
 for r in 2 10 100; do
 	for rep in $(seq 1 $reps) ; do 
+        if [[ $model == nWF ]]
+        then
              filename=tree_${model}_${avg_age}_${r}_${rep}.trees
              metafile=metaInd_${model}_${avg_age}_${r}_${rep}.txt
-            
              output_file=${homedir}${outdir}/${model}_${avg_age}_${r}_${rep}_${date}_age_bins.txt
+        elif [[ $model == pWF ]]
+             filename=tree_${model}_${r}_${rep}.trees
+             metafile=metaInd_${model}_${r}_${rep}.txt
+             output_file=${homedir}${outdir}/${model}_${r}_${rep}_${date}_age_bins.txt
+        fi
 
 		if [ ! -f "$output_file" ] # don't start job if output files already exists
 		then 

@@ -59,7 +59,6 @@ cp ${INDIR}/${METAFILE} $TMPDIR
 # [6] -- gen time
 # [7] -- avg age
 
-# python -u ./pythonScript treefile outdir prefix mu gen_time
 python -u ${TREEPROCESS} ${FILENAME} ${METAFILE} ${OUTDIR} ${MODEL}_${AVG_AGE}_${R}_${REP}_${DATE} ${MU} ${GEN} ${AVG_AGE} > ${LOGFILESDIR}/log_${JOBNAME}_${MODEL}_${AVG_AGE}_${R}_${REP}.out
 
 echo done processing trees 
