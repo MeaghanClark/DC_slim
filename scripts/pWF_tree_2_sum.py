@@ -124,8 +124,8 @@ elif avg_age == 10:
     burn = 635600
 elif avg_age == 20: 
     burn = 1264600
-elif avg_age ==1:
-    burn=180000
+elif avg_age == 1:
+    burn = 180000
 
 print(f"Using a burn-in time of {burn}")
 
@@ -153,8 +153,6 @@ for n in [*range(0, 24, 1)]:
     tskit_time = convert_time.iloc[n][0]
     print(f"processing sampling point {n} representing tskit time {tskit_time}")
     # assign timepoint to output file
-    tp_age_cohort.loc[0, 'timepoint'] = n 
-    tp_age_bins.loc[0, 'timepoint'] = n 
     tp_random_samp.loc[0, 'timepoint'] = n 
     
     # define pedigree ids sampled by slim, representing individuals we have we have age information for

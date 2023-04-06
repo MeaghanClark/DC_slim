@@ -195,7 +195,7 @@ for n in [*range(0, 24, 1)]:
     tskit_time = convert_time.iloc[n][0]
     print(f"processing sampling point {n} representing tskit time {tskit_time}")
     # assign timepoint to output file
-    tp_age_cohort.loc[0, 'timepoint'] = n 
+   # tp_age_cohort.loc[0, 'timepoint'] = n 
     tp_age_bins.loc[0, 'timepoint'] = n 
     tp_random_samp.loc[0, 'timepoint'] = n 
     
@@ -257,7 +257,8 @@ for n in [*range(0, 24, 1)]:
         tp_age_cohort.loc[a, 'age'] = unique_ages[a]
         tp_age_cohort.loc[a, 'pi'] = mts.diversity(sample_sets = cohort_nodes)
         tp_age_cohort.loc[a, 'theta'] = mts.segregating_sites(sample_sets = cohort_nodes) / np.sum([1/i for i in np.arange(1,len(cohort_nodes))])
-        #tp_age_cohort.loc[0, 'LD'] =
+        tp_age_cohort.loc[a, 'timepoint'] = n 
+	 #tp_age_cohort.loc[0, 'LD'] =
    
     print(f"done with age cohort sampling for sampling point {n} representing tskit time {tskit_time}")
 

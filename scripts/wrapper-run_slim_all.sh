@@ -1,6 +1,6 @@
 #!/bin/bash
 		
-# Last updated 10/26/2022 by MI Clark, script format by R Toczydlowski 
+# Last updated 04/05/2023 by MI Clark, script format by R Toczydlowski 
 
 #  run from project directory (where you want output directory to be created)
 
@@ -33,14 +33,18 @@ elif [[ $avg_age == 20 ]]
 then
 #	burn=1264558
 	burn=1264600
+
+elif [[ $avg_age == 1 ]]
+then
+	burn=100000
 else
 	echo average age is invalid
 fi
 
 
 #define upper-level variables:
-#date=$(date +%m%d%Y)
-date=11082022
+date=$(date +%m%d%Y)
+#date=11082022
 header=${jobname}_${avg_age}_${r} # header name, can change
 run_name=DC_slim #label to use on output files
 
@@ -71,6 +75,9 @@ then
 elif [[ $avg_age == 20 ]] 
 then
 	time=168:00:00
+elif [[ $avg_age == 1 ]] 
+then
+	time=12:00:00
 else
 	echo average age is invalid
 fi
@@ -80,8 +87,8 @@ fi
 if [ ! -d $logfilesdir ]; then mkdir $logfilesdir; fi
 
 #submit job to cluster
-	#for rep in $(seq 1 $reps) ; do 
-	for rep in 90 93 98 ; do 
+	for rep in $(seq 1 $reps) ; do 
+	#for rep in 90 93 98 ; do 
 		sbatch --job-name=$jobname \
 		--export=JOBNAME=$jobname,DATE=$date,SLIMSCRIPT=$slimscript,N=$n,AVG_AGE=$avg_age,BURN=$burn,P=$p,R=$r,HEADER=$header,REPS=${reps},REP=$rep,CPUS=$cpus,RUN_NAME=$run_name,STORAGENODE=$storagenode,OUTDIR=$outdir,INDIR=$indir,HOMEDIR=$homedir,LOGFILESDIR=$logfilesdir,EXECUTABLE=$executable \
 		--cpus-per-task=$cpus \

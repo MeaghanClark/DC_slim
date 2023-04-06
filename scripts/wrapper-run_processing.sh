@@ -30,24 +30,26 @@ if [[ $model == nWF ]]
 then
     date=11082022 
     header=${model}_${avg_age} # from input when running wrapper-run_slim_all.sh
+    treeprocess=tree_2_sum.py #processing python script 
 fi
 
 if [[ $model == pWF ]]
 then
-    date=05312022
+    date=04052023
     header=${model}
+    treeprocess=pWF_tree_2_sum.py #processing python script 
 fi
+
 # define dirs:
 storagenode=/mnt/home/clarkm89 #path to top level of dir where input/output files live
 logfilesdir=$storagenode/$run_name/py_logfiles_sumstats_${date} # name of directory to create and then write log files to
 indir=$storagenode/$run_name/slim_output_${date} # where tree files live
 pythondir=$storagenode/$run_name/scripts # where the python file lives
-outdir=sum_stat_output_${date}
+outdir=sum_stat_output_take2_${date}
 homedir=$storagenode/$run_name/
 
 # define files
 executable=$storagenode/$run_name/scripts/run_processing.sbatch #script to run 
-treeprocess=tree_2_sum.py #processing python script 
 
 # running variables
 cpus=1 #number of CPUs to request/use per dataset 
@@ -70,7 +72,7 @@ for r in 2 10 100; do
         fi
         
         if [[ $model == pWF ]]
-		then
+	then
              filename=tree_${model}_${r}_${rep}.trees
              metafile=metaInd_${model}_${r}_${rep}.txt
              output_file=${homedir}${outdir}/${model}_${r}_${rep}_${date}_age_bins.txt
@@ -87,7 +89,7 @@ for r in 2 10 100; do
 			--mem-per-cpu=$ram_per_cpu \
 			--output=$logfilesdir/${header}_${r}_${rep}_${date}_%A.out \
 			--error=$logfilesdir/${header}_${r}_${rep}_${date}_%A.err \
-			--time=12:00:00 \
+			--time=24:00:00 \
 			$executable
 		else
 			echo output files for ${model}_${r}_${rep}_${date} already exist in ${outdir}
