@@ -411,10 +411,11 @@ for n in [*range(0, 24, 1)]:
     df_age_cohort = pd.concat([df_age_cohort, tp_age_cohort], axis=0)
     df_age_bins = pd.concat([df_age_bins, tp_age_bins], axis=0)
     df_random_samp = pd.concat([df_random_samp, tp_random_samp], axis=0)
-
+	df_random_samp_summary = pd.concat([df_random_samp_summary, tp_random_samp_summary], axis=0)
     
 df_age_cohort.to_csv(outdir+"/"+prefix+"_age_cohort.txt", sep=',', index=False)
 df_age_bins.to_csv(outdir+"/"+prefix+"_age_bins.txt", sep=',', index=False)
 df_random_samp.to_csv(outdir+"/"+prefix+"_rand_samp.txt", sep=',', index=False)
+df_random_samp_summary.to_csv(outdir+"/"+prefix+"_rand_samp_summary.txt", sep=',', index=False)
 
 print(f"done saving output")
