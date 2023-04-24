@@ -35,7 +35,7 @@ fi
 
 if [[ $model == pWF ]]
 then
-    date=04052023
+    date=04062023
     header=${model}
     treeprocess=pWF_tree_2_sum.py #processing python script 
 fi
@@ -45,7 +45,7 @@ storagenode=/mnt/home/clarkm89 #path to top level of dir where input/output file
 logfilesdir=$storagenode/$run_name/py_logfiles_sumstats_${date} # name of directory to create and then write log files to
 indir=$storagenode/$run_name/slim_output_${date} # where tree files live
 pythondir=$storagenode/$run_name/scripts # where the python file lives
-outdir=sum_stat_output_take2_${date}
+outdir=sum_stat_output_take3_${date}
 homedir=$storagenode/$run_name/
 
 # define files
@@ -53,7 +53,7 @@ executable=$storagenode/$run_name/scripts/run_processing.sbatch #script to run
 
 # running variables
 cpus=1 #number of CPUs to request/use per dataset 
-ram_per_cpu=4G #amount of RAM to request/use per CPU 
+ram_per_cpu=8G #amount of RAM to request/use per CPU 
 reps=100 # testing with 1 rep, should be 100 
 
 #---------------------------------------------------------
@@ -73,8 +73,8 @@ for r in 2 10 100; do
         
         if [[ $model == pWF ]]
 	then
-             filename=tree_${model}_${r}_${rep}.trees
-             metafile=metaInd_${model}_${r}_${rep}.txt
+             filename=tree_${model}_${avg_age}_${r}_${rep}.trees
+             metafile=metaInd_${model}_${avg_age}_${r}_${rep}.txt
              output_file=${homedir}${outdir}/${model}_${r}_${rep}_${date}_age_bins.txt
         fi
 
