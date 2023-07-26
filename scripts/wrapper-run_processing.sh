@@ -40,12 +40,13 @@ then
     treeprocess=pWF_tree_2_sum.py #processing python script 
 fi
 
+rundate=$(date +%m%d%Y)
 # define dirs:
 storagenode=/mnt/home/clarkm89 #path to top level of dir where input/output files live
 logfilesdir=$storagenode/$run_name/py_logfiles_sumstats_${date} # name of directory to create and then write log files to
 indir=$storagenode/$run_name/slim_output_${date} # where tree files live
 pythondir=$storagenode/$run_name/scripts # where the python file lives
-outdir=sum_stat_output_take3_${date}
+outdir=sum_stat_output_${rundate}
 homedir=$storagenode/$run_name/
 
 # define files
