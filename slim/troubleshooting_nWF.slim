@@ -1,0 +1,115 @@
+// paired down slim script to troublshoot "inactive population" when recapitating tree sequence
+
+// set up a neutral nonWF simulation
+initialize() {
+	// define model characteristics 
+	initializeSLiMModelType("nonWF");
+	initializeSLiMOptions(keepPedigrees=T, preventIncidentalSelfing=T);
+	initializeTreeSeq();
+						
+	// define constants
+	// constants usually fed to slim in the executable
+	defineConstant("N", 11287);
+	defineConstant("AVG_AGE", 5);
+	defineConstant("R", 100);
+	defineConstant("Q", 315900);
+	
+	//
+	defineConstant("P", (1/(AVG_AGE+1)));	// probability of mortlity
+	defineConstant("K", N*((1-P)/(1-2*P)));	// carrying capacity 
+	defineConstant("B", K/R); // bottleneck carrying capacity
+	defineConstant("END", Q+500); //when to end simultion
+
+	// set up genomes
+	initializeMutationType("m1", 0.5, "f", 0.0); // neutral mutations, which are allowed to fix
+	initializeGenomicElementType("g1", m1, 1.0);
+	initializeGenomicElement(g1, 0, 1e8); 
+	initializeMutationRate(0); // mutations will be added in msprime
+	initializeRecombinationRate(1e-8);
+} // end initialize call 
+
+
+reproduction(NULL) {
+// Scaled reproduction calls		
+	if (individual.age > 0) { 
+		// before bottleneck
+		if(sim.generation < Q ){	prob_offspring = max(0.0, (1-p1.individualCount/K));}	 // 1- (N/K)
+
+		// bottleneck and after
+		if(sim.generation >= (Q)){ prob_offspring = max(0.0, (1-p1.individualCount/B));}
+
+		offspring_count = rbinom(1, 1, prob_offspring);
+		
+		// generate offspring
+		if (offspring_count > 0) {
+			subpop.addCrossed(individual, subpop.sampleIndividuals(1, exclude=individual, minAge=1));
+		}
+	}
+} // end reproduction callback
+
+
+// create an initial population of N individuals
+1 early() {
+	sim.addSubpop("p1", size=asInteger(K));
+	p1.individuals.age = rdunif(asInteger(K), min=0, max=39);
+}
+
+// redefine event timing
+1 early(){
+	before_bottleneck = (Q - 200); // beginning of "before" sampling, every 50 cycles 
+	begin_decline = (Q + 1);	// beginning of "during decline" sampling, every 5 cycles
+	end_decline = (Q + 45); // end of "during decline" sampling 
+	after_decline = (Q + 46); // beginning of post-decline sampling
+	
+	sim.rescheduleScriptBlock(s1, start = END, end = END); // end simulation
+	sim.rescheduleScriptBlock(s2, start = before_bottleneck, end = Q); // before bottleneck, e.g. 179800:180000
+	sim.rescheduleScriptBlock(s3, start = begin_decline, end = end_decline); // during bottleneck
+	sim.rescheduleScriptBlock(s4, start = after_decline, end = END); // after bottleneck
+	sim.rescheduleScriptBlock(s5, start = Q, end = Q);
+	
+} // end early callback 
+
+
+// fitness scaling
+
+early() {
+	p1.fitnessScaling = (1-P);
+} // end fitness scaling
+
+s5 180000 early() {
+	p1.fitnessScaling = 1-((K-B)/K);
+}
+
+
+// Define output and remember individuals 
+
+// before bottleneck
+s2 179800:180000 late(){
+	if (sim.generation % 50 == 0){ //every fifty generations
+		// individual output
+		sample = p1.sampleIndividuals(100, replace = F);
+		sim.treeSeqRememberIndividuals(sample);
+	}	
+} // end before bottleneck output 
+
+// during bottleneck
+s3 180001:180022 late(){
+	if (sim.generation % 5 == 0){ //every five generations
+		// individual output
+		sample = p1.sampleIndividuals(100, replace = F); // if Nc < 100, will sample Nc individuals
+		sim.treeSeqRememberIndividuals(sample);
+	}	
+} // end during bottleneck output 
+
+// after bottleneck
+s4 180023:180500 late(){
+	if (sim.generation % 50 == 0){ //every fifty generations
+		// individual output
+		sample = p1.sampleIndividuals(100, replace = F); // if Nc < 100, will sample Nc individuals
+		sim.treeSeqRememberIndividuals(sample);
+	}	
+} // end after bottleneck output
+
+s1 35000 late() {
+	sim.treeSeqOutput(O);
+} 
