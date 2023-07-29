@@ -90,7 +90,7 @@ for r in 2 10 100; do
 			--mem-per-cpu=$ram_per_cpu \
 			--output=$logfilesdir/${header}_${r}_${rep}_${date}_%A.out \
 			--error=$logfilesdir/${header}_${r}_${rep}_${date}_%A.err \
-			--time=24:00:00 \
+			--time=168:00:00 \
 			$executable
 		else
 			echo output files for ${model}_${r}_${rep}_${date} already exist in ${outdir}

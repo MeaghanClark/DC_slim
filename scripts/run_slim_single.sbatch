@@ -5,9 +5,9 @@
 #SBATCH --time=24:00:00             # limit of wall clock time - how long the job will run (same as -t)
 #SBATCH --cpus-per-task=1         # number of CPUs (or cores) per task (same as -c)
 #SBATCH --mem-per-cpu=12G            # memory required per allocated CPU (or core)
-#SBATCH --job-name=bam_hists      # you can give your job a name for easier identification (same as -J)
+#SBATCH --job-name=slim_single      # you can give your job a name for easier identification (same as -J)
 #SBATCH --output="/mnt/home/clarkm89/DC_slim/slim_log_single_07272023.out"
-#SBATCH --error="/mnt/home/clarkm89/EMR_WGS/slim_log_single_07272023.err"
+#SBATCH --error="/mnt/home/clarkm89/DC_slim/slim_log_single_07272023.err"
 
 ##########
 
@@ -29,8 +29,8 @@ today_date=$(date +%m%d%y)
 
 # define variables
 HOMEDIR=/mnt/home/clarkm89/DC_slim
-OUTDIR=$HOMEDIR/slim_output_troubleshooting_07272023/
-INDIR=$HOMEDIR/slim/
+OUTDIR=slim_output_troubleshooting_07272023
+INDIR=$HOMEDIR/slim
 SLIMSCRIPT="troubleshooting_nWF.slim"
 
 # move everything to TMPDIR
@@ -45,7 +45,7 @@ cp ${INDIR}/${SLIMSCRIPT} $TMPDIR
 
 echo I am running ${SLIMSCRIPT} and putting the output in ${OUTDIR} 
 
-slim ${SLIMSCRIPT}
+slim -d "O='${OUTDIR}/nWF_troubleshooting.trees'" ${SLIMSCRIPT}
 
 echo done running the simulation
 

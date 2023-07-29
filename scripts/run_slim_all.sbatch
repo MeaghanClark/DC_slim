@@ -11,7 +11,7 @@ echo "after calling source: $PATH"
 module purge
 module load GCC/6.4.0-2.28
 module load OpenMPI/2.1.2
-module load SLiM/2021dev
+module load SLiM/3.7.1
 module list
 
 today_date=$(date +%m%d%y)
