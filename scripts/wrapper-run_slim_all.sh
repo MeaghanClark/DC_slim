@@ -11,7 +11,7 @@ jobname=$1 #label for SLURM book-keeping, nWF or pWF
 
 # slim specific variables
 n=$2 # census pop size
-reps=100 # reps of slimulation to run 
+reps=1 # reps of slimulation to run 
 avg_age=$3
 r=$4 # factor to reduce pop size by
 

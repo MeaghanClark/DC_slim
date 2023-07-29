@@ -12,8 +12,7 @@ import datetime # FOR DEBUGGING
 import csv
 import math
 import tskit
-import seaborn as sns
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 np.set_printoptions(threshold=sys.maxsize)
 
 # define custom functions ------------------------------------------------------------------------------------------------------------------------------------------
