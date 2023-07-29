@@ -379,8 +379,6 @@ convert_time = pd.DataFrame({'tskit_time':sampling, 'slim_time':cycles}, columns
 no_straps = 1000
 
 df_summary = pd.DataFrame(columns = ['timepoint', 'pi', 'theta', 'LD']) # add eventually 'pi_ten', 'LD_ten',
-df_sub_samp = pd.DataFrame(columns=['timepoint', 'calculation_id'] + [f'replicate_{i}' for i in range(1, (no_straps + 1))])
-
 
 # loop through time points to calculate pi using tskit
 
@@ -391,9 +389,6 @@ for n in [*range(0, 24, 1)]:
     
     # data object to store summary stats calculated from all nodes
     tp_summary = pd.DataFrame(columns = ['timepoint', 'pi', 'theta', "LD"])
-        
-    # data object to store bootstrapped replicates of summary stats for sub-sample and age bins
-    tp_sub_samp = pd.DataFrame(columns=['timepoint', 'calculation_id'] + [f'replicate_{i}' for i in range(1, (no_straps + 1))])
 
     # define tskit time
     tskit_time = convert_time.iloc[n][0]
@@ -401,7 +396,6 @@ for n in [*range(0, 24, 1)]:
     
     # assign timepoint to output files    
     tp_summary.loc[0, 'timepoint'] = n
-    tp_sub_samp.loc[0, 'timepoint'] = n
     
     # define pedigree ids sampled by slim, representing individuals we have we have age information for
     samp_pdids = metadata[metadata["generation"] == convert_time.iloc[n][1]].filter(["pedigree_id"])
@@ -431,25 +425,6 @@ for n in [*range(0, 24, 1)]:
     tp_summary.loc[0, 'LD'] = getrSquaredDecayDist(all_nodes, gt_matrix_all_nodes)[3]
        
 
-    ### No age info------------------------------------------------------------------------------------------------------------------------------------------
-    subsamp_ids = pd.concat([lower_ids, upper_ids])
-    subsamp_nodes = getNodes(ids = subsamp_ids, inds_alive = alive, ts = mts)
-
-    # bootstrap theta and save to tp_age_bins
-    theta_subsamp = bootstrapTheta(nodes = subsamp_nodes, niter = no_straps, nDraws = 20)
-    tp_sub_samp = saveStraps(bootstrapped_data = theta_subsamp, timepoint = n, calc_id = "theta_subsamp", dataframe = tp_sub_samp)
-
-    # bootstrap pi and save to tp_age_bins
-    pi_subsamp = bootstrapPi(nodes = subsamp_nodes, gt_matrix = mts.genotype_matrix(samples = subsamp_nodes), ts = mts, niter = no_straps, nDraws = 20)
-    tp_sub_samp = saveStraps(bootstrapped_data = pi_subsamp, timepoint = n, calc_id = "pi_subsamp", dataframe = tp_sub_samp)
-    
-    # bootstrap LD and save to tp_age_bins
-    # get gt_matrix for all lower nodes
-    gt_matrix_subsamp= mts.genotype_matrix(samples = subsamp_nodes)
-    LD_subsamp = bootstrapLD(subsamp_ids, subsamp_nodes, gt_matrix_subsamp, niter = no_straps, nDraws = 10) 
-    tp_sub_samp= saveStraps(bootstrapped_data = LD_subsamp, timepoint = n, calc_id = "LD_subsamp", dataframe = tp_sub_samp)
-   
-
     # save output------------------------------------------------------------------------------------------------------------------------------------------
 
     print(f"done with age bin sampling for sampling point {n} representing tskit time {tskit_time}")
@@ -457,9 +432,7 @@ for n in [*range(0, 24, 1)]:
     #### add information from this timepoint to final dataframes
 
     df_summary = pd.concat([df_summary, tp_summary], axis=0)
-    df_sub_samp = pd.concat([df_sub_samp, tp_sub_samp], axis=0)    
     
 df_summary.to_csv(outdir+"/"+prefix+"_summary.txt", sep=',', index=False)
-df_sub_samp.to_csv(outdir+"/"+prefix+"_sub_samp.txt", sep=',', index=False)
 
 print(f"done saving output")
