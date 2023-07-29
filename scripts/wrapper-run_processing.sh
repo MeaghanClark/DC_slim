@@ -35,7 +35,7 @@ fi
 
 if [[ $model == pWF ]]
 then
-    date=04062023
+    date=04262023
     header=${model}
     treeprocess=pWF_tree_2_sum.py #processing python script 
 fi
