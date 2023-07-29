@@ -1,4 +1,7 @@
-// paired down slim script to troublshoot "inactive population" when recapitating tree sequence
+// troubleshooting_nWF.slim
+// M. Clark 07/27/2023
+// paired down slim script to troublshoot "inactive population" error when recapitating tree sequence
+// to be run with SLiM 3.7.1
 
 // set up a neutral nonWF simulation
 initialize() {
@@ -9,12 +12,12 @@ initialize() {
 						
 	// define constants
 	// constants usually fed to slim in the executable
-	defineConstant("N", 11287);
-	defineConstant("AVG_AGE", 5);
-	defineConstant("R", 100);
-	defineConstant("Q", 315900);
-	defineConstant("O", "./nWF_troubleshooting.trees"
-	
+	defineConstant("N", 11287); // desired census population size for a Ne of 10K
+	defineConstant("AVG_AGE", 5); // average age/lifespan of simulation
+	defineConstant("R", 100); // bottleneck severity
+	defineConstant("Q", 315900); // timing of bottleneck/ length of burn-in 
+	defineConstant("O", "./nWF_troubleshooting.trees"); // supply tree file output path using command line, or change this line
+	 
 	//
 	defineConstant("P", (1/(AVG_AGE+1)));	// probability of mortlity
 	defineConstant("K", N*((1-P)/(1-2*P)));	// carrying capacity 
@@ -66,7 +69,7 @@ reproduction(NULL) {
 	sim.rescheduleScriptBlock(s2, start = before_bottleneck, end = Q); // before bottleneck, e.g. 179800:180000
 	sim.rescheduleScriptBlock(s3, start = begin_decline, end = end_decline); // during bottleneck
 	sim.rescheduleScriptBlock(s4, start = after_decline, end = END); // after bottleneck
-	sim.rescheduleScriptBlock(s5, start = Q, end = Q);
+	sim.rescheduleScriptBlock(s5, start = Q, end = Q); // bottleneck generation 
 	
 } // end early callback 
 
