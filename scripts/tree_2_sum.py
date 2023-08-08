@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# last updates 07/26/2023
+# last updates 08/08/2023
 
 import sys
 import msprime
@@ -12,7 +12,6 @@ import datetime # FOR DEBUGGING
 import csv
 import math
 import tskit
-# import matplotlib.pyplot as plt
 np.set_printoptions(threshold=sys.maxsize)
 
 # define custom functions ------------------------------------------------------------------------------------------------------------------------------------------
@@ -24,17 +23,6 @@ def getNodes(ids, inds_alive, ts):
         nodes.append(focal_ind.nodes.tolist())
     nodes = [item for sublist in nodes for item in sublist] 
     return nodes
-
-
-def bootstrapTheta(nodes, niter, nDraws): 
-    # returns a list of theta values with length of niter, each value is Wu and Watterson's theta calculated from nDraws nodes
-    samples = []
-    theta = []
-    for i in [*range(0, niter, 1)]: 
-        sample = random.choices(nodes, k=nDraws)
-        sample_theta = mts.segregating_sites(sample_sets = list(set(sample))) / np.sum([1/i for i in np.arange(1,len(sample))])
-        theta.append(sample_theta)
-    return theta    
 
 
 def getAlleleCounts(gt_matrix) : 
@@ -75,30 +63,6 @@ def calcPiSFS(afs, mts, m_sites):
     return(pi)
 
 
-def bootstrapPi(nodes, gt_matrix, ts, niter, nDraws): # returns a list of pi values with length of niter, each value is pi calculated from nDraws nodes
-    # this function generates bootstrapped replicates of pi from the SFS by sampling nDraws numbers of nodes from a subset with replacement niter times. 
-    samples = []
-    pi = []
-    for i in [*range(0, niter, 1)]: 
-        #isolate appropraite columns of the genotype matrix
-        sample = random.choices(range(0, len(nodes), 1), k=nDraws)
-        sfs = getSFS(gt_matrix[:,sample], sample)
-        sample_pi = calcPiSFS(sfs[0], mts, sfs[1])
-        pi.append(sample_pi)
-    return(pi)
-
-
-def saveStraps(bootstrapped_data, timepoint, calc_id, dataframe):
-    # this function appends bootstrapped_data to a dataframe with specified timepoint and calculation informatio
-    rows = []
-    row = {'timepoint': timepoint, 'calculation_id': calc_id}
-    for i, rep in enumerate(bootstrapped_data):
-        row[f'replicate_{i+1}'] = rep
-    rows.append(row)
-    dataframe = pd.concat([dataframe, pd.DataFrame(rows)], ignore_index=True)
-    return(dataframe)
-
-
 def getBiGenoMatrix(gt_matrix):
     # This function returns a matrix of biallelic allele counts from a genotype matrix
 
@@ -124,6 +88,7 @@ def getVariantPositions(positions, gt_matrix):
     
     
 def getrSquared(bi_gt, A_index, B_index):
+    # This function calculates r^2 for two loci, A and B
     # consider two LOCI at a time 
     # in bi_gt, rows are loci, columns are genotypes
 
@@ -167,7 +132,7 @@ def getrSquared(bi_gt, A_index, B_index):
 
 
 def getrSquaredDecayDist(nodes, gt_matrix):
-
+    # This function calculates the distance class at which r^2 decays to near its minimum value (within 0.2) 
     # get genotype matrix for subset of individuals
     # gt_matrix = mts.genotype_matrix(samples = nodes) # genotype_matrix retains order of nodes passed to it
 
@@ -253,24 +218,91 @@ def getrSquaredDecayDist(nodes, gt_matrix):
     return(asym_mean, asym_se, limit, distance)
     
     
-def bootstrapLD(ids, nodes, gt_matrix, niter, nDraws): # returns a list of pi values with length of niter, each value is pi calculated from nDraws nodes
-    # this function generates bootstrapped replicates of pi from the SFS by sampling nDraws numbers of nodes from a subset with replacement niter times. 
-    samples = []
-    LD = []
-    for i in [*range(0, niter, 1)]: 
-        # define sample for bootstrapping
-        sample = random.choices(range(0, len(ids), 1), k=nDraws)
-        
-        # filter genotype matrix to retain only sampled individuals 
-        sample_nodes = getNodes(ids = ids.iloc[sample], inds_alive = alive, ts = mts)  # what are the node ids associated with the sample? 
-        matching_indices = [nodes.index(node) for node in sample_nodes]  # where to sample nodes match lower_ten_nodes?
-        gt_matrix_sample = gt_matrix[:,matching_indices]        # subset gt_matrix
+def bootstrap(group1_nodes, group2_nodes, niter):
+    # This function does a series of bootstrap hypothesis tests, comparing pi, theta, and LD distance decay for the two groups of nodes given 
+    
+    # get list of all nodes
+    node_combo = group1_nodes + group2_nodes
 
-        # calculate LD decay distance 
-        sample_LD = getrSquaredDecayDist(sample_nodes, gt_matrix_sample)[3]
+    #get genotype matrix for (all) samples
+    gt_matrix = mts.genotype_matrix(samples = node_combo) # group 1 will be 0-9 and group 2 will be 10-21?
+    # group 1 and 2 matrices should be: 
+    # np.shape(gt_matrix[:,0:20])
+    # np.shape(gt_matrix[:,20:41])
+
+    # define indicies that correspond to different groups
+    group1 = [*range(0, 20, 1)]
+    group2 = [*range(20, 40, 1)]
+
+    # get SFS from each sample set
+    sfs1 = getSFS(gt_matrix[:,group1], group1)
+    sfs2 = getSFS(gt_matrix[:,group2], group2)
+    
+    # calculate pi for each sample set
+    pi1 = calcPiSFS(sfs1[0], mts, sfs1[1])
+    pi2 = calcPiSFS(sfs2[0], mts, sfs2[1])
+    
+    # calculate theta for each sample set
+    theta1 = mts.segregating_sites(sample_sets = list(set(group1_nodes))) / np.sum([1/i for i in np.arange(1,len(group1_nodes))])
+    theta2 = mts.segregating_sites(sample_sets = list(set(group2_nodes))) / np.sum([1/i for i in np.arange(1,len(group2_nodes))])
+    
+    # calculate LD for each sample set
+    LD1 = getrSquaredDecayDist(group1_nodes, gt_matrix[:,group1])[3]
+    LD2 = getrSquaredDecayDist(group2_nodes, gt_matrix[:,group2])[3]
+    
+    # find differences
+    obs_dif_pi = pi2 - pi1
+    obs_dif_theta = theta2 - theta1
+    obs_dif_LD = LD2 - LD1
+
+    # generate bootstrapped differences
+    pi_strap_difs = []
+    theta_strap_difs = []
+    LD_strap_difs = []
+    
+    for i in [*range(0, niter, 1)]:     #repeat for no_straps
+    
+        # resample from all nodes
+        group1_rand_samp = random.choices(range(0, len(group1), 1), k=len(group1_nodes))
+        group2_rand_samp = random.choices(range(0, len(group2), 1), k=len(group2_nodes))
+                                
+        # calculate stats from artificial groups and find difference
+    
+        # pi
+        # get SFS from each sample set
+        rand_sfs1 = getSFS(gt_matrix[:,group1_rand_samp], group1_rand_samp)
+        rand_sfs2 = getSFS(gt_matrix[:,group2_rand_samp], group2_rand_samp)
         
-        LD.append(sample_LD)
-    return(LD)
+        # calculate pi for each sample set
+        rand_pi1 = calcPiSFS(rand_sfs1[0], mts, rand_sfs1[1])
+        rand_pi2 = calcPiSFS(rand_sfs2[0], mts, rand_sfs2[1])
+    
+        rand_dif_pi = rand_pi2 - rand_pi1
+        
+        # theta
+        rand_theta1 = mts.segregating_sites(sample_sets = list(set([node_combo[i] for i in group1_rand_samp]))) / np.sum([1/i for i in np.arange(1,len(group1_rand_samp))])
+        rand_theta2 = mts.segregating_sites(sample_sets = list(set([node_combo[i] for i in group2_rand_samp]))) / np.sum([1/i for i in np.arange(1,len(group2_rand_samp))])
+        
+        rand_dif_theta = rand_theta2 - rand_theta1
+            
+        # LD 
+        rand_LD1 = getrSquaredDecayDist([node_combo[i] for i in group1_rand_samp], gt_matrix[:,group1_rand_samp])[3]
+        rand_LD2 = getrSquaredDecayDist([node_combo[i] for i in group2_rand_samp], gt_matrix[:,group2_rand_samp])[3]    
+        
+        rand_dif_LD = rand_LD2 - rand_LD1
+        
+        pi_strap_difs.append(rand_dif_pi)
+        theta_strap_difs.append(rand_dif_theta)
+        LD_strap_difs.append(rand_dif_LD)
+
+
+    # caclulate p-value
+    p_val_pi = sum(pi_strap_difs >= obs_dif_pi) / niter
+    p_val_theta = sum(theta_strap_difs >= obs_dif_theta) / niter
+    p_val_LD = sum(LD_strap_difs >= obs_dif_LD) / niter
+    
+    p_vals = [pi2, pi1, p_val_pi, theta2, theta1, p_val_theta, LD1, LD2, p_val_LD]
+    return(p_vals)
 
 
 # ------------------------------------------------------------------------------------------------------------------------------------------
@@ -320,7 +352,7 @@ orig_ts = pyslim.update(orig_ts)
 print(f"Loaded tree file")
 
 # recapitate tree
-rts = pyslim.recapitate(orig_ts, ancestral_Ne=5487, recombination_rate = 1e-8) # need to change ancestral Ne! 
+rts = pyslim.recapitate(orig_ts, ancestral_Ne=(10000*float(gen_time)), recombination_rate = (1e-8/float(gen_time))) 
 
 orig_max_roots = max(t.num_roots for t in orig_ts.trees())
 recap_max_roots = max(t.num_roots for t in rts.trees())
@@ -381,12 +413,12 @@ convert_time = pd.DataFrame({'tskit_time':sampling, 'slim_time':cycles}, columns
 
 # initalize data lists
 
-no_straps = 1000
+no_straps = 1000 # 100 for troubleshooting, 1000 for running
 
 df_summary = pd.DataFrame(columns = ['timepoint', 'pi', 'theta', 'LD']) # add eventually 'pi_ten', 'LD_ten',
 df_age_cohort = pd.DataFrame(columns = ['timepoint', 'age', 'pi', 'theta']) # eventually want to add some measure of LD
-df_sub_samp = pd.DataFrame(columns=['timepoint', 'calculation_id'] + [f'replicate_{i}' for i in range(1, (no_straps + 1))])
-
+df_age_bin = pd.DataFrame(columns = ['timepoint', 'pi_older', 'pi_younger', 'pi_pval', 'theta_older', 'theta_younger', 'theta_pval', 'LD_older', 'LD_younger', 'LD_pval'])
+df_temporal = pd.DataFrame(columns = ['timepoint', 'pi_before', 'pi_now', 'pi_pval', 'theta_before', 'theta_now', 'theta_pval', 'LD_before', 'LD_now', 'LD_pval'])
 
 # loop through time points to calculate pi using tskit
 
@@ -401,16 +433,18 @@ for n in [*range(0, 24, 1)]:
     # data object to store summary stats for age cohorts
     tp_age_cohort = pd.DataFrame(columns = ['timepoint', 'age', 'pi', 'theta'])
     
-    # data object to store bootstrapped replicates of summary stats for sub-sample and age bins
-    tp_sub_samp = pd.DataFrame(columns=['timepoint', 'calculation_id'] + [f'replicate_{i}' for i in range(1, (no_straps + 1))])
-
+    # data objects to store bootstrapped replicates of summary stats for age bins and temporal comparison
+    tp_age_bin = pd.DataFrame(columns = ['timepoint', 'pi_older', 'pi_younger', 'pi_pval', 'theta_older', 'theta_younger', 'theta_pval', 'LD_older', 'LD_younger', 'LD_pval'])
+    tp_temporal = pd.DataFrame(columns = ['timepoint', 'pi_before', 'pi_now', 'pi_pval', 'theta_before', 'theta_now', 'theta_pval', 'LD_before', 'LD_now', 'LD_pval'])
+    
     # define tskit time
     tskit_time = convert_time.iloc[n][0]
     print(f"processing sampling point {n} representing tskit time {tskit_time}")
     
     # assign timepoint to output files    
     tp_summary.loc[0, 'timepoint'] = n
-    tp_sub_samp.loc[0, 'timepoint'] = n
+    tp_age_bin.loc[0, 'timepoint'] = n
+    tp_temporal.loc[0, 'timepoint'] = n 
     
     # define pedigree ids sampled by slim, representing individuals we have we have age information for
     samp_pdids = metadata[metadata["generation"] == convert_time.iloc[n][1]].filter(["pedigree_id"])
@@ -469,8 +503,6 @@ for n in [*range(0, 24, 1)]:
     ## [1] upper/lower 10%
     # define nodes from upper and lower 10% of individuals, calculate theta, pi, and LD of entire subsample, then calculate theta, pi and LD of age bins
     
-    # define nodes
-    
     lower_index_ten = int(len(meta_sorted) * 0.1)
     upper_index_ten = int(len(meta_sorted) * 0.9)
 
@@ -481,76 +513,45 @@ for n in [*range(0, 24, 1)]:
     upper_10_percent = meta_sorted[upper_index_ten:]
     
     # lower 10% ------------------------------------------------------------------------------------------------------------------------------------------
-    # define nodes 
     lower_ids = lower_10_percent["pedigree_id"] 
     lower_ten_nodes = getNodes(ids = lower_ids, inds_alive = alive, ts = mts)
-    
-    # bootstrap theta and save to tp_age_bins
-    theta_lower_ten = bootstrapTheta(nodes = lower_ten_nodes, niter = no_straps, nDraws = 20)
-    tp_sub_samp = saveStraps(bootstrapped_data = theta_lower_ten, timepoint = n, calc_id = "theta_lower_ten", dataframe = tp_sub_samp)
-
-    # bootstrap pi and save to tp_age_bins
-    pi_lower_ten = bootstrapPi(nodes = lower_ten_nodes, gt_matrix = mts.genotype_matrix(samples = lower_ten_nodes), ts = mts, niter = no_straps, nDraws = 20)
-    tp_sub_samp = saveStraps(bootstrapped_data = pi_lower_ten, timepoint = n, calc_id = "pi_lower_ten", dataframe = tp_sub_samp)
-
-    # bootstrap LD and save to tp_age_bins
-    # get gt_matrix for all lower nodes
-    gt_matrix_lower_ten = mts.genotype_matrix(samples = lower_ten_nodes)
-    LD_lower_ten = bootstrapLD(lower_ids, lower_ten_nodes, gt_matrix_lower_ten, niter = no_straps, nDraws = 10) 
-    tp_sub_samp= saveStraps(bootstrapped_data = LD_lower_ten, timepoint = n, calc_id = "LD_lower_ten", dataframe = tp_sub_samp)
-    
 
     # upper 10% ------------------------------------------------------------------------------------------------------------------------------------------
-    # define nodes 
     upper_ids = upper_10_percent["pedigree_id"] 
     upper_ten_nodes = getNodes(ids = upper_ids, inds_alive = alive, ts = mts)
+       
+    # bootstrap ------------------------------------------------------------------------------------------------------------------------------------------
+    bin_vals = bootstrap(lower_ten_nodes, upper_ten_nodes, niter = no_straps)
     
-    # bootstrap theta and save to tp_age_bins
-    theta_upper_ten = bootstrapTheta(nodes = upper_ten_nodes, niter = no_straps, nDraws = 20)
-    tp_sub_samp = saveStraps(bootstrapped_data = theta_upper_ten, timepoint = n, calc_id = "theta_upper_ten", dataframe = tp_sub_samp)
-
-    # bootstrap pi and save to tp_age_bins
-    pi_upper_ten = bootstrapPi(nodes = upper_ten_nodes, gt_matrix = mts.genotype_matrix(samples = upper_ten_nodes), ts = mts, niter = no_straps, nDraws = 20)
-    tp_sub_samp = saveStraps(bootstrapped_data = pi_upper_ten, timepoint = n, calc_id = "pi_upper_ten", dataframe = tp_sub_samp)
-    
-    # bootstrap LD and save to tp_age_bins
-    # get gt_matrix for all lower nodes
-    gt_matrix_upper_ten = mts.genotype_matrix(samples = upper_ten_nodes)
-    LD_upper_ten = bootstrapLD(upper_ids, upper_ten_nodes, gt_matrix_upper_ten, niter = no_straps, nDraws = 10) 
-    tp_sub_samp= saveStraps(bootstrapped_data = LD_upper_ten, timepoint = n, calc_id = "LD_upper_ten", dataframe = tp_sub_samp)
-   
+    # save output ------------------------------------------------------------------------------------------------------------------------------------------
+    tp_age_bin.iloc[:, 1:] = bin_vals
 
     ### No age info------------------------------------------------------------------------------------------------------------------------------------------
+    # now nodes
     subsamp_ids = pd.concat([lower_ids, upper_ids])
     subsamp_nodes = getNodes(ids = subsamp_ids, inds_alive = alive, ts = mts)
 
-    # bootstrap theta and save to tp_age_bins
-    theta_subsamp = bootstrapTheta(nodes = subsamp_nodes, niter = no_straps, nDraws = 20)
-    tp_sub_samp = saveStraps(bootstrapped_data = theta_subsamp, timepoint = n, calc_id = "theta_subsamp", dataframe = tp_sub_samp)
-
-    # bootstrap pi and save to tp_age_bins
-    pi_subsamp = bootstrapPi(nodes = subsamp_nodes, gt_matrix = mts.genotype_matrix(samples = subsamp_nodes), ts = mts, niter = no_straps, nDraws = 20)
-    tp_sub_samp = saveStraps(bootstrapped_data = pi_subsamp, timepoint = n, calc_id = "pi_subsamp", dataframe = tp_sub_samp)
+    # before nodes 
+    # bootstrap ------------------------------------------------------------------------------------------------------------------------------------------
+    if n > 0:
+        now_nodes = lower_ten_nodes + upper_ten_nodes
+        temp_vals = bootstrap(before_nodes, now_nodes, niter = no_straps)
     
-    # bootstrap LD and save to tp_age_bins
-    # get gt_matrix for all lower nodes
-    gt_matrix_subsamp= mts.genotype_matrix(samples = subsamp_nodes)
-    LD_subsamp = bootstrapLD(subsamp_ids, subsamp_nodes, gt_matrix_subsamp, niter = no_straps, nDraws = 10) 
-    tp_sub_samp= saveStraps(bootstrapped_data = LD_subsamp, timepoint = n, calc_id = "LD_subsamp", dataframe = tp_sub_samp)
-   
-
-    # save output------------------------------------------------------------------------------------------------------------------------------------------
-
-    print(f"done with age bin sampling for sampling point {n} representing tskit time {tskit_time}")
-
-    #### add information from this timepoint to final dataframes
-
+        # save output ------------------------------------------------------------------------------------------------------------------------------------------
+        tp_temporal.iloc[:, 1:] = temp_vals
+    
+    # save output ------------------------------------------------------------------------------------------------------------------------------------------
     df_summary = pd.concat([df_summary, tp_summary], axis=0)
     df_age_cohort = pd.concat([df_age_cohort, tp_age_cohort], axis=0)
-    df_sub_samp = pd.concat([df_sub_samp, tp_sub_samp], axis=0)    
-    
+    df_age_bin = pd.concat([df_age_bin, tp_age_bin], axis=0)   
+    df_temporal = pd.concat([df_temporal, tp_temporal], axis=0)   
+
+    # end of for loop
+    before_nodes = lower_ten_nodes + upper_ten_nodes
+
 df_summary.to_csv(outdir+"/"+prefix+"_summary.txt", sep=',', index=False)
 df_age_cohort.to_csv(outdir+"/"+prefix+"_age_cohort.txt", sep=',', index=False)
-df_sub_samp.to_csv(outdir+"/"+prefix+"_sub_samp.txt", sep=',', index=False)
+df_age_bin.to_csv(outdir+"/"+prefix+"_age_bin.txt", sep=',', index=False)
+df_temporal.to_csv(outdir+"/"+prefix+"_temporal.txt", sep=',', index=False)
 
 print(f"done saving output")
