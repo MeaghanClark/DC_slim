@@ -140,7 +140,7 @@ def getrSquaredDecayDist(nodes, gt_matrix):
     bi_gt = getBiGenoMatrix(gt_matrix)
 
     # downsample loci, randomly for now
-    target_loci = random.sample([*range(0, np.shape(bi_gt)[0], 1)], 100)
+    target_loci = random.sample([*range(0, np.shape(bi_gt)[0], 1)], 1000)
 
     # filter bi_gt by target loci
     bi_gt_target = bi_gt[target_loci,] # biallelic loci filtered to retain only target_loci
