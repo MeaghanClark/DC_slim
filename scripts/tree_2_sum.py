@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# last updates 08/08/2023
+# last updates 08/10/2023
 
 import sys
 import msprime
@@ -140,7 +140,7 @@ def getrSquaredDecayDist(nodes, gt_matrix):
     bi_gt = getBiGenoMatrix(gt_matrix)
 
     # downsample loci, randomly for now
-    target_loci = random.sample([*range(0, np.shape(bi_gt)[0], 1)], 100)
+    target_loci = random.sample([*range(0, np.shape(bi_gt)[0], 1)], 1000) 
 
     # filter bi_gt by target loci
     bi_gt_target = bi_gt[target_loci,] # biallelic loci filtered to retain only target_loci
@@ -217,6 +217,7 @@ def getrSquaredDecayDist(nodes, gt_matrix):
 
     return(asym_mean, asym_se, limit, distance)
     
+
     
 def bootstrap(group1_nodes, group2_nodes, niter):
     # This function does a series of bootstrap hypothesis tests, comparing pi, theta, and LD distance decay for the two groups of nodes given 
@@ -231,8 +232,8 @@ def bootstrap(group1_nodes, group2_nodes, niter):
     # np.shape(gt_matrix[:,20:41])
 
     # define indicies that correspond to different groups
-    group1 = [*range(0, 20, 1)]
-    group2 = [*range(20, 40, 1)]
+    group1 = [*range(0, len(group1_nodes), 1)]
+    group2 = [*range(len(group1_nodes), len(group1_nodes) + len(group2_nodes), 1)]
 
     # get SFS from each sample set
     sfs1 = getSFS(gt_matrix[:,group1], group1)
@@ -304,11 +305,10 @@ def bootstrap(group1_nodes, group2_nodes, niter):
     p_vals = [pi2, pi1, p_val_pi, theta2, theta1, p_val_theta, LD1, LD2, p_val_LD]
     return(p_vals)
 
-
 # ------------------------------------------------------------------------------------------------------------------------------------------
 
 # uncomment these lines when running from command line
-# sys.argv = ['tree_processing.py', '../slim_output_11082022/tree_nWF_5_10_89.trees','../slim_output_11082022/metaInd_nWF_5_10_89.txt', '/Users/meaghan/Desktop/DC_slim/het', 's_sites_test', 1e-8, 5, 5]
+# sys.argv = ['tree_processing.py', '../troubleshooting/tree_nWF_2_100_69.trees','../troubleshooting/metaInd_nWF_2_100_69.txt', '/Users/meaghan/Desktop/DC_slim/het', 'hpcc_trouble', 1e-8, 3, 2]
 # arguments: 
 # [0] -- python script name
 # [1] -- tree file
@@ -413,7 +413,7 @@ convert_time = pd.DataFrame({'tskit_time':sampling, 'slim_time':cycles}, columns
 
 # initalize data lists
 
-no_straps = 1000 # 100 for troubleshooting, 1000 for running
+no_straps = 20 # 100 for troubleshooting, 1000 for running
 
 df_summary = pd.DataFrame(columns = ['timepoint', 'pi', 'theta', 'LD']) # add eventually 'pi_ten', 'LD_ten',
 df_age_cohort = pd.DataFrame(columns = ['timepoint', 'age', 'pi', 'theta']) # eventually want to add some measure of LD
@@ -423,7 +423,7 @@ df_temporal = pd.DataFrame(columns = ['timepoint', 'pi_before', 'pi_now', 'pi_pv
 # loop through time points to calculate pi using tskit
 
 for n in [*range(0, 24, 1)]: 
-#for n in [*range(0, 2, 1)]: # ------------------------------------------------------------------------------------------------------------------------------------------
+#for n in [*range(0, 5, 1)]: # ------------------------------------------------------------------------------------------------------------------------------------------
 
     # initialize data object to store stats values that are calculated once per time point
     
@@ -467,9 +467,9 @@ for n in [*range(0, 24, 1)]:
     for i in samp_pdids.to_numpy():                            # for each individual sampled in slim
         focal_ind = mts.individual(int(alive[np.where(x==i)])) # get inidvidual id by matching pedigree id to tskit id
         ind_nodes.append(focal_ind.nodes.tolist())                      # make list of nodes
-    print(f"length of ind_nodes is {len(ind_nodes)}")
     all_nodes = [item for sublist in ind_nodes for item in sublist]
-    
+    print(f"length of all_nodes is {len(all_nodes)}")
+
     ### Summary stats for entire sample------------------------------------------------------------------------------------------------------------------------------------------
         
     # with all_nodes
@@ -505,7 +505,7 @@ for n in [*range(0, 24, 1)]:
     
     lower_index_ten = int(len(meta_sorted) * 0.1)
     upper_index_ten = int(len(meta_sorted) * 0.9)
-
+    
     # Get the lower 10% of individuals by age
     lower_10_percent = meta_sorted[:lower_index_ten]
     
