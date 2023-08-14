@@ -225,12 +225,17 @@ def bootstrap(group1_nodes, group2_nodes, niter):
     # get list of all nodes
     node_combo = group1_nodes + group2_nodes
 
-    #get genotype matrix for (all) samples
-    gt_matrix = mts.genotype_matrix(samples = node_combo) # group 1 will be 0-9 and group 2 will be 10-21?
-    # group 1 and 2 matrices should be: 
-    # np.shape(gt_matrix[:,0:20])
-    # np.shape(gt_matrix[:,20:41])
-
+    #get genotype matrix for (all) samples, accounting for the possibility of group 1 and group 2 having duplicate nodes between them during temporal sampling
+    if len(node_combo) == len(np.unique(node_combo)):
+        gt_matrix = mts.genotype_matrix(samples = node_combo) # group 1 will be 0-9 and group 2 will be 10-21?
+    else: 
+        print(f"duplicates in group 1 nodes and group 2 nodes!")
+        group1_matrix = mts.genotype_matrix(samples = group1_nodes)
+        group2_matrix = mts.genotype_matrix(samples = group2_nodes)
+        gt_matrix = np.hstack((group1_matrix, group2_matrix))    # group 1 and 2 matrices should be: 
+        # np.shape(gt_matrix[:,0:20])
+        # np.shape(gt_matrix[:,20:41])
+    
     # define indicies that correspond to different groups
     group1 = [*range(0, len(group1_nodes), 1)]
     group2 = [*range(len(group1_nodes), len(group1_nodes) + len(group2_nodes), 1)]
@@ -304,7 +309,6 @@ def bootstrap(group1_nodes, group2_nodes, niter):
     
     p_vals = [pi2, pi1, p_val_pi, theta2, theta1, p_val_theta, LD1, LD2, p_val_LD]
     return(p_vals)
-
 # ------------------------------------------------------------------------------------------------------------------------------------------
 
 # uncomment these lines when running from command line
