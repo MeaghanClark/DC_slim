@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# last updates 08/10/2023
+# last updates 08/18/2023
 
 import sys
 import msprime
@@ -10,11 +10,27 @@ import pandas as pd
 import random
 import datetime # FOR DEBUGGING 
 import csv
-import math
 import tskit
+from numba import jit
 np.set_printoptions(threshold=sys.maxsize)
 
 # define custom functions ------------------------------------------------------------------------------------------------------------------------------------------
+
+@jit(nopython=True)    
+def factorial(x):
+    # from: https://stackoverflow.com/questions/44346188/fastest-way-to-compute-a-factorial-in-a-numba-nopython-function
+    n = 1
+    for i in range(2, x+1):
+        n *= i
+    return n
+
+
+@jit(nopython=True)    
+def binomialCoeff(n, k): 
+    coeff = factorial(n) / (factorial(k) * factorial(n-k))
+    return(coeff)
+
+
 def getNodes(ids, inds_alive, ts):
     # this function returns a list of nodes from a given list of individuals alive at a specific time from a treesequence
     nodes = []
@@ -25,10 +41,11 @@ def getNodes(ids, inds_alive, ts):
     return nodes
 
 
+@jit(nopython=True)
 def getAlleleCounts(gt_matrix) : 
     # This function returns a matrix of biallelic allele counts and the number of multiallelic loci from a genotype matrix 
     # get mask for multiallelic sites
-    multiallelic_mask = (gt_matrix == 2).any(axis=1)
+    multiallelic_mask = (np.sum(gt_matrix == 2, axis = 1) > 0)
     
     # extract allele counts for multiallelic sites and biallelic sites
     m_gt = gt_matrix[multiallelic_mask]
@@ -52,32 +69,35 @@ def getSFS(gt_matrix, sample_set):
     return(sfs, m_sites)
 
 
-def calcPiSFS(afs, mts, m_sites):
+@jit(nopython=True)
+def calcPiSFS(afs, m_sites, seq_length):
     # this function returns pi, calculated from the site frequency spectrum, as defined by Korneliussen et al 2013
     n = len(afs)-1
     list = []
     for i in [*range(1, n-1, 1)]:
         x = i * (n-i) * afs[i]
         list.append(x)
-    pi = (sum(list)/math.comb(n, 2))/(mts.sequence_length - m_sites) # need to subtract number of biallelic sites
+    pi = (sum(list)/binomialCoeff(n, 2))/(seq_length - m_sites) # need to subtract number of biallelic sites
     return(pi)
 
 
+@jit(nopython=True)
 def getBiGenoMatrix(gt_matrix):
     # This function returns a matrix of biallelic allele counts from a genotype matrix
 
     # Filter for biallelic loci
-    mask = ((gt_matrix != 2).all(axis=1)) & (np.sum(gt_matrix, axis=1) > 0) & (np.sum(gt_matrix, axis=1) < np.shape(gt_matrix)[1])
+    mask = ((np.sum(gt_matrix !=2, axis=1) == np.shape(gt_matrix)[1]) & (np.sum(gt_matrix, axis=1) > 0) & (np.sum(gt_matrix, axis=1) < np.shape(gt_matrix)[1]))
     bi_gt = gt_matrix[mask]
 
     return bi_gt
 
 
+@jit(nopython=True)
 def getVariantPositions(positions, gt_matrix):
     # This function returns the positions corresponding to biallelic allele counts from a genotype matrix
 
     # Filter for biallelic loci
-    mask = ((gt_matrix != 2).all(axis=1)) & (np.sum(gt_matrix, axis=1) > 0) & (np.sum(gt_matrix, axis=1) < np.shape(gt_matrix)[1])
+    mask = ((np.sum(gt_matrix !=2, axis =1) == np.shape(gt_matrix)[1]) & (np.sum(gt_matrix, axis=1) > 0) & (np.sum(gt_matrix, axis=1) < np.shape(gt_matrix)[1]))
     bi_gt = gt_matrix[mask]
     positions_flt = positions[mask]
 
@@ -85,8 +105,9 @@ def getVariantPositions(positions, gt_matrix):
         print("Length of position object is not the same as the length of the genotype object")
     else:
         return positions_flt
-    
-    
+
+
+@jit(nopython=True)    
 def getrSquared(bi_gt, A_index, B_index):
     # This function calculates r^2 for two loci, A and B
     # consider two LOCI at a time 
@@ -95,29 +116,22 @@ def getrSquared(bi_gt, A_index, B_index):
     A_gt = bi_gt[A_index,:]
     B_gt = bi_gt[B_index,:]
     
-    genotype_counts = {
-        '00': 0,
-        '01': 0,
-        '10': 0,
-        '11': 0
-    }
-        
-    genotypes = np.char.add(A_gt.astype(str), B_gt.astype(str)) # generate genotypes
+    A_gt = bi_gt[A_index, :]
+    B_gt = bi_gt[B_index, :]
     
-    unique_genotypes, counts = np.unique(genotypes, return_counts=True) # get counts of genotypes 
+    total = len(A_gt)
     
-    for genotype, count in zip(unique_genotypes, counts):   # update genotype_counts dict
-        genotype_counts[genotype] = count
+    # Calculate allele counts
+    count_11 = np.sum(A_gt & B_gt)
+    count_10 = np.sum(A_gt & ~B_gt)
+    count_01 = np.sum(~A_gt & B_gt)
+    count_00 = np.sum(~A_gt & ~B_gt)
     
-    total = sum(genotype_counts.values()) # number of haplotypes
-    
-    
-    # Calculate allele frequencies
-    fA = (genotype_counts["11"] + genotype_counts["10"]) / total
-    fB = (genotype_counts["11"] + genotype_counts["01"]) / total
+    fA = (count_11 + count_10) / total
+    fB = (count_11 + count_01) / total
     fa = 1 - fA
     fb = 1 - fB
-    F_AB = genotype_counts["11"]/ total
+    F_AB = count_11 / total        
     
     # Calculate DAB
     DAB = F_AB - (fA * fB)
@@ -131,7 +145,7 @@ def getrSquared(bi_gt, A_index, B_index):
     return r_squared
 
 
-def getrSquaredDecayDist(nodes, gt_matrix):
+def getrSquaredDecayDist(nodes, gt_matrix, positions, seq_length): #positions = mts.tables.sites.position
     # This function calculates the distance class at which r^2 decays to near its minimum value (within 0.2) 
     # get genotype matrix for subset of individuals
     # gt_matrix = mts.genotype_matrix(samples = nodes) # genotype_matrix retains order of nodes passed to it
@@ -161,7 +175,6 @@ def getrSquaredDecayDist(nodes, gt_matrix):
     # get distance between loci         
     # following code adapted from JesseGarcia562 on tskit github (https://github.com/tskit-dev/tskit/discussions/1118)
     # record positions of loci
-    positions = mts.tables.sites.position # this is all positions, need to retain just positions biallelic in sample
     
     # filter positions to match r^2 
     filtered_positions = getVariantPositions(positions, gt_matrix) # filter to retain biallelic sites
@@ -177,16 +190,10 @@ def getrSquaredDecayDist(nodes, gt_matrix):
     long_format_distance_df.columns = ['position_1', 'position_2', 'r_2']
     long_format_distance_df["distance"] = np.fabs(long_format_distance_df["position_1"] - long_format_distance_df["position_2"])
     long_format_distance_df = long_format_distance_df[long_format_distance_df.distance != 0] # remove distance = 0 
-    
-    # ## Get coordinates for plot/fitting and plot
-    # x=long_format_distance_df["distance"]
-    # y=long_format_distance_df["r_2"]
-    # 
-    # plt.scatter(x, y, alpha=0.005)
-    
+        
     # define number of bins and bin edges
     num_bins = 10000
-    bin_edges = np.linspace(0, mts.sequence_length, num_bins + 1)
+    bin_edges = np.linspace(0, seq_length, num_bins + 1)
     
     # use bins to add distance class column to data frame
     long_format_distance_df['distance_class'] = pd.cut(long_format_distance_df['distance'], bins=bin_edges, right=True, labels = bin_edges[0:len(bin_edges)-1]) #.apply(lambda x: x.left)
@@ -194,8 +201,6 @@ def getrSquaredDecayDist(nodes, gt_matrix):
     
     # calculate mean r2 value for each distance class bin
     mean_r_2 = long_format_distance_df.groupby('distance_class')['r_2'].mean()
-    # plot
-    #plt.scatter(x = mean_r_2.index, y = mean_r_2, alpha = 0.15)
     
     # calculate mean and standard error of r^2 for last ~20% of bins 
     
@@ -210,16 +215,11 @@ def getrSquaredDecayDist(nodes, gt_matrix):
     
     distance = mean_r_2_df[mean_r_2_df['r_2'] < limit].iloc[0]['distance_class']
     
-    # record distance class, mean r^2 for last 20% and SE for last 20%    
-    
-    #print(mean_r_2_df.head())
-    #print(mean_r_2_df['r_2'].isna().sum())
-
+    # return distance class, mean r^2 for last 20% and SE for last 20%    
     return(asym_mean, asym_se, limit, distance)
-    
 
     
-def bootstrap(group1_nodes, group2_nodes, niter):
+def bootstrap(group1_nodes, group2_nodes, g1_len, g2_len, niter):
     # This function does a series of bootstrap hypothesis tests, comparing pi, theta, and LD distance decay for the two groups of nodes given 
     
     # get list of all nodes
@@ -233,28 +233,26 @@ def bootstrap(group1_nodes, group2_nodes, niter):
         group1_matrix = mts.genotype_matrix(samples = group1_nodes)
         group2_matrix = mts.genotype_matrix(samples = group2_nodes)
         gt_matrix = np.hstack((group1_matrix, group2_matrix))    # group 1 and 2 matrices should be: 
-        # np.shape(gt_matrix[:,0:20])
-        # np.shape(gt_matrix[:,20:41])
     
     # define indicies that correspond to different groups
-    group1 = [*range(0, len(group1_nodes), 1)]
-    group2 = [*range(len(group1_nodes), len(group1_nodes) + len(group2_nodes), 1)]
-
+    group1 = [*range(0, g1_len, 1)]
+    group2 = [*range(g1_len, g1_len + g2_len, 1)]
+    
     # get SFS from each sample set
     sfs1 = getSFS(gt_matrix[:,group1], group1)
     sfs2 = getSFS(gt_matrix[:,group2], group2)
     
     # calculate pi for each sample set
-    pi1 = calcPiSFS(sfs1[0], mts, sfs1[1])
-    pi2 = calcPiSFS(sfs2[0], mts, sfs2[1])
+    pi1 = calcPiSFS(sfs1[0], sfs1[1], seq_length)
+    pi2 = calcPiSFS(sfs2[0], sfs2[1], seq_length)
     
     # calculate theta for each sample set
     theta1 = mts.segregating_sites(sample_sets = list(set(group1_nodes))) / np.sum([1/i for i in np.arange(1,len(group1_nodes))])
     theta2 = mts.segregating_sites(sample_sets = list(set(group2_nodes))) / np.sum([1/i for i in np.arange(1,len(group2_nodes))])
     
     # calculate LD for each sample set
-    LD1 = getrSquaredDecayDist(group1_nodes, gt_matrix[:,group1])[3]
-    LD2 = getrSquaredDecayDist(group2_nodes, gt_matrix[:,group2])[3]
+    LD1 = getrSquaredDecayDist(group1_nodes, gt_matrix[:,group1], positions, seq_length)[3]
+    LD2 = getrSquaredDecayDist(group2_nodes, gt_matrix[:,group2], positions, seq_length)[3]
     
     # find differences
     obs_dif_pi = pi2 - pi1
@@ -266,11 +264,11 @@ def bootstrap(group1_nodes, group2_nodes, niter):
     theta_strap_difs = []
     LD_strap_difs = []
     
-    for i in [*range(0, niter, 1)]:     #repeat for no_straps
+    for i in range(niter):     #repeat for no_straps
     
         # resample from all nodes
-        group1_rand_samp = random.choices(range(0, len(group1), 1), k=len(group1_nodes))
-        group2_rand_samp = random.choices(range(0, len(group2), 1), k=len(group2_nodes))
+        group1_rand_samp = random.choices(range(0, g1_len, 1), k=g1_len)
+        group2_rand_samp = random.choices(range(0, g2_len, 1), k=g2_len)
                                 
         # calculate stats from artificial groups and find difference
     
@@ -280,8 +278,8 @@ def bootstrap(group1_nodes, group2_nodes, niter):
         rand_sfs2 = getSFS(gt_matrix[:,group2_rand_samp], group2_rand_samp)
         
         # calculate pi for each sample set
-        rand_pi1 = calcPiSFS(rand_sfs1[0], mts, rand_sfs1[1])
-        rand_pi2 = calcPiSFS(rand_sfs2[0], mts, rand_sfs2[1])
+        rand_pi1 = calcPiSFS(rand_sfs1[0], rand_sfs1[1], seq_length)
+        rand_pi2 = calcPiSFS(rand_sfs2[0], rand_sfs2[1], seq_length)
     
         rand_dif_pi = rand_pi2 - rand_pi1
         
@@ -292,8 +290,8 @@ def bootstrap(group1_nodes, group2_nodes, niter):
         rand_dif_theta = rand_theta2 - rand_theta1
             
         # LD 
-        rand_LD1 = getrSquaredDecayDist([node_combo[i] for i in group1_rand_samp], gt_matrix[:,group1_rand_samp])[3]
-        rand_LD2 = getrSquaredDecayDist([node_combo[i] for i in group2_rand_samp], gt_matrix[:,group2_rand_samp])[3]    
+        rand_LD1 = getrSquaredDecayDist([node_combo[i] for i in group1_rand_samp], gt_matrix[:,group1_rand_samp], positions, seq_length)[3]
+        rand_LD2 = getrSquaredDecayDist([node_combo[i] for i in group2_rand_samp], gt_matrix[:,group2_rand_samp], positions, seq_length)[3]    
         
         rand_dif_LD = rand_LD2 - rand_LD1
         
@@ -303,12 +301,13 @@ def bootstrap(group1_nodes, group2_nodes, niter):
 
 
     # caclulate p-value
-    p_val_pi = sum(pi_strap_difs >= obs_dif_pi) / niter
-    p_val_theta = sum(theta_strap_difs >= obs_dif_theta) / niter
-    p_val_LD = sum(LD_strap_difs >= obs_dif_LD) / niter
+    p_val_pi = len([i for i in pi_strap_difs if i >= obs_dif_pi]) / niter
+    p_val_theta = len([i for i in theta_strap_difs >= obs_dif_theta]) / niter
+    p_val_LD = len([i for i in LD_strap_difs >= obs_dif_LD]) / niter
     
     p_vals = [pi2, pi1, p_val_pi, theta2, theta1, p_val_theta, LD1, LD2, p_val_LD]
     return(p_vals)
+
 # ------------------------------------------------------------------------------------------------------------------------------------------
 
 # uncomment these lines when running from command line
@@ -417,7 +416,10 @@ convert_time = pd.DataFrame({'tskit_time':sampling, 'slim_time':cycles}, columns
 
 # initalize data lists
 
-no_straps = 20 # 100 for troubleshooting, 1000 for running
+no_straps = 1000 # 100 for troubleshooting, 1000 for running
+
+seq_length = mts.sequence_length
+positions = mts.tables.sites.position
 
 df_summary = pd.DataFrame(columns = ['timepoint', 'pi', 'theta', 'LD']) # add eventually 'pi_ten', 'LD_ten',
 df_age_cohort = pd.DataFrame(columns = ['timepoint', 'age', 'pi', 'theta']) # eventually want to add some measure of LD
@@ -427,7 +429,7 @@ df_temporal = pd.DataFrame(columns = ['timepoint', 'pi_before', 'pi_now', 'pi_pv
 # loop through time points to calculate pi using tskit
 
 for n in [*range(0, 24, 1)]: 
-#for n in [*range(0, 5, 1)]: # ------------------------------------------------------------------------------------------------------------------------------------------
+#for n in [*range(0, 1, 1)]: # ------------------------------------------------------------------------------------------------------------------------------------------
 
     # initialize data object to store stats values that are calculated once per time point
     
@@ -480,7 +482,7 @@ for n in [*range(0, 24, 1)]:
     tp_summary.loc[0, 'pi'] = mts.diversity(sample_sets = all_nodes)
     tp_summary.loc[0, 'theta'] = mts.segregating_sites(sample_sets = all_nodes) / np.sum([1/i for i in np.arange(1,len(all_nodes))])
     gt_matrix_all_nodes = mts.genotype_matrix(samples = all_nodes)
-    tp_summary.loc[0, 'LD'] = getrSquaredDecayDist(all_nodes, gt_matrix_all_nodes)[3]
+    tp_summary.loc[0, 'LD'] = getrSquaredDecayDist(all_nodes, gt_matrix_all_nodes, positions, seq_length)[3] 
     
     ### Age Cohorts------------------------------------------------------------------------------------------------------------------------------------------
             # what to fill in: 'age', 'pi', 'theta'
@@ -496,9 +498,9 @@ for n in [*range(0, 24, 1)]:
         tp_age_cohort.loc[a, 'pi'] = mts.diversity(sample_sets = cohort_nodes)
         tp_age_cohort.loc[a, 'theta'] = mts.segregating_sites(sample_sets = cohort_nodes) / np.sum([1/i for i in np.arange(1,len(cohort_nodes))])
         tp_age_cohort.loc[a, 'timepoint'] = n 
-   
+    
     print(f"done with age cohort sampling for sampling point {n} representing tskit time {tskit_time}")
-
+    
     ### Age Bins------------------------------------------------------------------------------------------------------------------------------------------
         
     # sort individuals by age
@@ -523,9 +525,10 @@ for n in [*range(0, 24, 1)]:
     # upper 10% ------------------------------------------------------------------------------------------------------------------------------------------
     upper_ids = upper_10_percent["pedigree_id"] 
     upper_ten_nodes = getNodes(ids = upper_ids, inds_alive = alive, ts = mts)
+
        
     # bootstrap ------------------------------------------------------------------------------------------------------------------------------------------
-    bin_vals = bootstrap(lower_ten_nodes, upper_ten_nodes, niter = no_straps)
+    bin_vals = bootstrap(lower_ten_nodes, upper_ten_nodes, len(lower_ten_nodes), len(upper_ten_nodes), niter = no_straps)
     
     # save output ------------------------------------------------------------------------------------------------------------------------------------------
     tp_age_bin.iloc[:, 1:] = bin_vals
@@ -539,7 +542,7 @@ for n in [*range(0, 24, 1)]:
     # bootstrap ------------------------------------------------------------------------------------------------------------------------------------------
     if n > 0:
         now_nodes = lower_ten_nodes + upper_ten_nodes
-        temp_vals = bootstrap(before_nodes, now_nodes, niter = no_straps)
+        temp_vals = bootstrap(before_nodes, now_nodes, len(before_nodes), len(now_nodes), niter = no_straps)
     
         # save output ------------------------------------------------------------------------------------------------------------------------------------------
         tp_temporal.iloc[:, 1:] = temp_vals
