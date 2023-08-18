@@ -1,6 +1,6 @@
 #!/bin/bash
 		
-# Last updated 11/14/2022 by MI Clark, script format by R Toczydlowski 
+# Last updated 08/08/2023 by MI Clark, script format by R Toczydlowski 
 
 #  run from project directory (where you want output directory to be created)
 

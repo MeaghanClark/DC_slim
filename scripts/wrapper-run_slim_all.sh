@@ -17,22 +17,28 @@ r=$4 # factor to reduce pop size by
 
 # select burn-in based on avg_age (Ne will change with age, so burn in must also change!) burn-in = avg_age * 10 * Ne
 	# Ne estimated in estimate_Ne.R
+
+# 07292023: trying avg_Age * 2 * Ne instead
 if [[ $avg_age == 2 ]]
 then
 #	burn=126260
-	burn=126300
+#	burn=126300
+	burn=25300
 elif [[ $avg_age == 5 ]]
 then
 #	burn=315890
-	burn=315900
+#	burn=315900
+	burn=63200
 elif [[ $avg_age == 10 ]] 
 then
 #	burn=635576
-	burn=635600
+#	burn=635600
+	burn=127150
 elif [[ $avg_age == 20 ]] 
 then
 #	burn=1264558
-	burn=1264600
+#	burn=1264600
+	burn=253000
 
 elif [[ $avg_age == 1 ]]
 then
