@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# last updates 08/18/2023
+# last updates 08/22/2023
 
 import sys
 import msprime
@@ -12,17 +12,14 @@ import datetime # FOR DEBUGGING
 import csv
 import tskit
 from numba import jit
+import math
 np.set_printoptions(threshold=sys.maxsize)
 
 # define custom functions ------------------------------------------------------------------------------------------------------------------------------------------
 
 @jit(nopython=True)    
 def factorial(x):
-    # from: https://stackoverflow.com/questions/44346188/fastest-way-to-compute-a-factorial-in-a-numba-nopython-function
-    n = 1
-    for i in range(2, x+1):
-        n *= i
-    return n
+    return math.exp(math.lgamma((x+1))
 
 
 @jit(nopython=True)    
@@ -224,6 +221,7 @@ def bootstrap(group1_nodes, group2_nodes, g1_len, g2_len, niter):
     
     # get list of all nodes
     node_combo = group1_nodes + group2_nodes
+    node_no = len(node_combo)
 
     #get genotype matrix for (all) samples, accounting for the possibility of group 1 and group 2 having duplicate nodes between them during temporal sampling
     if len(node_combo) == len(np.unique(node_combo)):
@@ -255,7 +253,7 @@ def bootstrap(group1_nodes, group2_nodes, g1_len, g2_len, niter):
     LD2 = getrSquaredDecayDist(group2_nodes, gt_matrix[:,group2], positions, seq_length)[3]
     
     # find differences
-    obs_dif_pi = pi2 - pi1
+    obs_dif_pi = np.float64(pi2 - pi1)
     obs_dif_theta = theta2 - theta1
     obs_dif_LD = LD2 - LD1
 
@@ -267,8 +265,8 @@ def bootstrap(group1_nodes, group2_nodes, g1_len, g2_len, niter):
     for i in range(niter):     #repeat for no_straps
     
         # resample from all nodes
-        group1_rand_samp = random.choices(range(0, g1_len, 1), k=g1_len)
-        group2_rand_samp = random.choices(range(0, g2_len, 1), k=g2_len)
+        group1_rand_samp = np.random.choice(range(0, node_no), size = g1_len, replace = True)
+        group2_rand_samp = np.random.choice(range(0, node_no), size = g2_len, replace = True)
                                 
         # calculate stats from artificial groups and find difference
     
@@ -301,9 +299,9 @@ def bootstrap(group1_nodes, group2_nodes, g1_len, g2_len, niter):
 
 
     # caclulate p-value
-    p_val_pi = len([i for i in pi_strap_difs if i >= obs_dif_pi]) / niter
-    p_val_theta = len([i for i in theta_strap_difs >= obs_dif_theta]) / niter
-    p_val_LD = len([i for i in LD_strap_difs >= obs_dif_LD]) / niter
+    p_val_pi = sum([i for i in pi_strap_difs >= obs_dif_pi]) / niter
+    p_val_theta = sum([i for i in theta_strap_difs >= obs_dif_theta]) / niter
+    p_val_LD = sum([i for i in LD_strap_difs >= obs_dif_LD]) / niter
     
     p_vals = [pi2, pi1, p_val_pi, theta2, theta1, p_val_theta, LD1, LD2, p_val_LD]
     return(p_vals)
@@ -366,9 +364,7 @@ print(f"Maximum number of roots before recapitation: {orig_max_roots}\n"
 rate = float(mu)/float(gen_time)
 print(f"using rate {rate}")
 
-# mts = pyslim.SlimTreeSequence(msprime.mutate(rts, rate=rate, random_seed = seed, keep=True)) 
 mts = msprime.sim_mutations(rts, rate = rate, random_seed = seed, keep = True)
-# should increase genome size to get more mutations or set mutation rate to 2.59e-5
 
 print(f"The tree sequence now has {mts.num_mutations} mutations, "
       f"and mean pairwise nucleotide diversity is {mts.diversity()}.")
@@ -429,7 +425,7 @@ df_temporal = pd.DataFrame(columns = ['timepoint', 'pi_before', 'pi_now', 'pi_pv
 # loop through time points to calculate pi using tskit
 
 for n in [*range(0, 24, 1)]: 
-#for n in [*range(0, 1, 1)]: # ------------------------------------------------------------------------------------------------------------------------------------------
+#for n in [*range(0, 5, 1)]: # ------------------------------------------------------------------------------------------------------------------------------------------
 
     # initialize data object to store stats values that are calculated once per time point
     
