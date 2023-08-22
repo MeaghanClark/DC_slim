@@ -3,7 +3,7 @@
 # usage: bash run_slim.sh file.slim K-value output
 # importing: JOBNAME,SLIMSCRIPT,TREEPROCESS,KVALUE,BVALUE,REP,CPUS,RUN_NAME,STORAGENODE,OUTDIR,LOGFILESDIR \
 echo "before calling source: $PATH"
-source activate slim
+source activate slim3
 echo "after calling source: $PATH"
 
 #load programs we want to use
