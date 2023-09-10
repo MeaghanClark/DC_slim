@@ -19,7 +19,7 @@ np.set_printoptions(threshold=sys.maxsize)
 
 @jit(nopython=True)    
 def factorial(x):
-    return math.exp(math.lgamma((x+1))
+    return math.exp(math.lgamma(x+1))
 
 
 @jit(nopython=True)    

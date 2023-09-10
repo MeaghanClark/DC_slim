@@ -40,7 +40,7 @@ then
     treeprocess=pWF_tree_2_sum.py #processing python script 
 fi
 
-rundate=$(date +%m%d%Y)
+rundate=08222023	#$(date +%m%d%Y)
 # define dirs:
 storagenode=/mnt/home/clarkm89 #path to top level of dir where input/output files live
 logfilesdir=$storagenode/$run_name/py_logfiles_sumstats_${date} # name of directory to create and then write log files to
@@ -69,14 +69,14 @@ for r in 2 10 100; do
         then
              filename=tree_${model}_${avg_age}_${r}_${rep}.trees
              metafile=metaInd_${model}_${avg_age}_${r}_${rep}.txt
-             output_file=${homedir}${outdir}/${model}_${avg_age}_${r}_${rep}_${date}_age_bins.txt
+             output_file=${homedir}${outdir}/${model}_${avg_age}_${r}_${rep}_${date}_age_bin.txt
         fi
         
         if [[ $model == pWF ]]
 	then
              filename=tree_${model}_${avg_age}_${r}_${rep}.trees
              metafile=metaInd_${model}_${avg_age}_${r}_${rep}.txt
-             output_file=${homedir}${outdir}/${model}_${r}_${rep}_${date}_age_bins.txt
+             output_file=${homedir}${outdir}/${model}_${r}_${rep}_${date}_age_bin.txt
         fi
 
 		if [ ! -f "$output_file" ] # don't start job if output files already exists
