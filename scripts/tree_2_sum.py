@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# last updates 09/10/2023
+# last updates 09/11/2023
 
 import sys
 import msprime
@@ -51,21 +51,7 @@ def plotDists(g1_data, g2_data, g1_real, g2_real, stat, n):
     
     print(f"area of overlap is {area} for {stat} at {n}")
     
-    
-def measureOverlap(g1_data, g2_data): 
-    # modified from: https://stackoverflow.com/questions/72931022/how-to-calculate-histogram-intersection
-
-    rng = min(g1_data.min(),g2_data.min()),max(g1_data.max(),g2_data.max()) # define total range of STAT values
-    
-    # without plotting version
-    n1, bins1 = np.histogram(a = g1_data, bins=100, range=rng)
-    n2, bins2 = np.histogram(a = g2_data, bins=100, range=rng)
-    
-    intersection = np.minimum(n1, n2)
-    area = intersection.sum()
-    return(area)
-    
-    
+        
 def newBoot(group1_nodes, group2_nodes, niter):
     # new bootstrapping function
     
@@ -113,10 +99,10 @@ def newBoot(group1_nodes, group2_nodes, niter):
     # plotDists(theta_boot_g1, theta_boot_g2, real_theta_g1, real_theta_g2, "theta", n)
     # plotDists(pi_boot_g1, pi_boot_g2, real_pi_g1, real_pi_g2, "pi", n)
     
-    # measure overlap in distributions 
+    # proporation of differences between bootstrapped regions that are greater than 0 
     
-    theta_OVL = measureOverlap(theta_boot_g1, theta_boot_g2)
-    pi_OVL = measureOverlap(pi_boot_g1, pi_boot_g2)
+    theta_prop = sum((theta_boot_g2 - theta_boot_g1) > 0.0)/len(theta_boot_g1) 
+    pi_prop = sum((pi_boot_g2 - pi_boot_g1) > 0.0)/len(pi_boot_g1) 
     
     # compare bootstrapped distributions using t-test
     
@@ -125,7 +111,7 @@ def newBoot(group1_nodes, group2_nodes, niter):
     
     
     # return output
-    return(real_theta_g1, real_theta_g2, theta_OVL, theta_ttest[1], theta_ttest[0], real_pi_g1, real_pi_g2, pi_OVL, pi_ttest[1], pi_ttest[0]) 
+    return(real_theta_g1, real_theta_g2, theta_prop, theta_ttest[1], theta_ttest[0], real_pi_g1, real_pi_g2, pi_prop, pi_ttest[1], pi_ttest[0]) 
 
 # ------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -239,14 +225,14 @@ no_straps = 1000 # 100 for troubleshooting, 1000 for running
 # positions = mts.tables.sites.position
 
 df_summary = pd.DataFrame(columns = ['timepoint', 'pi', 'theta']) #'LD'
-df_age_cohort = pd.DataFrame(columns = ['timepoint', 'total_sample_size', 'N_min', 'age', 'pi', 'theta']) 
-df_age_bin = pd.DataFrame(columns = ['timepoint', 'theta_younger', 'theta_older', 'theta_OVL', 'theta_pval', 'theta_T', 'pi_younger', 'pi_older', 'pi_OVL', 'pi_pval', 'pi_T'])
-df_temporal = pd.DataFrame(columns = ['timepoint', 'theta_younger', 'theta_older', 'theta_OVL', 'theta_pval', 'theta_T', 'pi_younger', 'pi_older', 'pi_OVL', 'pi_pval', 'pi_T'])
+df_age_cohort = pd.DataFrame(columns = ['timepoint', 'pedigree_id', 'age', 'pi', 'theta']) 
+df_age_bin = pd.DataFrame(columns = ['timepoint', 'theta_younger', 'theta_older', 'theta_prop', 'theta_pval', 'theta_T', 'pi_younger', 'pi_older', 'pi_prop', 'pi_pval', 'pi_T'])
+df_temporal = pd.DataFrame(columns = ['timepoint', 'theta_future', 'theta_now', 'theta_prop', 'theta_pval', 'theta_T', 'pi_future', 'pi_now', 'pi_prop', 'pi_pval', 'pi_T'])
 
 # loop through time points to calculate pi using tskit
 
 for n in [*range(0, 24, 1)]: 
-#for n in [*range(20, 21, 1)]: # ------------------------------------------------------------------------------------------------------------------------------------------
+#for n in [*range(18, 19, 1)]: # ------------------------------------------------------------------------------------------------------------------------------------------
 
     # initialize data object to store stats values that are calculated once per time point
     
@@ -254,11 +240,11 @@ for n in [*range(0, 24, 1)]:
     tp_summary = pd.DataFrame(columns = ['timepoint', 'pi', 'theta']) # "LD"
     
     # data object to store summary stats for age cohorts
-    tp_age_cohort = pd.DataFrame(columns = ['timepoint', 'sample_size', 'age', 'pi', 'theta']) 
+    tp_age_cohort = pd.DataFrame(columns = ['timepoint', 'pedigree_id', 'age', 'pi', 'theta']) 
     
     # data objects to store bootstrapped replicates of summary stats for age bins and temporal comparison
-    tp_age_bin = pd.DataFrame(columns = ['timepoint', 'theta_younger', 'theta_older', 'theta_OVL', 'theta_pval', 'theta_T', 'pi_younger', 'pi_older', 'pi_OVL', 'pi_pval', 'pi_T'])
-    tp_temporal = pd.DataFrame(columns = ['timepoint', 'theta_younger', 'theta_older', 'theta_OVL', 'theta_pval', 'theta_T', 'pi_younger', 'pi_older', 'pi_OVL', 'pi_pval', 'pi_T'])
+    tp_age_bin = pd.DataFrame(columns = ['timepoint', 'theta_younger', 'theta_older', 'theta_prop', 'theta_pval', 'theta_T', 'pi_younger', 'pi_older', 'pi_prop', 'pi_pval', 'pi_T'])
+    tp_temporal = pd.DataFrame(columns = ['timepoint', 'theta_future', 'theta_now', 'theta_prop', 'theta_pval', 'theta_T', 'pi_future', 'pi_now', 'pi_prop', 'pi_pval', 'pi_T']) # newBoot(future_nodes, now_nodes, niter = no_straps)
     
     # define tskit time
     tskit_time = convert_time.iloc[n][0]
@@ -303,30 +289,19 @@ for n in [*range(0, 24, 1)]:
     
     ### Age Cohorts------------------------------------------------------------------------------------------------------------------------------------------
             # what to fill in: 'age', 'pi', 'theta'
-    unique_ages = list(set(all_ages))
-    
-    # find minimum sample size
-    age_dict = {i:all_ages.count(i) for i in unique_ages}
-    N_min = age_dict[min(age_dict, key = age_dict.get)]
-    
-    # calculate stats for samples of each age cohort
-    for a in [*range(0, len(unique_ages), 1)]:
-        cohort_nodes = [] 
-        ids = meta[meta['age'] == unique_ages[a]][["pedigree_id"]]
-        for i in ids.to_numpy():
-            focal_ind = mts.individual(int(alive[np.where(x==i)])) # get inidvidual id by matching pedigree id to tskit id
-            cohort_nodes.append(focal_ind.nodes.tolist())   # make list of nodes
-        cohort_nodes = [item for sublist in cohort_nodes for item in sublist] # get rid of sub-lists to get overall pi 
         
-        rand_nodes = random.sample(cohort_nodes, k = (N_min * 2))
-    
-        tp_age_cohort.loc[a, 'age'] = unique_ages[a]
-        tp_age_cohort.loc[a, 'pi'] = mts.diversity(sample_sets = rand_nodes)
-        tp_age_cohort.loc[a, 'theta'] = mts.segregating_sites(sample_sets = rand_nodes) / np.sum([1/i for i in np.arange(1,len(rand_nodes))])
-        tp_age_cohort.loc[a, 'timepoint'] = n 
-        tp_age_cohort.loc[a, 'total_sample_size'] = len(cohort_nodes)/2
-        tp_age_cohort.loc[a, 'N_min'] = N_min
-        
+    # calculate individual stats for samples of each age cohort
+    for i in [*range(0,len(meta['pedigree_id']))]:
+        ind = list(meta['pedigree_id'])[i]
+        focal_ind = mts.individual(int(alive[x.index(ind)]))# get inidvidual id by matching pedigree id to tskit id
+        nodes = focal_ind.nodes.tolist()
+        tp_age_cohort.loc[i, 'age'] = unique_ages[a]
+        tp_age_cohort.loc[i, 'pi'] = mts.diversity(sample_sets = nodes)
+        tp_age_cohort.loc[i, 'theta'] = mts.segregating_sites(sample_sets = nodes) / np.sum([1/i for i in np.arange(1,len(nodes))])
+        tp_age_cohort.loc[i, 'timepoint'] = n 
+        tp_age_cohort.loc[i, 'pedigree_id'] = ind
+
+            
     print(f"done with age cohort sampling for sampling point {n} representing tskit time {tskit_time}")
   
     ### Age Bins------------------------------------------------------------------------------------------------------------------------------------------
