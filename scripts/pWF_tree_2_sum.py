@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# last updates 08/18/2023
+# last updates 09/15/2023
 
 import sys
 import msprime
@@ -12,6 +12,8 @@ import datetime # FOR DEBUGGING
 import csv
 import tskit
 import scipy.stats as stats
+import momi
+
 np.set_printoptions(threshold=sys.maxsize)
 
 # define custom functions ------------------------------------------------------------------------------------------------------------------------------------------
@@ -51,21 +53,7 @@ def plotDists(g1_data, g2_data, g1_real, g2_real, stat, n):
     
     print(f"area of overlap is {area} for {stat} at {n}")
     
-    
-def measureOverlap(g1_data, g2_data): 
-    # modified from: https://stackoverflow.com/questions/72931022/how-to-calculate-histogram-intersection
-
-    rng = min(g1_data.min(),g2_data.min()),max(g1_data.max(),g2_data.max()) # define total range of STAT values
-    
-    # without plotting version
-    n1, bins1 = np.histogram(a = g1_data, bins=100, range=rng)
-    n2, bins2 = np.histogram(a = g2_data, bins=100, range=rng)
-    
-    intersection = np.minimum(n1, n2)
-    area = intersection.sum()
-    return(area)
-    
-    
+        
 def newBoot(group1_nodes, group2_nodes, niter):
     # new bootstrapping function
     
@@ -113,10 +101,10 @@ def newBoot(group1_nodes, group2_nodes, niter):
     # plotDists(theta_boot_g1, theta_boot_g2, real_theta_g1, real_theta_g2, "theta", n)
     # plotDists(pi_boot_g1, pi_boot_g2, real_pi_g1, real_pi_g2, "pi", n)
     
-    # measure overlap in distributions 
+    # proporation of differences between bootstrapped regions that are greater than 0 
     
-    theta_OVL = measureOverlap(theta_boot_g1, theta_boot_g2)
-    pi_OVL = measureOverlap(pi_boot_g1, pi_boot_g2)
+    theta_prop = sum((theta_boot_g2 - theta_boot_g1) > 0.0)/len(theta_boot_g1) 
+    pi_prop = sum((pi_boot_g2 - pi_boot_g1) > 0.0)/len(pi_boot_g1) 
     
     # compare bootstrapped distributions using t-test
     
@@ -125,7 +113,100 @@ def newBoot(group1_nodes, group2_nodes, niter):
     
     
     # return output
-    return(real_theta_g1, real_theta_g2, theta_OVL, theta_ttest[1], theta_ttest[0], real_pi_g1, real_pi_g2, pi_OVL, pi_ttest[1], pi_ttest[0]) 
+    return(real_theta_g1, real_theta_g2, theta_prop, theta_ttest[1], theta_ttest[0], real_pi_g1, real_pi_g2, pi_prop, pi_ttest[1], pi_ttest[0]) 
+
+
+#def getGeneticRel(ped_inds, ts, inds_alive, ts_inds):
+#    nodes = []
+#    for i in ped_inds.to_numpy():
+#        focal_ind = ts.individual(int(inds_alive[np.where(ts_inds==i)])) # get inidvidual id by matching pedigree id to tskit id
+#        nodes.append(focal_ind.nodes.tolist())
+#    pairs = [(i, j) for i in range(len(nodes)) for j in range(len(nodes)) if i != j] # range (# of groups)
+#    plt.hist(mts.genetic_relatedness(nodes, indexes= pairs, mode = 'site'))
+#    return(np.mean(mts.genetic_relatedness(nodes, indexes= pairs, mode = 'site')))
+#    
+
+def getAIC(log_like, K):
+    AIC = (2*K) - (2*log_like)
+    return(AIC)
+
+
+def mod2AIC(model):
+    model_like = model.log_likelihood()
+    no_params = len(model.get_params())
+    AIC = getAIC(model_like, no_params)
+    return(AIC)
+
+
+def getMomiSFS(nodes, ts, pop_name):
+    afs = ts.allele_frequency_spectrum(sample_sets = [nodes], span_normalise = False, polarised = False)
+    configs = [[len(nodes) - i, i] for i in range(1, len(nodes))]
+    afs_dict = {}
+    for config, value in zip(configs, afs[1:200]):
+        key = (tuple(config),)  # Convert the list to a tuple and create a tuple containing it
+        afs_dict[key] = value
+
+    afs_dict_flt = {key: value for key, value in afs_dict.items() if value != 0}
+
+    afs_momi = momi.site_freq_spectrum([pop_name], [afs_dict_flt], length = ts.sequence_length)    
+    
+    return(afs_momi)
+    
+    
+def runMomiModels(SFS):
+    
+    # define model –– no population size change
+    mod_constant = momi.DemographicModel(N_e = 10000, gen_time = gen_time, muts_per_gen=mu)
+
+    # add data
+    mod_constant.set_data(SFS)
+
+    # define parameters to infer
+    mod_constant.add_size_param("N_c", lower = 10, upper = 1e7)
+
+    # add samples
+    mod_constant.add_leaf("pop", N="N_c")
+
+    # infer parameters
+
+    mod_constant.optimize(method="TNC")
+
+
+    # define model –– bottleneck
+    mod_bn = momi.DemographicModel(N_e = 10000, gen_time = gen_time, muts_per_gen=mu)
+
+    # add data
+    mod_bn.set_data(SFS)
+
+    # define parameters to infer
+    mod_bn.add_size_param("N_pre", lower = 10, upper = 1e7)
+    mod_bn.add_size_param("N_post", lower = 10, upper = 1e7)
+    mod_bn.add_size_param("T_bn", lower = 0, upper = 1e3)
+
+
+    # add samples
+    mod_bn.add_leaf("pop", t=0, N="N_post")
+    mod_bn.set_size("pop", t="T_bn", N="N_pre")
+
+    # infer parameters
+
+    mod_bn.optimize(method="TNC")
+
+    # compare models
+    # "verdict" is whether a bottleneck was detected (True) or not (False) 
+    if(mod2AIC(mod_bn) < mod2AIC(mod_constant)):
+        if(mod_bn.get_params()['N_pre'] > mod_bn.get_params()['N_post']):
+            verdict = True
+        else: 
+            verdict = False
+    elif(mod2AIC(mod_bn) >= mod2AIC(mod_constant)):
+        verdict = False
+    
+    list = [verdict, mod2AIC(mod_constant), mod_constant.log_likelihood(), mod_constant.get_params()['N_c'], 
+              mod2AIC(mod_bn), mod_bn.log_likelihood(), mod_bn.get_params()['N_pre'], mod_bn.get_params()['N_post'], mod_bn.get_params()['T_bn']]
+
+    return(list)
+
 
 # ------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -237,6 +318,7 @@ positions = mts.tables.sites.position
 
 
 df_summary = pd.DataFrame(columns = ['timepoint', 'pi', 'theta']) #'LD'
+df_demo_params = pd.DataFrame(columns = ['timepoint', 'verdict', 'con_AIC', 'con_llike', 'con_N_c', 'bn_AIC', 'bn_llike', 'bn_N_pre', 'bn_N_post', 'bn_T_bn'])
 
 # loop through time points to calculate stats using tskit
 
@@ -247,14 +329,16 @@ for n in [*range(0, 24, 1)]:
     
     # data object to store summary stats calculated from all nodes
     tp_summary = pd.DataFrame(columns = ['timepoint', 'pi', 'theta']) # "LD"
-        
+    tp_demo_params = pd.DataFrame(columns = ['timepoint', 'verdict', 'con_AIC', 'con_llike', 'con_N_c', 'bn_AIC', 'bn_llike', 'bn_N_pre', 'bn_N_post', 'bn_T_bn'])
+ 
     # define tskit time
     tskit_time = convert_time.iloc[n][0]
     print(f"processing sampling point {n} representing tskit time {tskit_time}")
     
     # assign timepoint to output files    
     tp_summary.loc[0, 'timepoint'] = n
-    
+    tp_demo_params.loc[0, 'timepoint'] = n
+
     # define pedigree ids sampled by slim, representing individuals we have we have age information for
     samp_pdids = metadata[metadata["generation"] == convert_time.iloc[n][1]].filter(["pedigree_id"])
     
@@ -274,6 +358,7 @@ for n in [*range(0, 24, 1)]:
     print(f"length of ind_nodes is {len(ind_nodes)}")
     all_nodes = [item for sublist in ind_nodes for item in sublist]
     
+
     ### Summary stats for entire sample------------------------------------------------------------------------------------------------------------------------------------------
         
     # with all_nodes
@@ -282,12 +367,26 @@ for n in [*range(0, 24, 1)]:
     gt_matrix_all_nodes = mts.genotype_matrix(samples = all_nodes)
     tp_summary.loc[0, 'LD'] = getrSquaredDecayDist(all_nodes, gt_matrix_all_nodes, positions, seq_length)[3]
 
+    ### Demographic inference with 40 nodes
+    
+    # select nodes randomly without replacement
+    rand_nodes = np.random.choice(all_nodes, size = 40, replace = False)
+    
+    # momi model selection
+    SFS = getMomiSFS(rand_nodes, mts, "pop")
+    mod_summary = runMomiModels(SFS)
+    
+    # save output to data object
+    tp_demo_params.iloc[:, 1:] = mod_summary
+
     
     # save output ------------------------------------------------------------------------------------------------------------------------------------------
     df_summary = pd.concat([df_summary, tp_summary], axis=0)
+    df_demo_params = pd.concat([df_demo_params, tp_demo_params], axis=0)
 
     # end of for loop
 
 df_summary.to_csv(outdir+"/"+prefix+"_summary.txt", sep=',', index=False)
+df_summary.to_csv(outdir+"/"+prefix+"_demo_params.txt", sep=',', index=False)
 
 print(f"done saving output")
