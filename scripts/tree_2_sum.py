@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# last updates 09/11/2023
+# last updates 09/15/2023
 
 import sys
 import msprime
@@ -12,6 +12,9 @@ import datetime # FOR DEBUGGING
 import csv
 import tskit
 import scipy.stats as stats
+import momi
+#import matplotlib.pyplot as plt
+
 np.set_printoptions(threshold=sys.maxsize)
 
 # define custom functions ------------------------------------------------------------------------------------------------------------------------------------------
@@ -113,10 +116,103 @@ def newBoot(group1_nodes, group2_nodes, niter):
     # return output
     return(real_theta_g1, real_theta_g2, theta_prop, theta_ttest[1], theta_ttest[0], real_pi_g1, real_pi_g2, pi_prop, pi_ttest[1], pi_ttest[0]) 
 
+
+#def getGeneticRel(ped_inds, ts, inds_alive, ts_inds):
+#    nodes = []
+#    for i in ped_inds.to_numpy():
+#        focal_ind = ts.individual(int(inds_alive[np.where(ts_inds==i)])) # get inidvidual id by matching pedigree id to tskit id
+#        nodes.append(focal_ind.nodes.tolist())
+#    pairs = [(i, j) for i in range(len(nodes)) for j in range(len(nodes)) if i != j] # range (# of groups)
+#    plt.hist(mts.genetic_relatedness(nodes, indexes= pairs, mode = 'site'))
+#    return(np.mean(mts.genetic_relatedness(nodes, indexes= pairs, mode = 'site')))
+#    
+
+def getAIC(log_like, K):
+    AIC = (2*K) - (2*log_like)
+    return(AIC)
+
+
+def mod2AIC(model):
+    model_like = model.log_likelihood()
+    no_params = len(model.get_params())
+    AIC = getAIC(model_like, no_params)
+    return(AIC)
+
+
+def getMomiSFS(nodes, ts, pop_name):
+    afs = ts.allele_frequency_spectrum(sample_sets = [nodes], span_normalise = False, polarised = False)
+    configs = [[len(nodes) - i, i] for i in range(1, len(nodes))]
+    afs_dict = {}
+    for config, value in zip(configs, afs[1:200]):
+        key = (tuple(config),)  # Convert the list to a tuple and create a tuple containing it
+        afs_dict[key] = value
+
+    afs_dict_flt = {key: value for key, value in afs_dict.items() if value != 0}
+
+    afs_momi = momi.site_freq_spectrum([pop_name], [afs_dict_flt], length = ts.sequence_length)    
+    
+    return(afs_momi)
+    
+    
+def runMomiModels(SFS):
+    
+    # define model –– no population size change
+    mod_constant = momi.DemographicModel(N_e = 10000, gen_time = gen_time, muts_per_gen=mu)
+
+    # add data
+    mod_constant.set_data(SFS)
+
+    # define parameters to infer
+    mod_constant.add_size_param("N_c", lower = 10, upper = 1e7)
+
+    # add samples
+    mod_constant.add_leaf("pop", N="N_c")
+
+    # infer parameters
+
+    mod_constant.optimize(method="TNC")
+
+
+    # define model –– bottleneck
+    mod_bn = momi.DemographicModel(N_e = 10000, gen_time = gen_time, muts_per_gen=mu)
+
+    # add data
+    mod_bn.set_data(SFS)
+
+    # define parameters to infer
+    mod_bn.add_size_param("N_pre", lower = 10, upper = 1e7)
+    mod_bn.add_size_param("N_post", lower = 10, upper = 1e7)
+    mod_bn.add_size_param("T_bn", lower = 0, upper = 1e3)
+
+
+    # add samples
+    mod_bn.add_leaf("pop", t=0, N="N_post")
+    mod_bn.set_size("pop", t="T_bn", N="N_pre")
+
+    # infer parameters
+
+    mod_bn.optimize(method="TNC")
+
+    # compare models
+    # "verdict" is whether a bottleneck was detected (True) or not (False) 
+    if(mod2AIC(mod_bn) < mod2AIC(mod_constant)):
+        if(mod_bn.get_params()['N_pre'] > mod_bn.get_params()['N_post']):
+            verdict = True
+        else: 
+            verdict = False
+    elif(mod2AIC(mod_bn) >= mod2AIC(mod_constant)):
+        verdict = False
+    
+    list = [verdict, mod2AIC(mod_constant), mod_constant.log_likelihood(), mod_constant.get_params()['N_c'], 
+              mod2AIC(mod_bn), mod_bn.log_likelihood(), mod_bn.get_params()['N_pre'], mod_bn.get_params()['N_post'], mod_bn.get_params()['T_bn']]
+
+    return(list)
+
+
 # ------------------------------------------------------------------------------------------------------------------------------------------
 
 # uncomment these lines when running from command line
-# sys.argv = ['tree_processing.py', '../troubleshooting/tree_nWF_2_2_60.trees','../troubleshooting/metaInd_nWF_2_2_60.txt', '/Users/meaghan/Desktop/DC_slim/het', 'hpcc_trouble', 1e-8, 3, 2]
+# sys.argv = ['tree_processing.py', '../troubleshooting/tree_nWF_2_100_69.trees','../troubleshooting/metaInd_nWF_2_100_69.txt', '/Users/meaghan/Desktop/DC_slim/het', 'hpcc_trouble', 1e-8, 3, 2]
 # arguments: 
 # [0] -- python script name
 # [1] -- tree file
@@ -228,11 +324,13 @@ df_summary = pd.DataFrame(columns = ['timepoint', 'pi', 'theta']) #'LD'
 df_age_cohort = pd.DataFrame(columns = ['timepoint', 'pedigree_id', 'age', 'pi', 'theta']) 
 df_age_bin = pd.DataFrame(columns = ['timepoint', 'theta_younger', 'theta_older', 'theta_prop', 'theta_pval', 'theta_T', 'pi_younger', 'pi_older', 'pi_prop', 'pi_pval', 'pi_T'])
 df_temporal = pd.DataFrame(columns = ['timepoint', 'theta_future', 'theta_now', 'theta_prop', 'theta_pval', 'theta_T', 'pi_future', 'pi_now', 'pi_prop', 'pi_pval', 'pi_T'])
+df_demo_params = pd.DataFrame(columns = ['timepoint', 'verdict', 'con_AIC', 'con_llike', 'con_N_c', 'bn_AIC', 'bn_llike', 'bn_N_pre', 'bn_N_post', 'bn_T_bn'])
+
 
 # loop through time points to calculate pi using tskit
 
 for n in [*range(0, 24, 1)]: 
-#for n in [*range(18, 19, 1)]: # ------------------------------------------------------------------------------------------------------------------------------------------
+#for n in [*range(0, 2, 1)]: # ------------------------------------------------------------------------------------------------------------------------------------------
 
     # initialize data object to store stats values that are calculated once per time point
     
@@ -246,6 +344,9 @@ for n in [*range(0, 24, 1)]:
     tp_age_bin = pd.DataFrame(columns = ['timepoint', 'theta_younger', 'theta_older', 'theta_prop', 'theta_pval', 'theta_T', 'pi_younger', 'pi_older', 'pi_prop', 'pi_pval', 'pi_T'])
     tp_temporal = pd.DataFrame(columns = ['timepoint', 'theta_future', 'theta_now', 'theta_prop', 'theta_pval', 'theta_T', 'pi_future', 'pi_now', 'pi_prop', 'pi_pval', 'pi_T']) # newBoot(future_nodes, now_nodes, niter = no_straps)
     
+    # data object to store results from demographic inference
+    tp_demo_params = pd.DataFrame(columns = ['timepoint', 'verdict', 'con_AIC', 'con_llike', 'con_N_c', 'bn_AIC', 'bn_llike', 'bn_N_pre', 'bn_N_post', 'bn_T_bn'])
+
     # define tskit time
     tskit_time = convert_time.iloc[n][0]
     print(f"processing sampling point {n} representing tskit time {tskit_time}")
@@ -254,7 +355,8 @@ for n in [*range(0, 24, 1)]:
     tp_summary.loc[0, 'timepoint'] = n
     tp_age_bin.loc[0, 'timepoint'] = n
     tp_temporal.loc[0, 'timepoint'] = n 
-    
+    tp_demo_params.loc[0, 'timepoint'] = n 
+
     # define pedigree ids sampled by slim, representing individuals we have we have age information for
     samp_pdids = metadata[metadata["generation"] == convert_time.iloc[n][1]].filter(["pedigree_id"])
     
@@ -277,7 +379,7 @@ for n in [*range(0, 24, 1)]:
         focal_ind = mts.individual(int(alive[np.where(x==i)])) # get inidvidual id by matching pedigree id to tskit id
         ind_nodes.append(focal_ind.nodes.tolist())                      # make list of nodes
     all_nodes = [item for sublist in ind_nodes for item in sublist]
-    print(f"length of all_nodes is {len(all_nodes)}")
+    # print(f"length of all_nodes is {len(all_nodes)}")
 
     ### Summary stats for entire sample------------------------------------------------------------------------------------------------------------------------------------------
         
@@ -302,7 +404,7 @@ for n in [*range(0, 24, 1)]:
         tp_age_cohort.loc[i, 'pedigree_id'] = ind
 
             
-    print(f"done with age cohort sampling for sampling point {n} representing tskit time {tskit_time}")
+    # print(f"done with age cohort sampling for sampling point {n} representing tskit time {tskit_time}")
   
     ### Age Bins------------------------------------------------------------------------------------------------------------------------------------------
         
@@ -338,14 +440,23 @@ for n in [*range(0, 24, 1)]:
 
     # before nodes 
     # bootstrap ------------------------------------------------------------------------------------------------------------------------------------------
+    now_nodes = lower_ten_nodes + upper_ten_nodes
+
     if 'future_nodes' in locals(): 
         now_nodes = lower_ten_nodes + upper_ten_nodes
         temp_vals = newBoot(future_nodes, now_nodes, niter = no_straps)
     
-        # save output ------------------------------------------------------------------------------------------------------------------------------------------
+       # save output ------------------------------------------------------------------------------------------------------------------------------------------
         tp_temporal.iloc[:, 1:] = temp_vals
     
+    # momi model selection
+    SFS = getMomiSFS(now_nodes, mts, "pop")
+    mod_summary = runMomiModels(SFS)
+    # save output to data object
+    tp_demo_params.iloc[:, 1:] = mod_summary
+    
     # save output ------------------------------------------------------------------------------------------------------------------------------------------
+    df_demo_params = pd.concat([df_demo_params, tp_demo_params], axis = 0)
     df_summary = pd.concat([df_summary, tp_summary], axis=0)
     df_age_cohort = pd.concat([df_age_cohort, tp_age_cohort], axis=0)
     df_age_bin = pd.concat([df_age_bin, tp_age_bin], axis=0)   
@@ -358,5 +469,6 @@ df_summary.to_csv(outdir+"/"+prefix+"_summary.txt", sep=',', index=False)
 df_age_cohort.to_csv(outdir+"/"+prefix+"_age_cohort.txt", sep=',', index=False)
 df_age_bin.to_csv(outdir+"/"+prefix+"_age_bin.txt", sep=',', index=False)
 df_temporal.to_csv(outdir+"/"+prefix+"_temporal.txt", sep=',', index=False)
+df_demo_params.to_csv(outdir+"/"+prefix+"_demo_params.txt", sep=',', index=False)
 
 print(f"done saving output")
