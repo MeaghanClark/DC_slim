@@ -295,7 +295,7 @@ for n in [*range(0, 24, 1)]:
         ind = list(meta['pedigree_id'])[i]
         focal_ind = mts.individual(int(alive[x.index(ind)]))# get inidvidual id by matching pedigree id to tskit id
         nodes = focal_ind.nodes.tolist()
-        tp_age_cohort.loc[i, 'age'] = unique_ages[a]
+        tp_age_cohort.loc[i, 'age'] = list(meta['age'])[i]
         tp_age_cohort.loc[i, 'pi'] = mts.diversity(sample_sets = nodes)
         tp_age_cohort.loc[i, 'theta'] = mts.segregating_sites(sample_sets = nodes) / np.sum([1/i for i in np.arange(1,len(nodes))])
         tp_age_cohort.loc[i, 'timepoint'] = n 

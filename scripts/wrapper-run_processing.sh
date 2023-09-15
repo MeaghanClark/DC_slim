@@ -40,7 +40,7 @@ then
     treeprocess=pWF_tree_2_sum.py #processing python script 
 fi
 
-rundate=08222023	#$(date +%m%d%Y)
+rundate=$(date +%m%d%Y)
 # define dirs:
 storagenode=/mnt/home/clarkm89 #path to top level of dir where input/output files live
 logfilesdir=$storagenode/$run_name/py_logfiles_sumstats_${date} # name of directory to create and then write log files to
@@ -90,7 +90,7 @@ for r in 2 10 100; do
 			--mem-per-cpu=$ram_per_cpu \
 			--output=$logfilesdir/${header}_${r}_${rep}_${date}_%A.out \
 			--error=$logfilesdir/${header}_${r}_${rep}_${date}_%A.err \
-			--time=168:00:00 \
+			--time=48:00:00 \
 			$executable
 		else
 			echo output files for ${model}_${r}_${rep}_${date} already exist in ${outdir}
