@@ -154,10 +154,10 @@ def getMomiSFS(nodes, ts, pop_name):
     return(afs_momi)
     
     
-def runMomiModels(SFS):
-    
+def runMomiModels(SFS, gen_time):
+
     # define model –– no population size change
-    mod_constant = momi.DemographicModel(N_e = 10000, gen_time = gen_time, muts_per_gen=mu)
+    mod_constant = momi.DemographicModel(N_e = 10000, gen_time = float(gen_time), muts_per_gen=float(mu))
 
     # add data
     mod_constant.set_data(SFS)
@@ -174,7 +174,7 @@ def runMomiModels(SFS):
 
 
     # define model –– bottleneck
-    mod_bn = momi.DemographicModel(N_e = 10000, gen_time = gen_time, muts_per_gen=mu)
+    mod_bn = momi.DemographicModel(N_e = 10000, gen_time = float(gen_time), muts_per_gen=float(mu))
 
     # add data
     mod_bn.set_data(SFS)
@@ -451,7 +451,7 @@ for n in [*range(0, 24, 1)]:
     
     # momi model selection
     SFS = getMomiSFS(now_nodes, mts, "pop")
-    mod_summary = runMomiModels(SFS)
+    mod_summary = runMomiModels(SFS, gen_time)
     # save output to data object
     tp_demo_params.iloc[:, 1:] = mod_summary
     

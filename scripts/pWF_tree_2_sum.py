@@ -156,7 +156,7 @@ def getMomiSFS(nodes, ts, pop_name):
 def runMomiModels(SFS):
     
     # define model –– no population size change
-    mod_constant = momi.DemographicModel(N_e = 10000, gen_time = gen_time, muts_per_gen=mu)
+    mod_constant = momi.DemographicModel(N_e = 10000, gen_time = float(gen_time), muts_per_gen=float(mu))
 
     # add data
     mod_constant.set_data(SFS)
@@ -173,7 +173,7 @@ def runMomiModels(SFS):
 
 
     # define model –– bottleneck
-    mod_bn = momi.DemographicModel(N_e = 10000, gen_time = gen_time, muts_per_gen=mu)
+    mod_bn = momi.DemographicModel(N_e = 10000, gen_time = float(gen_time), muts_per_gen=float(mu))
 
     # add data
     mod_bn.set_data(SFS)
@@ -365,7 +365,6 @@ for n in [*range(0, 24, 1)]:
     tp_summary.loc[0, 'pi'] = mts.diversity(sample_sets = all_nodes)
     tp_summary.loc[0, 'theta'] = mts.segregating_sites(sample_sets = all_nodes) / np.sum([1/i for i in np.arange(1,len(all_nodes))])
     gt_matrix_all_nodes = mts.genotype_matrix(samples = all_nodes)
-    tp_summary.loc[0, 'LD'] = getrSquaredDecayDist(all_nodes, gt_matrix_all_nodes, positions, seq_length)[3]
 
     ### Demographic inference with 40 nodes
     
@@ -387,6 +386,6 @@ for n in [*range(0, 24, 1)]:
     # end of for loop
 
 df_summary.to_csv(outdir+"/"+prefix+"_summary.txt", sep=',', index=False)
-df_summary.to_csv(outdir+"/"+prefix+"_demo_params.txt", sep=',', index=False)
+df_demo_params.to_csv(outdir+"/"+prefix+"_demo_params.txt", sep=',', index=False)
 
 print(f"done saving output")

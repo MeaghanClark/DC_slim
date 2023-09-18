@@ -14,12 +14,16 @@ mu=1e-8
 
 if [[ $model == nWF ]]
 then
+	#if [[ $avg_age == 2 ]]; then gen=3; fi
+        #if [[ $avg_age == 5 ]]; then gen=6; fi 
+        #if [[ $avg_age == 10 ]]; then gen=11; fi 
+        #if [[ $avg_age == 20 ]]; then gen=21; fi 
 	if [[ $avg_age == 2 ]]; then gen=2.999165; fi
 	if [[ $avg_age == 5 ]]; then gen=6.006728; fi 
 	if [[ $avg_age == 10 ]]; then gen=11.01567; fi 
 	if [[ $avg_age == 20 ]]; then gen=20.97633; fi 
 else 
-	gen=1.00 # for pWF model
+	gen=1 # for pWF model
 fi
 
 # define upper level variables:
@@ -90,7 +94,7 @@ for r in 2 10 100; do
 			--mem-per-cpu=$ram_per_cpu \
 			--output=$logfilesdir/${header}_${r}_${rep}_${date}_%A.out \
 			--error=$logfilesdir/${header}_${r}_${rep}_${date}_%A.err \
-			--time=48:00:00 \
+			--time=24:00:00 \
 			$executable
 		else
 			echo output files for ${model}_${r}_${rep}_${date} already exist in ${outdir}
