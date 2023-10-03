@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
-# last updates 09/15/2023
+# last updates 10/3/2023
+
+# reduced no.iter to 100 to troubleshoot false postive rate
 
 import sys
 import msprime
@@ -54,7 +56,12 @@ def plotDists(g1_data, g2_data, g1_real, g2_real, stat, n):
     
     print(f"area of overlap is {area} for {stat} at {n}")
     
-        
+
+def getDoubleSingleRatio(afs):
+    X = afs[1]/afs[2]
+    return(X)
+
+
 def newBoot(group1_nodes, group2_nodes, niter):
     # new bootstrapping function
     
@@ -208,11 +215,10 @@ def runMomiModels(SFS, gen_time):
 
     return(list)
 
-
 # ------------------------------------------------------------------------------------------------------------------------------------------
 
 # uncomment these lines when running from command line
-# sys.argv = ['tree_processing.py', '../troubleshooting/tree_nWF_2_100_69.trees','../troubleshooting/metaInd_nWF_2_100_69.txt', '/Users/meaghan/Desktop/DC_slim/het', 'hpcc_trouble', 1e-8, 3, 2]
+# sys.argv = ['tree_processing.py', '../troubleshooting/tree_nWF_20_2_100.trees','../troubleshooting/metaInd_nWF_20_2_100.txt', '/Users/meaghan/Desktop/DC_slim/het', 'hpcc_trouble', 1e-8, 21, 20]
 # arguments: 
 # [0] -- python script name
 # [1] -- tree file
@@ -294,7 +300,7 @@ print(f"the type of avg_age is {type(avg_age)}")
 if avg_age == 2: 
     burn = 126300
 elif avg_age == 5: 
-    burn = 315900  # changed b/c of my slim error with % 50 
+    burn = 315900
 elif avg_age == 10: 
     burn = 635600
 elif avg_age == 20: 
@@ -315,22 +321,23 @@ convert_time = pd.DataFrame({'tskit_time':sampling, 'slim_time':cycles}, columns
 
 # initalize data lists
 
-no_straps = 1000 # 100 for troubleshooting, 1000 for running
+no_straps = 100 # 100 for troubleshooting, 1000 for running
 
 # seq_length = mts.sequence_length
 # positions = mts.tables.sites.position
 
-df_summary = pd.DataFrame(columns = ['timepoint', 'pi', 'theta']) #'LD'
-df_age_cohort = pd.DataFrame(columns = ['timepoint', 'pedigree_id', 'age', 'pi', 'theta']) 
+df_summary = pd.DataFrame(columns = ['timepoint', 'pi', 'theta'])
+df_age_cohort = pd.DataFrame(columns = ['timepoint', 'age', 'N', 'pi', 'theta', 'FL_theta', 'prop_SS']) 
 df_age_bin = pd.DataFrame(columns = ['timepoint', 'theta_younger', 'theta_older', 'theta_prop', 'theta_pval', 'theta_T', 'pi_younger', 'pi_older', 'pi_prop', 'pi_pval', 'pi_T'])
 df_temporal = pd.DataFrame(columns = ['timepoint', 'theta_future', 'theta_now', 'theta_prop', 'theta_pval', 'theta_T', 'pi_future', 'pi_now', 'pi_prop', 'pi_pval', 'pi_T'])
-df_demo_params = pd.DataFrame(columns = ['timepoint', 'verdict', 'con_AIC', 'con_llike', 'con_N_c', 'bn_AIC', 'bn_llike', 'bn_N_pre', 'bn_N_post', 'bn_T_bn'])
-
+df_demo_params_all = pd.DataFrame(columns = ['timepoint', 'verdict', 'con_AIC', 'con_llike', 'con_N_c', 'bn_AIC', 'bn_llike', 'bn_N_pre', 'bn_N_post', 'bn_T_bn'])
+df_demo_params_young = pd.DataFrame(columns = ['timepoint', 'verdict', 'con_AIC', 'con_llike', 'con_N_c', 'bn_AIC', 'bn_llike', 'bn_N_pre', 'bn_N_post', 'bn_T_bn'])
+df_demo_params_yoy = pd.DataFrame(columns = ['timepoint', 'verdict', 'con_AIC', 'con_llike', 'con_N_c', 'bn_AIC', 'bn_llike', 'bn_N_pre', 'bn_N_post', 'bn_T_bn'])
 
 # loop through time points to calculate pi using tskit
 
 for n in [*range(0, 24, 1)]: 
-#for n in [*range(0, 2, 1)]: # ------------------------------------------------------------------------------------------------------------------------------------------
+#for n in [*range(16, 17, 1)]: # ------------------------------------------------------------------------------------------------------------------------------------------
 
     # initialize data object to store stats values that are calculated once per time point
     
@@ -338,14 +345,16 @@ for n in [*range(0, 24, 1)]:
     tp_summary = pd.DataFrame(columns = ['timepoint', 'pi', 'theta']) # "LD"
     
     # data object to store summary stats for age cohorts
-    tp_age_cohort = pd.DataFrame(columns = ['timepoint', 'pedigree_id', 'age', 'pi', 'theta']) 
+    tp_age_cohort = pd.DataFrame(columns = ['timepoint', 'age', 'N', 'pi', 'theta', 'FL_theta', 'prop_SS']) 
     
     # data objects to store bootstrapped replicates of summary stats for age bins and temporal comparison
     tp_age_bin = pd.DataFrame(columns = ['timepoint', 'theta_younger', 'theta_older', 'theta_prop', 'theta_pval', 'theta_T', 'pi_younger', 'pi_older', 'pi_prop', 'pi_pval', 'pi_T'])
     tp_temporal = pd.DataFrame(columns = ['timepoint', 'theta_future', 'theta_now', 'theta_prop', 'theta_pval', 'theta_T', 'pi_future', 'pi_now', 'pi_prop', 'pi_pval', 'pi_T']) # newBoot(future_nodes, now_nodes, niter = no_straps)
     
     # data object to store results from demographic inference
-    tp_demo_params = pd.DataFrame(columns = ['timepoint', 'verdict', 'con_AIC', 'con_llike', 'con_N_c', 'bn_AIC', 'bn_llike', 'bn_N_pre', 'bn_N_post', 'bn_T_bn'])
+    tp_demo_params_all = pd.DataFrame(columns = ['timepoint', 'verdict', 'con_AIC', 'con_llike', 'con_N_c', 'bn_AIC', 'bn_llike', 'bn_N_pre', 'bn_N_post', 'bn_T_bn'])
+    tp_demo_params_young = pd.DataFrame(columns = ['timepoint', 'verdict', 'con_AIC', 'con_llike', 'con_N_c', 'bn_AIC', 'bn_llike', 'bn_N_pre', 'bn_N_post', 'bn_T_bn'])
+    tp_demo_params_yoy = pd.DataFrame(columns = ['timepoint', 'verdict', 'con_AIC', 'con_llike', 'con_N_c', 'bn_AIC', 'bn_llike', 'bn_N_pre', 'bn_N_post', 'bn_T_bn'])
 
     # define tskit time
     tskit_time = convert_time.iloc[n][0]
@@ -355,7 +364,10 @@ for n in [*range(0, 24, 1)]:
     tp_summary.loc[0, 'timepoint'] = n
     tp_age_bin.loc[0, 'timepoint'] = n
     tp_temporal.loc[0, 'timepoint'] = n 
-    tp_demo_params.loc[0, 'timepoint'] = n 
+    tp_demo_params_all.loc[0, 'timepoint'] = n 
+    tp_demo_params_young.loc[0, 'timepoint'] = n 
+    tp_demo_params_yoy.loc[0, 'timepoint'] = n 
+    
 
     # define pedigree ids sampled by slim, representing individuals we have we have age information for
     samp_pdids = metadata[metadata["generation"] == convert_time.iloc[n][1]].filter(["pedigree_id"])
@@ -386,24 +398,42 @@ for n in [*range(0, 24, 1)]:
     # with all_nodes
     tp_summary.loc[0, 'pi'] = mts.diversity(sample_sets = all_nodes)
     tp_summary.loc[0, 'theta'] = mts.segregating_sites(sample_sets = all_nodes) / np.sum([1/i for i in np.arange(1,len(all_nodes))])
-    gt_matrix_all_nodes = mts.genotype_matrix(samples = all_nodes)
+    #gt_matrix_all_nodes = mts.genotype_matrix(samples = all_nodes)
     # tp_summary.loc[0, 'LD'] = getrSquaredDecayDist(all_nodes, gt_matrix_all_nodes, positions, seq_length)[3] 
     
     ### Age Cohorts------------------------------------------------------------------------------------------------------------------------------------------
             # what to fill in: 'age', 'pi', 'theta'
         
-    # calculate individual stats for samples of each age cohort
-    for i in [*range(0,len(meta['pedigree_id']))]:
-        ind = list(meta['pedigree_id'])[i]
-        focal_ind = mts.individual(int(alive[x.index(ind)]))# get inidvidual id by matching pedigree id to tskit id
-        nodes = focal_ind.nodes.tolist()
-        tp_age_cohort.loc[i, 'age'] = list(meta['age'])[i]
-        tp_age_cohort.loc[i, 'pi'] = mts.diversity(sample_sets = nodes)
-        tp_age_cohort.loc[i, 'theta'] = mts.segregating_sites(sample_sets = nodes) / np.sum([1/i for i in np.arange(1,len(nodes))])
-        tp_age_cohort.loc[i, 'timepoint'] = n 
-        tp_age_cohort.loc[i, 'pedigree_id'] = ind
-
-            
+    # # calculate individual stats for samples of each age cohort
+    # for i in [*range(0,len(meta['pedigree_id']))]:
+    #     ind = list(meta['pedigree_id'])[i]
+    #     focal_ind = mts.individual(int(alive[x.index(ind)]))# get inidvidual id by matching pedigree id to tskit id
+    #     nodes = focal_ind.nodes.tolist()
+    #     tp_age_cohort.loc[i, 'age'] = list(meta['age'])[i]
+    #     tp_age_cohort.loc[i, 'pi'] = mts.diversity(sample_sets = nodes)
+    #     tp_age_cohort.loc[i, 'theta'] = mts.segregating_sites(sample_sets = nodes) / np.sum([1/i for i in np.arange(1,len(nodes))])
+    #     tp_age_cohort.loc[i, 'timepoint'] = n 
+    #     tp_age_cohort.loc[i, 'pedigree_id'] = ind
+    
+    # calculate cohort stats 
+    unique_ages = list(set(all_ages))
+    for a in [*range(0, len(unique_ages), 1)]:
+        cohort_nodes = [] 
+        ids = meta[meta['age'] == unique_ages[a]][["pedigree_id"]]
+        for i in ids.to_numpy():
+            focal_ind = mts.individual(int(alive[np.where(x==i)])) # get inidvidual id by matching pedigree id to tskit id
+            cohort_nodes.append(focal_ind.nodes.tolist())   # make list of nodes
+        cohort_nodes = [item for sublist in cohort_nodes for item in sublist] # get rid of sub-lists to get overall pi 
+        tp_age_cohort.loc[a, 'timepoint'] = n 
+        tp_age_cohort.loc[a, 'age'] = unique_ages[a]
+        tp_age_cohort.loc[a, 'N'] = len(cohort_nodes)
+        tp_age_cohort.loc[a, 'pi'] = mts.diversity(sample_sets = cohort_nodes)
+        tp_age_cohort.loc[a, 'theta'] = mts.segregating_sites(sample_sets = all_nodes) / np.sum([1/i for i in np.arange(1,len(all_nodes))])
+        cohort_SFS = mts.allele_frequency_spectrum(sample_sets = [cohort_nodes], span_normalise = False, polarised = False)
+        tp_age_cohort.loc[a, 'FL_theta'] = cohort_SFS[1]
+        #tp_age_cohort.loc[a, 'X_ratio'] = cohort_SFS[1]/cohort_SFS[2]
+        tp_age_cohort.loc[a, 'prop_SS'] = (mts.segregating_sites(sample_sets = cohort_nodes)/mts.segregating_sites(sample_sets = all_nodes))/np.sum([1/i for i in np.arange(1,len(cohort_nodes))])
+        
     # print(f"done with age cohort sampling for sampling point {n} representing tskit time {tskit_time}")
   
     ### Age Bins------------------------------------------------------------------------------------------------------------------------------------------
@@ -437,7 +467,7 @@ for n in [*range(0, 24, 1)]:
             
     # save output ------------------------------------------------------------------------------------------------------------------------------------------
     tp_age_bin.iloc[:, 1:] = bin_vals
-
+    
     # before nodes 
     # bootstrap ------------------------------------------------------------------------------------------------------------------------------------------
     now_nodes = lower_ten_nodes + upper_ten_nodes
@@ -452,15 +482,32 @@ for n in [*range(0, 24, 1)]:
     # momi model selection
     SFS = getMomiSFS(now_nodes, mts, "pop")
     mod_summary = runMomiModels(SFS, gen_time)
-    # save output to data object
-    tp_demo_params.iloc[:, 1:] = mod_summary
     
+    # momi inference on 20 young individuals only
+    young_nodes = getNodes(ids = meta_sorted[0:20]["pedigree_id"], inds_alive = alive, ts = mts) # twenty youngest individuals = 40 nodes total
+    young_SFS = getMomiSFS(young_nodes, mts, "pop")
+    young_mod_summary = runMomiModels(young_SFS, gen_time)
+    
+    # momi inference on individuals younger than avg_age/10 only
+    yoy_nodes = getNodes(ids = meta_sorted[meta_sorted["age"] <= round(avg_age/10)]["pedigree_id"], inds_alive = alive, ts = mts) # all individuals under avg_age/10 (rounded)
+    yoy_SFS = getMomiSFS(young_nodes, mts, "pop")
+    yoy_mod_summary = runMomiModels(young_SFS, gen_time)
+
+
+    # save output to data object
+    tp_demo_params_all.iloc[:, 1:] = mod_summary
+    tp_demo_params_young.iloc[:, 1:] = young_mod_summary
+    tp_demo_params_yoy.iloc[:,1:] = yoy_mod_summary
+
     # save output ------------------------------------------------------------------------------------------------------------------------------------------
-    df_demo_params = pd.concat([df_demo_params, tp_demo_params], axis = 0)
     df_summary = pd.concat([df_summary, tp_summary], axis=0)
     df_age_cohort = pd.concat([df_age_cohort, tp_age_cohort], axis=0)
     df_age_bin = pd.concat([df_age_bin, tp_age_bin], axis=0)   
     df_temporal = pd.concat([df_temporal, tp_temporal], axis=0)   
+    df_demo_params_all = pd.concat([df_demo_params_all, tp_demo_params_all], axis = 0)
+    df_demo_params_young = pd.concat([df_demo_params_young, tp_demo_params_young], axis = 0)
+    df_demo_params_yoy = pd.concat([df_demo_params_yoy, tp_demo_params_yoy], axis = 0)
+
 
     # end of for loop
     future_nodes = lower_ten_nodes + upper_ten_nodes
@@ -469,6 +516,9 @@ df_summary.to_csv(outdir+"/"+prefix+"_summary.txt", sep=',', index=False)
 df_age_cohort.to_csv(outdir+"/"+prefix+"_age_cohort.txt", sep=',', index=False)
 df_age_bin.to_csv(outdir+"/"+prefix+"_age_bin.txt", sep=',', index=False)
 df_temporal.to_csv(outdir+"/"+prefix+"_temporal.txt", sep=',', index=False)
-df_demo_params.to_csv(outdir+"/"+prefix+"_demo_params.txt", sep=',', index=False)
+df_demo_params_all.to_csv(outdir+"/"+prefix+"_demo_params_all.txt", sep=',', index=False)
+df_demo_params_young.to_csv(outdir+"/"+prefix+"_demo_params_young.txt", sep=',', index=False)
+df_demo_params_yoy.to_csv(outdir+"/"+prefix+"_demo_params_yoy.txt", sep=',', index=False)
+
 
 print(f"done saving output")

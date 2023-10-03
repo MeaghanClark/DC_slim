@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
-# last updates 09/15/2023
+# last updates 10/3/2023
+
+# added subsampling
 
 import sys
 import msprime
@@ -317,8 +319,9 @@ seq_length = mts.sequence_length
 positions = mts.tables.sites.position
 
 
-df_summary = pd.DataFrame(columns = ['timepoint', 'pi', 'theta']) #'LD'
+df_summary = pd.DataFrame(columns = ['timepoint', 'pi', 'theta'])
 df_demo_params = pd.DataFrame(columns = ['timepoint', 'verdict', 'con_AIC', 'con_llike', 'con_N_c', 'bn_AIC', 'bn_llike', 'bn_N_pre', 'bn_N_post', 'bn_T_bn'])
+df_subsamp = pd.DataFrame(columns = ['timepoint', 'pi', 'theta', 'prop_SS'])
 
 # loop through time points to calculate stats using tskit
 
@@ -328,8 +331,9 @@ for n in [*range(0, 24, 1)]:
     # initialize data object to store stats values that are calculated once per time point
     
     # data object to store summary stats calculated from all nodes
-    tp_summary = pd.DataFrame(columns = ['timepoint', 'pi', 'theta']) # "LD"
+    tp_summary = pd.DataFrame(columns = ['timepoint', 'pi', 'theta'])
     tp_demo_params = pd.DataFrame(columns = ['timepoint', 'verdict', 'con_AIC', 'con_llike', 'con_N_c', 'bn_AIC', 'bn_llike', 'bn_N_pre', 'bn_N_post', 'bn_T_bn'])
+    tp_subsamp = pd.DataFrame(columns = ['timepoint', 'pi', 'theta', 'prop_SS'])
  
     # define tskit time
     tskit_time = convert_time.iloc[n][0]
@@ -338,6 +342,7 @@ for n in [*range(0, 24, 1)]:
     # assign timepoint to output files    
     tp_summary.loc[0, 'timepoint'] = n
     tp_demo_params.loc[0, 'timepoint'] = n
+    tp_subsamp.loc[0,'timepoint'] = n
 
     # define pedigree ids sampled by slim, representing individuals we have we have age information for
     samp_pdids = metadata[metadata["generation"] == convert_time.iloc[n][1]].filter(["pedigree_id"])
@@ -364,13 +369,18 @@ for n in [*range(0, 24, 1)]:
     # with all_nodes
     tp_summary.loc[0, 'pi'] = mts.diversity(sample_sets = all_nodes)
     tp_summary.loc[0, 'theta'] = mts.segregating_sites(sample_sets = all_nodes) / np.sum([1/i for i in np.arange(1,len(all_nodes))])
-    gt_matrix_all_nodes = mts.genotype_matrix(samples = all_nodes)
 
-    ### Demographic inference with 40 nodes
+
     
+    ### Summary stats for subsample------------------------------------------------------------------------------------------------------------------------------------------
     # select nodes randomly without replacement
     rand_nodes = np.random.choice(all_nodes, size = 40, replace = False)
-    
+
+    tp_subsamp.loc[0, 'pi'] = mts.diversity(sample_sets = rand_nodes)
+    tp_subsamp.loc[0, 'theta'] = mts.segregating_sites(sample_sets = rand_nodes) / np.sum([1/i for i in np.arange(1,len(rand_nodes))])
+
+    ### Demographic inference with 40 nodes
+
     # momi model selection
     SFS = getMomiSFS(rand_nodes, mts, "pop")
     mod_summary = runMomiModels(SFS)
@@ -378,14 +388,15 @@ for n in [*range(0, 24, 1)]:
     # save output to data object
     tp_demo_params.iloc[:, 1:] = mod_summary
 
-    
     # save output ------------------------------------------------------------------------------------------------------------------------------------------
     df_summary = pd.concat([df_summary, tp_summary], axis=0)
     df_demo_params = pd.concat([df_demo_params, tp_demo_params], axis=0)
-
+    df_subsamp = pd.concat([df_subsamp, tp_subsamp], axis=0)
+    
     # end of for loop
 
 df_summary.to_csv(outdir+"/"+prefix+"_summary.txt", sep=',', index=False)
 df_demo_params.to_csv(outdir+"/"+prefix+"_demo_params.txt", sep=',', index=False)
+df_subsamp.to_csv(outdir+"/"+prefix+"_subsamp.txt", sep=',', index=False)
 
 print(f"done saving output")
