@@ -50,7 +50,7 @@ storagenode=/mnt/home/clarkm89 #path to top level of dir where input/output file
 logfilesdir=$storagenode/$run_name/py_logfiles_sumstats_${date} # name of directory to create and then write log files to
 indir=$storagenode/$run_name/slim_output_${date} # where tree files live
 pythondir=$storagenode/$run_name/scripts # where the python file lives
-outdir=sum_stat_output_${rundate}
+outdir=sum_stat_output_tests_${rundate}
 homedir=$storagenode/$run_name/
 
 # define files
