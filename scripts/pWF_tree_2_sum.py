@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-# last updates 10/3/2023
+# last updates 10/17/2023
 
-# added subsampling
+# added temporal sampling and ARG segment comparison
 
 import sys
 import msprime
@@ -210,6 +210,48 @@ def runMomiModels(SFS):
     return(list)
 
 
+def ARGtest(group1_nodes, group2_nodes, ts):
+    # new function that calculates theta and pi for each segment in the ARG instead of resampling/bootstrapping
+    
+    # input: group 1 nodes, group 2 nodes, number of interations
+    
+    ## calculate stats using all nodes
+    # theta
+    real_theta_g1 = mts.segregating_sites(sample_sets = group1_nodes) / np.sum([1/i for i in np.arange(1,len(group1_nodes))])
+    real_theta_g2 = mts.segregating_sites(sample_sets = group2_nodes) / np.sum([1/i for i in np.arange(1,len(group2_nodes))])
+    
+    # pi
+    real_pi_g1 = mts.diversity(sample_sets = group1_nodes)
+    real_pi_g2 = mts.diversity(sample_sets = group2_nodes)
+    
+    ## define ARG segment breakpoints
+    
+    tree_coords = [i for i in ts.breakpoints()] # Thanks to A. Lewanski for this code! 
+    
+    segment_theta_g1 = ts.segregating_sites(sample_sets = group1_nodes, windows = tree_coords, mode = 'site', span_normalise = False) / np.sum([1/i for i in np.arange(1,len(group1_nodes))])
+    segment_theta_g2 = ts.segregating_sites(sample_sets = group2_nodes, windows = tree_coords, mode = 'site', span_normalise = False) / np.sum([1/i for i in np.arange(1,len(group2_nodes))])    
+
+    segment_pi_g1 = ts.diversity(sample_sets = group1_nodes, windows=tree_coords, mode='site', span_normalise=False)
+    segment_pi_g2 = ts.diversity(sample_sets = group2_nodes, windows=tree_coords, mode='site', span_normalise=False)
+    
+    # plot for troubleshooting
+    # plotDists(theta_boot_g1, theta_boot_g2, real_theta_g1, real_theta_g2, "theta", n)
+    # plotDists(pi_boot_g1, pi_boot_g2, real_pi_g1, real_pi_g2, "pi", n)
+    
+    # proporation of differences between bootstrapped regions that are greater than 0 
+    
+    theta_prop = sum((segment_theta_g2 - segment_theta_g1) > 0.0)/len(segment_theta_g1) 
+    pi_prop = sum((segment_pi_g2 - segment_pi_g1) > 0.0)/len(segment_pi_g1) 
+    
+    # compare bootstrapped distributions using t-test
+    
+    theta_ttest = stats.ttest_rel(segment_theta_g1, segment_theta_g2, alternative = "less") # ‘less’: the mean of the distribution underlying the first sample is less than the mean of the distribution underlying the second sample.
+    pi_ttest = stats.ttest_rel(segment_pi_g1, segment_pi_g2, alternative = "less") 
+    
+    
+    # return output
+    return(real_theta_g1, real_theta_g2, theta_prop, theta_ttest[1], theta_ttest[0], real_pi_g1, real_pi_g2, pi_prop, pi_ttest[1], pi_ttest[0]) 
+
 # ------------------------------------------------------------------------------------------------------------------------------------------
 
 # uncomment these lines when running from command line
@@ -322,6 +364,8 @@ positions = mts.tables.sites.position
 df_summary = pd.DataFrame(columns = ['timepoint', 'pi', 'theta'])
 df_demo_params = pd.DataFrame(columns = ['timepoint', 'verdict', 'con_AIC', 'con_llike', 'con_N_c', 'bn_AIC', 'bn_llike', 'bn_N_pre', 'bn_N_post', 'bn_T_bn'])
 df_subsamp = pd.DataFrame(columns = ['timepoint', 'pi', 'theta', 'prop_SS'])
+df_temporal_boot = pd.DataFrame(columns = ['timepoint', 'theta_future', 'theta_now', 'theta_prop', 'theta_pval', 'theta_T', 'pi_future', 'pi_now', 'pi_prop', 'pi_pval', 'pi_T'])
+df_temporal_test = pd.DataFrame(columns = ['timepoint', 'theta_future', 'theta_now', 'theta_prop', 'theta_pval', 'theta_T', 'pi_future', 'pi_now', 'pi_prop', 'pi_pval', 'pi_T'])
 
 # loop through time points to calculate stats using tskit
 
@@ -334,7 +378,9 @@ for n in [*range(0, 24, 1)]:
     tp_summary = pd.DataFrame(columns = ['timepoint', 'pi', 'theta'])
     tp_demo_params = pd.DataFrame(columns = ['timepoint', 'verdict', 'con_AIC', 'con_llike', 'con_N_c', 'bn_AIC', 'bn_llike', 'bn_N_pre', 'bn_N_post', 'bn_T_bn'])
     tp_subsamp = pd.DataFrame(columns = ['timepoint', 'pi', 'theta', 'prop_SS'])
- 
+     tp_temporal_test = pd.DataFrame(columns = ['timepoint', 'theta_future', 'theta_now', 'theta_prop', 'theta_pval', 'theta_T', 'pi_future', 'pi_now', 'pi_prop', 'pi_pval', 'pi_T']) # newBoot(future_nodes, now_nodes, niter = no_straps)
+    tp_temporal_boot = pd.DataFrame(columns = ['timepoint', 'theta_future', 'theta_now', 'theta_prop', 'theta_pval', 'theta_T', 'pi_future', 'pi_now', 'pi_prop', 'pi_pval', 'pi_T']) # newBoot(future_nodes, now_nodes, niter = no_straps)
+
     # define tskit time
     tskit_time = convert_time.iloc[n][0]
     print(f"processing sampling point {n} representing tskit time {tskit_time}")
@@ -343,6 +389,8 @@ for n in [*range(0, 24, 1)]:
     tp_summary.loc[0, 'timepoint'] = n
     tp_demo_params.loc[0, 'timepoint'] = n
     tp_subsamp.loc[0,'timepoint'] = n
+    tp_temporal_test.loc[0, 'timepoint'] = n 
+    tp_temporal_boot.loc[0, 'timepoint'] = n 
 
     # define pedigree ids sampled by slim, representing individuals we have we have age information for
     samp_pdids = metadata[metadata["generation"] == convert_time.iloc[n][1]].filter(["pedigree_id"])
@@ -388,15 +436,32 @@ for n in [*range(0, 24, 1)]:
     # save output to data object
     tp_demo_params.iloc[:, 1:] = mod_summary
 
+    # before nodes 
+    # bootstrap ------------------------------------------------------------------------------------------------------------------------------------------
+    now_nodes = rand_nodes
+
+    if 'future_nodes' in locals(): 
+        temp_vals = newBoot(future_nodes, now_nodes, niter = no_straps)
+        temp_ARG_test = ARGtest(future_nodes, now_nodes, ts = mts)
+
+    # save output ------------------------------------------------------------------------------------------------------------------------------------------
+        tp_temporal_boot.iloc[:, 1:] = temp_vals
+        tp_temporal_test.iloc[:, 1:] = temp_ARG_test
+
     # save output ------------------------------------------------------------------------------------------------------------------------------------------
     df_summary = pd.concat([df_summary, tp_summary], axis=0)
     df_demo_params = pd.concat([df_demo_params, tp_demo_params], axis=0)
     df_subsamp = pd.concat([df_subsamp, tp_subsamp], axis=0)
-    
+    df_temporal_boot = pd.concat([df_temporal_boot, tp_temporal_boot], axis=0)  
+    df_temporal_test = pd.concat([df_temporal_test, tp_temporal_test], axis=0)   
+
     # end of for loop
+    future_nodes = now_nodes
 
 df_summary.to_csv(outdir+"/"+prefix+"_summary.txt", sep=',', index=False)
 df_demo_params.to_csv(outdir+"/"+prefix+"_demo_params.txt", sep=',', index=False)
 df_subsamp.to_csv(outdir+"/"+prefix+"_subsamp.txt", sep=',', index=False)
+df_temporal_boot.to_csv(outdir+"/"+prefix+"_temporal_boot.txt", sep=',', index=False)
+df_temporal_test.to_csv(outdir+"/"+prefix+"_temporal_test.txt", sep=',', index=False)
 
 print(f"done saving output")

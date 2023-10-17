@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-# last updates 10/3/2023
+# last updates 10/17/2023
 
-# reduced no.iter to 100 to troubleshoot false postive rate
+# added ARG segment comparison
 
 import sys
 import msprime
@@ -215,6 +215,49 @@ def runMomiModels(SFS, gen_time):
 
     return(list)
 
+def ARGtest(group1_nodes, group2_nodes, ts):
+    # new function that calculates theta and pi for each segment in the ARG instead of resampling/bootstrapping
+    
+    # input: group 1 nodes, group 2 nodes, number of interations
+    
+    ## calculate stats using all nodes
+    # theta
+    real_theta_g1 = mts.segregating_sites(sample_sets = group1_nodes) / np.sum([1/i for i in np.arange(1,len(group1_nodes))])
+    real_theta_g2 = mts.segregating_sites(sample_sets = group2_nodes) / np.sum([1/i for i in np.arange(1,len(group2_nodes))])
+    
+    # pi
+    real_pi_g1 = mts.diversity(sample_sets = group1_nodes)
+    real_pi_g2 = mts.diversity(sample_sets = group2_nodes)
+    
+    ## define ARG segment breakpoints
+    
+    tree_coords = [i for i in ts.breakpoints()] # Thanks to A. Lewanski for this code! 
+    
+    segment_theta_g1 = ts.segregating_sites(sample_sets = group1_nodes, windows = tree_coords, mode = 'site', span_normalise = False) / np.sum([1/i for i in np.arange(1,len(group1_nodes))])
+    segment_theta_g2 = ts.segregating_sites(sample_sets = group2_nodes, windows = tree_coords, mode = 'site', span_normalise = False) / np.sum([1/i for i in np.arange(1,len(group2_nodes))])    
+
+    segment_pi_g1 = ts.diversity(sample_sets = group1_nodes, windows=tree_coords, mode='site', span_normalise=False)
+    segment_pi_g2 = ts.diversity(sample_sets = group2_nodes, windows=tree_coords, mode='site', span_normalise=False)
+    
+    # plot for troubleshooting
+    # plotDists(theta_boot_g1, theta_boot_g2, real_theta_g1, real_theta_g2, "theta", n)
+    # plotDists(pi_boot_g1, pi_boot_g2, real_pi_g1, real_pi_g2, "pi", n)
+    
+    # proporation of differences between bootstrapped regions that are greater than 0 
+    
+    theta_prop = sum((segment_theta_g2 - segment_theta_g1) > 0.0)/len(segment_theta_g1) 
+    pi_prop = sum((segment_pi_g2 - segment_pi_g1) > 0.0)/len(segment_pi_g1) 
+    
+    # compare bootstrapped distributions using t-test
+    
+    theta_ttest = stats.ttest_rel(segment_theta_g1, segment_theta_g2, alternative = "less") # ‘less’: the mean of the distribution underlying the first sample is less than the mean of the distribution underlying the second sample.
+    pi_ttest = stats.ttest_rel(segment_pi_g1, segment_pi_g2, alternative = "less") 
+    
+    
+    # return output
+    return(real_theta_g1, real_theta_g2, theta_prop, theta_ttest[1], theta_ttest[0], real_pi_g1, real_pi_g2, pi_prop, pi_ttest[1], pi_ttest[0]) 
+
+
 # ------------------------------------------------------------------------------------------------------------------------------------------
 
 # uncomment these lines when running from command line
@@ -327,9 +370,14 @@ no_straps = 100 # 100 for troubleshooting, 1000 for running
 # positions = mts.tables.sites.position
 
 df_summary = pd.DataFrame(columns = ['timepoint', 'pi', 'theta'])
-df_age_cohort = pd.DataFrame(columns = ['timepoint', 'age', 'N', 'pi', 'theta', 'FL_theta', 'prop_SS']) 
-df_age_bin = pd.DataFrame(columns = ['timepoint', 'theta_younger', 'theta_older', 'theta_prop', 'theta_pval', 'theta_T', 'pi_younger', 'pi_older', 'pi_prop', 'pi_pval', 'pi_T'])
-df_temporal = pd.DataFrame(columns = ['timepoint', 'theta_future', 'theta_now', 'theta_prop', 'theta_pval', 'theta_T', 'pi_future', 'pi_now', 'pi_prop', 'pi_pval', 'pi_T'])
+df_age_cohort = pd.DataFrame(columns = ['timepoint', 'age', 'N', 'pi', 'theta']) 
+
+df_age_bin_boot = pd.DataFrame(columns = ['timepoint', 'theta_younger', 'theta_older', 'theta_prop', 'theta_pval', 'theta_T', 'pi_younger', 'pi_older', 'pi_prop', 'pi_pval', 'pi_T'])
+df_temporal_boot = pd.DataFrame(columns = ['timepoint', 'theta_future', 'theta_now', 'theta_prop', 'theta_pval', 'theta_T', 'pi_future', 'pi_now', 'pi_prop', 'pi_pval', 'pi_T'])
+df_age_bin_test = pd.DataFrame(columns = ['timepoint', 'theta_younger', 'theta_older', 'theta_prop', 'theta_pval', 'theta_T', 'pi_younger', 'pi_older', 'pi_prop', 'pi_pval', 'pi_T'])
+df_temporal_test = pd.DataFrame(columns = ['timepoint', 'theta_future', 'theta_now', 'theta_prop', 'theta_pval', 'theta_T', 'pi_future', 'pi_now', 'pi_prop', 'pi_pval', 'pi_T'])
+
+# momi2 
 df_demo_params_all = pd.DataFrame(columns = ['timepoint', 'verdict', 'con_AIC', 'con_llike', 'con_N_c', 'bn_AIC', 'bn_llike', 'bn_N_pre', 'bn_N_post', 'bn_T_bn'])
 df_demo_params_young = pd.DataFrame(columns = ['timepoint', 'verdict', 'con_AIC', 'con_llike', 'con_N_c', 'bn_AIC', 'bn_llike', 'bn_N_pre', 'bn_N_post', 'bn_T_bn'])
 df_demo_params_yoy = pd.DataFrame(columns = ['timepoint', 'verdict', 'con_AIC', 'con_llike', 'con_N_c', 'bn_AIC', 'bn_llike', 'bn_N_pre', 'bn_N_post', 'bn_T_bn'])
@@ -345,12 +393,15 @@ for n in [*range(0, 24, 1)]:
     tp_summary = pd.DataFrame(columns = ['timepoint', 'pi', 'theta']) # "LD"
     
     # data object to store summary stats for age cohorts
-    tp_age_cohort = pd.DataFrame(columns = ['timepoint', 'age', 'N', 'pi', 'theta', 'FL_theta', 'prop_SS']) 
+    tp_age_cohort = pd.DataFrame(columns = ['timepoint', 'age', 'N', 'pi', 'theta']) 
     
     # data objects to store bootstrapped replicates of summary stats for age bins and temporal comparison
-    tp_age_bin = pd.DataFrame(columns = ['timepoint', 'theta_younger', 'theta_older', 'theta_prop', 'theta_pval', 'theta_T', 'pi_younger', 'pi_older', 'pi_prop', 'pi_pval', 'pi_T'])
-    tp_temporal = pd.DataFrame(columns = ['timepoint', 'theta_future', 'theta_now', 'theta_prop', 'theta_pval', 'theta_T', 'pi_future', 'pi_now', 'pi_prop', 'pi_pval', 'pi_T']) # newBoot(future_nodes, now_nodes, niter = no_straps)
+    tp_age_bin_test = pd.DataFrame(columns = ['timepoint', 'theta_younger', 'theta_older', 'theta_prop', 'theta_pval', 'theta_T', 'pi_younger', 'pi_older', 'pi_prop', 'pi_pval', 'pi_T'])
+    tp_temporal_test = pd.DataFrame(columns = ['timepoint', 'theta_future', 'theta_now', 'theta_prop', 'theta_pval', 'theta_T', 'pi_future', 'pi_now', 'pi_prop', 'pi_pval', 'pi_T']) # newBoot(future_nodes, now_nodes, niter = no_straps)
     
+    tp_age_bin_boot = pd.DataFrame(columns = ['timepoint', 'theta_younger', 'theta_older', 'theta_prop', 'theta_pval', 'theta_T', 'pi_younger', 'pi_older', 'pi_prop', 'pi_pval', 'pi_T'])
+    tp_temporal_boot = pd.DataFrame(columns = ['timepoint', 'theta_future', 'theta_now', 'theta_prop', 'theta_pval', 'theta_T', 'pi_future', 'pi_now', 'pi_prop', 'pi_pval', 'pi_T']) # newBoot(future_nodes, now_nodes, niter = no_straps)
+
     # data object to store results from demographic inference
     tp_demo_params_all = pd.DataFrame(columns = ['timepoint', 'verdict', 'con_AIC', 'con_llike', 'con_N_c', 'bn_AIC', 'bn_llike', 'bn_N_pre', 'bn_N_post', 'bn_T_bn'])
     tp_demo_params_young = pd.DataFrame(columns = ['timepoint', 'verdict', 'con_AIC', 'con_llike', 'con_N_c', 'bn_AIC', 'bn_llike', 'bn_N_pre', 'bn_N_post', 'bn_T_bn'])
@@ -362,8 +413,10 @@ for n in [*range(0, 24, 1)]:
     
     # assign timepoint to output files    
     tp_summary.loc[0, 'timepoint'] = n
-    tp_age_bin.loc[0, 'timepoint'] = n
-    tp_temporal.loc[0, 'timepoint'] = n 
+    tp_age_bin_boot.loc[0, 'timepoint'] = n
+    tp_temporal_boot.loc[0, 'timepoint'] = n 
+    tp_age_bin_test.loc[0, 'timepoint'] = n
+    tp_temporal_test.loc[0, 'timepoint'] = n 
     tp_demo_params_all.loc[0, 'timepoint'] = n 
     tp_demo_params_young.loc[0, 'timepoint'] = n 
     tp_demo_params_yoy.loc[0, 'timepoint'] = n 
@@ -417,6 +470,7 @@ for n in [*range(0, 24, 1)]:
     
     # calculate cohort stats 
     unique_ages = list(set(all_ages))
+    noSegSites = mts.segregating_sites(sample_sets = all_nodes, span_normalise = False)
     for a in [*range(0, len(unique_ages), 1)]:
         cohort_nodes = [] 
         ids = meta[meta['age'] == unique_ages[a]][["pedigree_id"]]
@@ -428,12 +482,12 @@ for n in [*range(0, 24, 1)]:
         tp_age_cohort.loc[a, 'age'] = unique_ages[a]
         tp_age_cohort.loc[a, 'N'] = len(cohort_nodes)
         tp_age_cohort.loc[a, 'pi'] = mts.diversity(sample_sets = cohort_nodes)
-        tp_age_cohort.loc[a, 'theta'] = mts.segregating_sites(sample_sets = all_nodes) / np.sum([1/i for i in np.arange(1,len(all_nodes))])
-        cohort_SFS = mts.allele_frequency_spectrum(sample_sets = [cohort_nodes], span_normalise = False, polarised = False)
-        tp_age_cohort.loc[a, 'FL_theta'] = cohort_SFS[1]
+        tp_age_cohort.loc[a, 'theta'] = mts.segregating_sites(sample_sets = cohort_nodes) / np.sum([1/i for i in np.arange(1,len(cohort_nodes))])
+        #cohort_SFS = mts.allele_frequency_spectrum(sample_sets = [cohort_nodes], span_normalise = False, polarised = False)
         #tp_age_cohort.loc[a, 'X_ratio'] = cohort_SFS[1]/cohort_SFS[2]
-        tp_age_cohort.loc[a, 'prop_SS'] = (mts.segregating_sites(sample_sets = cohort_nodes)/mts.segregating_sites(sample_sets = all_nodes))/np.sum([1/i for i in np.arange(1,len(cohort_nodes))])
-        
+        #tp_age_cohort.loc[a, 'prop_SS'] = (mts.segregating_sites(sample_sets = cohort_nodes)/mts.segregating_sites(sample_sets = all_nodes))/np.sum([1/i for i in np.arange(1,len(cohort_nodes))])
+        #tp_age_cohort.loc[a, 'prop_SS'] = cohort_SFS[1]/noSegSites
+
     # print(f"done with age cohort sampling for sampling point {n} representing tskit time {tskit_time}")
   
     ### Age Bins------------------------------------------------------------------------------------------------------------------------------------------
@@ -464,21 +518,24 @@ for n in [*range(0, 24, 1)]:
 
     # bootstrap ------------------------------------------------------------------------------------------------------------------------------------------    
     bin_vals = newBoot(lower_ten_nodes, upper_ten_nodes, niter = no_straps)
-            
-    # save output ------------------------------------------------------------------------------------------------------------------------------------------
-    tp_age_bin.iloc[:, 1:] = bin_vals
+    ARG_test = ARGtest(lower_ten_nodes, upper_ten_nodes, ts = mts)
     
+    # save output ------------------------------------------------------------------------------------------------------------------------------------------
+    tp_age_bin_boot.iloc[:, 1:] = bin_vals
+    tp_age_bin_test.iloc[:, 1:] = ARG_test
+
     # before nodes 
     # bootstrap ------------------------------------------------------------------------------------------------------------------------------------------
     now_nodes = lower_ten_nodes + upper_ten_nodes
 
-    if 'future_nodes' in locals(): 
-        now_nodes = lower_ten_nodes + upper_ten_nodes
+    if 'future_nodes' in locals():         
         temp_vals = newBoot(future_nodes, now_nodes, niter = no_straps)
-    
-       # save output ------------------------------------------------------------------------------------------------------------------------------------------
-        tp_temporal.iloc[:, 1:] = temp_vals
-    
+        temp_ARG_test = ARGtest(future_nodes, now_nodes, ts = mts)
+       
+    # save output ------------------------------------------------------------------------------------------------------------------------------------------
+        tp_temporal_boot.iloc[:, 1:] = temp_vals
+        tp_temporal_test.iloc[:, 1:] = temp_ARG_test
+
     # momi model selection
     SFS = getMomiSFS(now_nodes, mts, "pop")
     mod_summary = runMomiModels(SFS, gen_time)
@@ -502,8 +559,13 @@ for n in [*range(0, 24, 1)]:
     # save output ------------------------------------------------------------------------------------------------------------------------------------------
     df_summary = pd.concat([df_summary, tp_summary], axis=0)
     df_age_cohort = pd.concat([df_age_cohort, tp_age_cohort], axis=0)
-    df_age_bin = pd.concat([df_age_bin, tp_age_bin], axis=0)   
-    df_temporal = pd.concat([df_temporal, tp_temporal], axis=0)   
+    #---
+    df_age_bin_boot = pd.concat([df_age_bin_boot, tp_age_bin_boot], axis=0)   
+    df_temporal_boot = pd.concat([df_temporal_boot, tp_temporal_boot], axis=0)  
+    
+    df_age_bin_test = pd.concat([df_age_bin_test, tp_age_bin_test], axis=0)   
+    df_temporal_test = pd.concat([df_temporal_test, tp_temporal_test], axis=0)   
+    #---
     df_demo_params_all = pd.concat([df_demo_params_all, tp_demo_params_all], axis = 0)
     df_demo_params_young = pd.concat([df_demo_params_young, tp_demo_params_young], axis = 0)
     df_demo_params_yoy = pd.concat([df_demo_params_yoy, tp_demo_params_yoy], axis = 0)
@@ -514,8 +576,12 @@ for n in [*range(0, 24, 1)]:
 
 df_summary.to_csv(outdir+"/"+prefix+"_summary.txt", sep=',', index=False)
 df_age_cohort.to_csv(outdir+"/"+prefix+"_age_cohort.txt", sep=',', index=False)
-df_age_bin.to_csv(outdir+"/"+prefix+"_age_bin.txt", sep=',', index=False)
-df_temporal.to_csv(outdir+"/"+prefix+"_temporal.txt", sep=',', index=False)
+
+df_age_bin_boot.to_csv(outdir+"/"+prefix+"_age_bin_boot.txt", sep=',', index=False)
+df_temporal_boot.to_csv(outdir+"/"+prefix+"_temporal_boot.txt", sep=',', index=False)
+df_age_bin_test.to_csv(outdir+"/"+prefix+"_age_bin_test.txt", sep=',', index=False)
+df_temporal_test.to_csv(outdir+"/"+prefix+"_temporal_test.txt", sep=',', index=False)
+
 df_demo_params_all.to_csv(outdir+"/"+prefix+"_demo_params_all.txt", sep=',', index=False)
 df_demo_params_young.to_csv(outdir+"/"+prefix+"_demo_params_young.txt", sep=',', index=False)
 df_demo_params_yoy.to_csv(outdir+"/"+prefix+"_demo_params_yoy.txt", sep=',', index=False)
