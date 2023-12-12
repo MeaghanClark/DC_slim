@@ -457,45 +457,38 @@ for n in [*range(0, 24, 1)]:
     ### Age Cohorts------------------------------------------------------------------------------------------------------------------------------------------
             # what to fill in: 'age', 'pi', 'theta'
         
-    # INDIVIDUAL 
-    # real ages
-    for i in [*range(0,len(meta['pedigree_id']))]:
-        ind = list(meta['pedigree_id'])[i]
-        focal_ind = mts.individual(int(alive[x.index(ind)]))# get inidvidual id by matching pedigree id to tskit id
-        nodes = focal_ind.nodes.tolist()
-        # populate dataframe
-        tp_age_cohort.loc[i, 'timepoint'] = n 
-        tp_age_cohort.loc[i, 'pedigree_id'] = ind
-        tp_age_cohort.loc[i, 'pi'] = mts.diversity(sample_sets = nodes)
-        tp_age_cohort.loc[i, 'theta'] = mts.segregating_sites(sample_sets = nodes) / np.sum([1/i for i in np.arange(1,len(nodes))])
-        tp_age_cohort.loc[i, 'real_age'] = list(meta['age'])[i]
-    
-    # age permutations
-    age_permut = all_ages.copy()
-    for j in [*range(1, 101)]:
-        random.shuffle(age_permut)
-        tp_age_cohort.loc[:, f'age_perm_{j}'] = age_permut
+    # # INDIVIDUAL 
     
     ## calculate cohort stats, summary
-    #unique_ages = list(set(all_ages))
+    unique_ages = list(set(all_ages))
     #noSegSites = mts.segregating_sites(sample_sets = all_nodes, span_normalise = False)
-    #for a in [*range(0, len(unique_ages), 1)]:
-    #    cohort_nodes = [] 
-    #    ids = meta[meta['age'] == unique_ages[a]][["pedigree_id"]]
-    #    for i in ids.to_numpy():
-    #        focal_ind = mts.individual(int(alive[np.where(x==i)])) # get inidvidual id by matching pedigree id to tskit id
-    #        cohort_nodes.append(focal_ind.nodes.tolist())   # make list of nodes
-    #    cohort_nodes = [item for sublist in cohort_nodes for item in sublist] # get rid of sub-lists to get overall pi 
-    #    tp_age_cohort.loc[a, 'timepoint'] = n 
-    #    tp_age_cohort.loc[a, 'age'] = unique_ages[a]
-    #    tp_age_cohort.loc[a, 'N'] = len(cohort_nodes)
-    #    tp_age_cohort.loc[a, 'pi'] = mts.diversity(sample_sets = cohort_nodes)
-    #    tp_age_cohort.loc[a, 'theta'] = mts.segregating_sites(sample_sets = cohort_nodes) / np.sum([1/i for i in np.arange(1,len(cohort_nodes))])
-    #    #cohort_SFS = mts.allele_frequency_spectrum(sample_sets = [cohort_nodes], span_normalise = False, polarised = False)
-        #tp_age_cohort.loc[a, 'X_ratio'] = cohort_SFS[1]/cohort_SFS[2]
-        #tp_age_cohort.loc[a, 'prop_SS'] = (mts.segregating_sites(sample_sets = cohort_nodes)/mts.segregating_sites(sample_sets = all_nodes))/np.sum([1/i for i in np.arange(1,len(cohort_nodes))])
-        #tp_age_cohort.loc[a, 'prop_SS'] = cohort_SFS[1]/noSegSites
-
+    for a in [*range(0, len(unique_ages), 1)]:
+        cohort_nodes = [] 
+        ids = meta[meta['age'] == unique_ages[a]][["pedigree_id"]]
+        for i in ids.to_numpy():
+            focal_ind = mts.individual(int(alive[np.where(x==i)])) # get inidvidual id by matching pedigree id to tskit id
+            cohort_nodes.append(focal_ind.nodes.tolist())   # make list of nodes
+        cohort_nodes = [item for sublist in cohort_nodes for item in sublist] # get rid of sub-lists to get overall pi 
+        tp_age_cohort.loc[a, 'timepoint'] = n 
+        tp_age_cohort.loc[a, 'age'] = unique_ages[a]
+        tp_age_cohort.loc[a, 'N'] = len(cohort_nodes)
+        tp_age_cohort.loc[a, 'real_pi'] = mts.diversity(sample_sets = cohort_nodes)
+        tp_age_cohort.loc[a, 'real_theta'] = mts.segregating_sites(sample_sets = cohort_nodes) / np.sum([1/i for i in np.arange(1,len(cohort_nodes))])
+    
+    # do permutations
+    age_permut = all_ages.copy()
+    for j in range(1, 101):
+        random.shuffle(age_permut)
+        for a in [*range(0, len(unique_ages), 1)]:
+            cohort_nodes = [] 
+            ids = meta[pd.Series(age_permut, index=range(700, 800)) == unique_ages[a]][["pedigree_id"]]
+            for i in ids.to_numpy():
+                focal_ind = mts.individual(int(alive[np.where(x==i)])) # get inidvidual id by matching pedigree id to tskit id
+                cohort_nodes.append(focal_ind.nodes.tolist())   # make list of nodes
+            cohort_nodes = [item for sublist in cohort_nodes for item in sublist] # get rid of sub-lists to get overall pi 
+            tp_age_cohort.loc[a, f'pi_perm_{j}'] = mts.diversity(sample_sets = cohort_nodes)
+            tp_age_cohort.loc[a, f'theta_perm_{j}'] = mts.segregating_sites(sample_sets = cohort_nodes) / np.sum([1/i for i in np.arange(1,len(cohort_nodes))])
+        
     # print(f"done with age cohort sampling for sampling point {n} representing tskit time {tskit_time}")
   
     ### Age Bins------------------------------------------------------------------------------------------------------------------------------------------
