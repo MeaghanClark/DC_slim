@@ -378,7 +378,7 @@ for n in [*range(0, 24, 1)]:
     tp_summary = pd.DataFrame(columns = ['timepoint', 'pi', 'theta'])
     tp_demo_params = pd.DataFrame(columns = ['timepoint', 'verdict', 'con_AIC', 'con_llike', 'con_N_c', 'bn_AIC', 'bn_llike', 'bn_N_pre', 'bn_N_post', 'bn_T_bn'])
     tp_subsamp = pd.DataFrame(columns = ['timepoint', 'pi', 'theta', 'prop_SS'])
-     tp_temporal_test = pd.DataFrame(columns = ['timepoint', 'theta_future', 'theta_now', 'theta_prop', 'theta_pval', 'theta_T', 'pi_future', 'pi_now', 'pi_prop', 'pi_pval', 'pi_T']) # newBoot(future_nodes, now_nodes, niter = no_straps)
+    tp_temporal_test = pd.DataFrame(columns = ['timepoint', 'theta_future', 'theta_now', 'theta_prop', 'theta_pval', 'theta_T', 'pi_future', 'pi_now', 'pi_prop', 'pi_pval', 'pi_T']) # newBoot(future_nodes, now_nodes, niter = no_straps)
     tp_temporal_boot = pd.DataFrame(columns = ['timepoint', 'theta_future', 'theta_now', 'theta_prop', 'theta_pval', 'theta_T', 'pi_future', 'pi_now', 'pi_prop', 'pi_pval', 'pi_T']) # newBoot(future_nodes, now_nodes, niter = no_straps)
 
     # define tskit time

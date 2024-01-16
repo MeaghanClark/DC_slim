@@ -370,7 +370,7 @@ no_straps = 100 # 100 for troubleshooting, 1000 for running
 # positions = mts.tables.sites.position
 
 df_summary = pd.DataFrame(columns = ['timepoint', 'pi', 'theta'])
-df_age_cohort = pd.DataFrame(columns=['timepoint', 'pedigree_id', 'pi', 'theta', 'real_age'] + [f'age_perm_{i}' for i in range(1, 101)])
+df_age_cohort = pd.DataFrame(columns=['timepoint', 'age', 'N', 'real_pi', 'real_theta'] + [f'pi_perm_{i}' for i in range(1, 101)] + [f'theta_perm_{i}' for i in range(1, 101)])
 
 df_age_bin_boot = pd.DataFrame(columns = ['timepoint', 'theta_younger', 'theta_older', 'theta_prop', 'theta_pval', 'theta_T', 'pi_younger', 'pi_older', 'pi_prop', 'pi_pval', 'pi_T'])
 df_temporal_boot = pd.DataFrame(columns = ['timepoint', 'theta_future', 'theta_now', 'theta_prop', 'theta_pval', 'theta_T', 'pi_future', 'pi_now', 'pi_prop', 'pi_pval', 'pi_T'])
@@ -393,7 +393,7 @@ for n in [*range(0, 24, 1)]:
     tp_summary = pd.DataFrame(columns = ['timepoint', 'pi', 'theta']) # "LD"
     
     # data object to store summary stats for age cohorts
-    tp_age_cohort = pd.DataFrame(columns=['timepoint', 'pedigree_id', 'pi', 'theta', 'real_age'] + [f'age_perm_{i}' for i in range(1, 101)])
+    tp_age_cohort = pd.DataFrame(columns=['timepoint', 'age', 'N', 'real_pi', 'real_theta'] + [f'pi_perm_{i}' for i in range(1, 101)] + [f'theta_perm_{i}' for i in range(1, 101)])
     
     # data objects to store bootstrapped replicates of summary stats for age bins and temporal comparison
     tp_age_bin_test = pd.DataFrame(columns = ['timepoint', 'theta_younger', 'theta_older', 'theta_prop', 'theta_pval', 'theta_T', 'pi_younger', 'pi_older', 'pi_prop', 'pi_pval', 'pi_T'])
@@ -481,7 +481,7 @@ for n in [*range(0, 24, 1)]:
         random.shuffle(age_permut)
         for a in [*range(0, len(unique_ages), 1)]:
             cohort_nodes = [] 
-            ids = meta[pd.Series(age_permut, index=range(700, 800)) == unique_ages[a]][["pedigree_id"]]
+            ids = meta[pd.Series(age_permut, index=meta.index) == unique_ages[a]][["pedigree_id"]]
             for i in ids.to_numpy():
                 focal_ind = mts.individual(int(alive[np.where(x==i)])) # get inidvidual id by matching pedigree id to tskit id
                 cohort_nodes.append(focal_ind.nodes.tolist())   # make list of nodes
