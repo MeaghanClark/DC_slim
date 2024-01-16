@@ -369,11 +369,8 @@ no_straps = 1000 # 100 for troubleshooting, 1000 for running
 # positions = mts.tables.sites.position
 
 df_summary = pd.DataFrame(columns = ['timepoint', 'pi', 'theta'])
-<<<<<<< HEAD
-df_age_cohort = pd.DataFrame(columns=['timepoint', 'age', 'N', 'real_pi', 'real_theta'] + [f'pi_perm_{i}' for i in range(1, 101)] + [f'theta_perm_{i}' for i in range(1, 101)])
-=======
+# df_age_cohort = pd.DataFrame(columns=['timepoint', 'age', 'N', 'real_pi', 'real_theta'] + [f'pi_perm_{i}' for i in range(1, 101)] + [f'theta_perm_{i}' for i in range(1, 101)])
 # df_age_cohort = pd.DataFrame(columns=['timepoint', 'pedigree_id', 'pi', 'theta', 'real_age'] + [f'age_perm_{i}' for i in range(1, 101)])
->>>>>>> 5d94f75cbea6675274d67cfd9097e49d38e54942
 
 # df_age_bin_boot = pd.DataFrame(columns = ['timepoint', 'theta_younger', 'theta_older', 'theta_prop', 'theta_pval', 'theta_T', 'pi_younger', 'pi_older', 'pi_prop', 'pi_pval', 'pi_T'])
 # df_temporal_boot = pd.DataFrame(columns = ['timepoint', 'theta_future', 'theta_now', 'theta_prop', 'theta_pval', 'theta_T', 'pi_future', 'pi_now', 'pi_prop', 'pi_pval', 'pi_T'])
