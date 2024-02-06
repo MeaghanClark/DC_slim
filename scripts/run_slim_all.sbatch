@@ -15,6 +15,27 @@ module load SLiM/3.7.1
 module list
 
 today_date=$(date +%m%d%y)
+# define variables using array key
+echo this is task ${SLURM_ARRAY_TASK_ID}
+
+read -r AVG_AGE R REP N BURN <<< $(awk -v row=${SLURM_ARRAY_TASK_ID} -F',' 'NR==row {print $1, $2, $3, $4, $5}' "$ARRAY_KEY" | tr -d '\r')
+
+#convert to numbers
+AVG_AGE=$((AVG_AGE))
+R=$((R))
+REP=$((REP))
+N=$((N))
+BURN=$((BURN))
+
+
+# print variables imported from array key
+echo ----------------------------------------------------------------------------------------
+echo variables imported from $ARRAY_KEY
+echo AVG_AGE is $AVG_AGE
+echo R is $R
+echo REP is $REP
+echo N is $N
+echo BURN is $BURN 
 
 # print vital variables imported from wrapper
 echo ----------------------------------------------------------------------------------------
@@ -24,17 +45,11 @@ echo jobname is $JOBNAME
 echo slimscript is $SLIMSCRIPT
 echo This file is $EXECUTABLE
 echo Logs for this job are in $LOGFILESDIR
-echo logs are called: ${HEADER}_${REP}_%A.out and ${HEADER}_${REP}_%A.err
+echo logs are called: ${JOBNAME}_${SIM_BLOCK}_%A_${SLURM_ARRAY_TASK_ID}.out and ${JOBNAME}_${SIM_BLOCK}_%A_${SLURM_ARRAY_TASK_ID}.err
 echo
-echo
-echo This is rep ${REP} / ${REPS} of ${HEADER}
-echo running with N == ${N}
-echo running with AVG_AGE = ${AVG_AGE}
-echo running with R == ${R}
-echo running with Q == ${BURN}
 echo
 echo datafiles created by this job will be moved to ${HOMEDIR}/${OUTDIR}
-echo output will use the header $HEADER
+echo output will use the header ${JOBNAME}_${AVG_AGE}_${R}_${REP}
 echo running with $CPUS
 echo ----------------------------------------------------------------------------------------
 
@@ -50,7 +65,7 @@ cp ${INDIR}/${SLIMSCRIPT} $TMPDIR
 
 echo I am running ${SLIMSCRIPT} and putting the output in ${OUTDIR} 
 
-slim -d N=${N} -d AVG_AGE=${AVG_AGE} -d R=${R} -d Q=${BURN} -d "O='${OUTDIR}/tree_${HEADER}_${REP}.trees'" -d "MI='${OUTDIR}/metaInd_${HEADER}_${REP}.txt'" -d "MA='${OUTDIR}/metaAll_${HEADER}_${REP}.txt'" ${SLIMSCRIPT}
+slim -d N=${N} -d AVG_AGE=${AVG_AGE} -d R=${R} -d Q=${BURN} -d "O='${OUTDIR}/tree_${JOBNAME}_${AVG_AGE}_${R}_${REP}.trees'" -d "MI='${OUTDIR}/metaInd_${JOBNAME}_${AVG_AGE}_${R}_${REP}.txt'" -d "MA='${OUTDIR}/metaAll_${JOBNAME}_${AVG_AGE}_${R}_${REP}.txt'" ${SLIMSCRIPT}
 
 echo done running the simulation
 

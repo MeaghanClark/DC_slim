@@ -12,6 +12,7 @@ module load SLiM/2021dev
 module list
 
 today_date=$(date +%m%d%y)
+REP=${SLURM_ARRAY_TASK_ID}
 
 # print vital variables imported from wrapper
 echo ----------------------------------------------------------------------------------------

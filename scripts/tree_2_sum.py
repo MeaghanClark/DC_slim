@@ -270,6 +270,7 @@ def ARGtest(group1_nodes, group2_nodes, ts):
 # [5] -- mu
 # [6] -- gen time
 # [7] -- avg age
+# [8] -- burn in time
 
 # print some record keeping output
 seed = random.randint(1,1e6)
@@ -295,6 +296,9 @@ print(f"gen time is {gen_time}")
 avg_age = int(sys.argv[7])
 print(f"average age is {avg_age}")
 print(f"the type of avg_age is {type(avg_age)}")
+
+burn = int(sys.argv[8])
+print(f"burn in time is {burn}")
 
 # read in treefile 
 orig_ts = tskit.load(treefile)
@@ -339,16 +343,16 @@ print(sampling)
 print(f"average age is {avg_age}")
 print(f"the type of avg_age is {type(avg_age)}")
 
-if avg_age == 2: 
-    burn = 126300
-elif avg_age == 5: 
-    burn = 315900
-elif avg_age == 10: 
-    burn = 635600
-elif avg_age == 20: 
-    burn = 1264600
-elif avg_age == 1: 
-    burn = 100000
+#if avg_age == 2: 
+#    burn = 126300
+#elif avg_age == 5: 
+#    burn = 315900
+#elif avg_age == 10: 
+#    burn = 635600
+#elif avg_age == 20: 
+#    burn = 253000
+#elif avg_age == 1: 
+#    burn = 100000
 
 print(f"Using a burn-in time of {burn}")
 
@@ -622,13 +626,13 @@ for n in [*range(0, 24, 1)]:
     future_nodes = lower_ten_nodes + upper_ten_nodes
 
 df_summary.to_csv(outdir+"/"+prefix+"_summary.txt", sep=',', index=False)
-df_age_cohort.to_csv(outdir+"/"+prefix+"_age_cohort.txt", sep=',', index=False)
+#df_age_cohort.to_csv(outdir+"/"+prefix+"_age_cohort.txt", sep=',', index=False)
 
 # df_age_bin_boot.to_csv(outdir+"/"+prefix+"_age_bin_boot.txt", sep=',', index=False)
 # df_temporal_boot.to_csv(outdir+"/"+prefix+"_temporal_boot.txt", sep=',', index=False)
 df_age_bin_test.to_csv(outdir+"/"+prefix+"_age_bin_test.txt", sep=',', index=False)
 df_temporal_test.to_csv(outdir+"/"+prefix+"_temporal_test.txt", sep=',', index=False)
-
+df_permut_age_bin.to_csv(outdir+"/"+prefix+"_permut_test.txt", sep=',', index=False)
 # df_demo_params_all.to_csv(outdir+"/"+prefix+"_demo_params_all.txt", sep=',', index=False)
 # df_demo_params_young.to_csv(outdir+"/"+prefix+"_demo_params_young.txt", sep=',', index=False)
 # df_demo_params_yoy.to_csv(outdir+"/"+prefix+"_demo_params_yoy.txt", sep=',', index=False)

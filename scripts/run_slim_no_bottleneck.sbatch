@@ -12,6 +12,7 @@ module load SLiM/2021dev
 module list
 
 today_date=$(date +%m%d%y)
+REP=${SLURM_ARRAY_TASK_ID}
 
 # print vital variables imported from wrapper
 echo ----------------------------------------------------------------------------------------
@@ -47,7 +48,12 @@ cp ${INDIR}/${SLIMSCRIPT} $TMPDIR
 
 echo I am running ${SLIMSCRIPT} and putting the output in ${OUTDIR} 
 
-slim -d AVG_AGE=${AVG_AGE} -d N=${N} -d "M='${OUTDIR}/${HEADER}_${REP}.txt'" ${SLIMSCRIPT}
+CMD="slim -d AVG_AGE=${AVG_AGE} -d N=${N} -d "M='/mnt/home/clarkm89/DC_slim/${OUTDIR}/${HEADER}_${REP}.txt'" ${SLIMSCRIPT}"
+printf "\n%s\n\n" "$CMD"
+
+slim -d AVG_AGE=${AVG_AGE} -d N=${N} -d "M='/mnt/home/clarkm89/DC_slim/${OUTDIR}/${HEADER}_${REP}.txt'" ${SLIMSCRIPT}
+
+wait
 
 cp -r $OUTDIR $HOMEDIR
 

@@ -10,9 +10,9 @@
 
 # slim specific variables 
 jobname=Ne_test
-n=$1 # census pop size
+n=50000 # census pop size
 reps=100 # reps of slimulation to run 
-avg_age=$2
+avg_age=20
 
 # define upper-level variables:
 date=$(date +%m%d%Y)
@@ -39,18 +39,19 @@ ram_per_cpu=2G #amount of RAM to request/use per CPU
 if [ ! -d $logfilesdir ]; then mkdir $logfilesdir; fi
 
 #submit job to cluster
-	for rep in $(seq 1 $reps) ; do 
+#	for rep in $(seq 1 $reps) ; do 
 		sbatch --job-name=$jobname \
-		--export=JOBNAME=$jobname,SLIMSCRIPT=$slimscript,HEADER=$header,N=$n,AVG_AGE=$avg_age,REP=$rep,REPS=$reps,CPUS=$cpus,RUN_NAME=$run_name,DATE=$date,STORAGENODE=$storagenode,OUTDIR=$outdir,HOMEDIR=$homedir,LOGFILESDIR=$logfilesdir \
+		--array=1-${reps} \
+		--export=JOBNAME=$jobname,SLIMSCRIPT=$slimscript,HEADER=$header,N=$n,AVG_AGE=$avg_age,REPS=$reps,CPUS=$cpus,RUN_NAME=$run_name,DATE=$date,STORAGENODE=$storagenode,OUTDIR=$outdir,HOMEDIR=$homedir,LOGFILESDIR=$logfilesdir \
 		--cpus-per-task=$cpus \
 		--mem-per-cpu=$ram_per_cpu \
-		--output=$logfilesdir/${jobname}_${avg_age}_${n}_${rep}_%A.out \
-		--error=$logfilesdir/${jobname}_${avg_age}_${n}_${rep}_%A.err \
+		--output=$logfilesdir/${jobname}_${avg_age}_${n}_%a_%A.out \
+		--error=$logfilesdir/${jobname}_${avg_age}_${n}_%a_%A.err \
 		--time=4:00:00 \
 		$executable
 		
 		echo submitting job with an average age of $avg_age and N of $n!
-	done	
+#	done	
 #done
 
 echo ----------------------------------------------------------------------------------------

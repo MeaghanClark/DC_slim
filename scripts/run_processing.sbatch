@@ -14,6 +14,28 @@ module list
 
 today_date=$(date +%m%d%y)
 
+# define variables using array key
+echo this is task ${SLURM_ARRAY_TASK_ID}
+
+read -r AVG_AGE R REP N BURN <<< $(awk -v row=${SLURM_ARRAY_TASK_ID} -F',' 'NR==row {print $1, $2, $3, $4, $5}' "$ARRAY_KEY" | tr -d '\r')
+
+#convert to numbers
+AVG_AGE=$((AVG_AGE))
+R=$((R))
+REP=$((REP))
+N=$((N))
+BURN=$((BURN))
+
+# print variables imported from array key
+echo ----------------------------------------------------------------------------------------
+echo variables imported from $ARRAY_KEY
+echo AVG_AGE is $AVG_AGE
+echo R is $R
+echo REP is $REP
+echo N is $N
+echo BURN is $BURN 
+
+
 # print vital variables imported from wrapper
 echo ----------------------------------------------------------------------------------------
 echo the date is $DATE but running on ${today_date}
@@ -34,6 +56,20 @@ echo output will use the prefix ${MODEL}_${REP}
 echo running with $CPUS
 echo ----------------------------------------------------------------------------------------
 
+# define input files 
+FILENAME=tree_${MODEL}_${AVG_AGE}_${R}_${REP}.trees
+METAFILE=metaInd_${MODEL}_${AVG_AGE}_${R}_${REP}.txt
+OUTPUT_FILE=${HOMEDIR}${OUTDIR}/${MODEL}_${AVG_AGE}_${R}_${REP}_${DATE}_age_bin.txt # use if re-doing for subset of jobs.. not written yet! 
+
+if [[ $MODEL == nWF ]]
+then
+       if [[ $AVG_AGE == 2 ]]; then GEN=2.999165; fi
+       if [[ $AVG_AGE == 5 ]]; then GEN=6.006728; fi 
+       if [[ $AVG_AGE == 10 ]]; then GEN=11.01567; fi 
+       if [[ $AVG_AGE == 20 ]]; then GEN=20.97633; fi 
+else 
+       GEN=1 # for pWF model
+fi
 
 # move everything to tmpdir
 cd $TMPDIR
@@ -58,8 +94,9 @@ cp ${INDIR}/${METAFILE} $TMPDIR
 # [5] -- mu
 # [6] -- gen time
 # [7] -- avg age
+# [8] -- burn in 
 
-python -u ${TREEPROCESS} ${FILENAME} ${METAFILE} ${OUTDIR} ${MODEL}_${AVG_AGE}_${R}_${REP}_${DATE} ${MU} ${GEN} ${AVG_AGE} > ${LOGFILESDIR}/log_${JOBNAME}_${MODEL}_${AVG_AGE}_${R}_${REP}.out
+python -u ${TREEPROCESS} ${FILENAME} ${METAFILE} ${OUTDIR} ${MODEL}_${AVG_AGE}_${R}_${REP}_${DATE} ${MU} ${GEN} ${AVG_AGE} ${BURN} > ${LOGFILESDIR}/log_${JOBNAME}_${MODEL}_${AVG_AGE}_${R}_${REP}.out
 
 echo done processing trees 
 
