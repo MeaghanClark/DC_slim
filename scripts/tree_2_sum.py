@@ -300,6 +300,9 @@ print(f"the type of avg_age is {type(avg_age)}")
 burn = int(sys.argv[8])
 print(f"burn in time is {burn}")
 
+rVal =  int(sys.argv[9])
+print(f"bottleneck intensity is {rVal}")
+
 # read in treefile 
 orig_ts = tskit.load(treefile)
 
@@ -343,16 +346,6 @@ print(sampling)
 print(f"average age is {avg_age}")
 print(f"the type of avg_age is {type(avg_age)}")
 
-#if avg_age == 2: 
-#    burn = 126300
-#elif avg_age == 5: 
-#    burn = 315900
-#elif avg_age == 10: 
-#    burn = 635600
-#elif avg_age == 20: 
-#    burn = 253000
-#elif avg_age == 1: 
-#    burn = 100000
 
 print(f"Using a burn-in time of {burn}")
 
@@ -369,26 +362,32 @@ convert_time = pd.DataFrame({'tskit_time':sampling, 'slim_time':cycles}, columns
 
 no_straps = 1000 # 100 for troubleshooting, 1000 for running
 
-# seq_length = mts.sequence_length
-# positions = mts.tables.sites.position
-
 df_summary = pd.DataFrame(columns = ['timepoint', 'pi', 'theta'])
-# df_age_cohort = pd.DataFrame(columns=['timepoint', 'age', 'N', 'real_pi', 'real_theta'] + [f'pi_perm_{i}' for i in range(1, 101)] + [f'theta_perm_{i}' for i in range(1, 101)])
-# df_age_cohort = pd.DataFrame(columns=['timepoint', 'pedigree_id', 'pi', 'theta', 'real_age'] + [f'age_perm_{i}' for i in range(1, 101)])
-
-# df_age_bin_boot = pd.DataFrame(columns = ['timepoint', 'theta_younger', 'theta_older', 'theta_prop', 'theta_pval', 'theta_T', 'pi_younger', 'pi_older', 'pi_prop', 'pi_pval', 'pi_T'])
-# df_temporal_boot = pd.DataFrame(columns = ['timepoint', 'theta_future', 'theta_now', 'theta_prop', 'theta_pval', 'theta_T', 'pi_future', 'pi_now', 'pi_prop', 'pi_pval', 'pi_T'])
 df_age_bin_test = pd.DataFrame(columns = ['timepoint', 'theta_younger', 'theta_older', 'theta_prop', 'theta_pval', 'theta_T', 'pi_younger', 'pi_older', 'pi_prop', 'pi_pval', 'pi_T'])
 df_temporal_test = pd.DataFrame(columns = ['timepoint', 'theta_future', 'theta_now', 'theta_prop', 'theta_pval', 'theta_T', 'pi_future', 'pi_now', 'pi_prop', 'pi_pval', 'pi_T'])
 df_permut_age_bin = pd.DataFrame(columns = ['timepoint', 'permutation', 'theta_younger', 'theta_older', 'theta_prop', 'theta_pval', 'theta_T', 'pi_younger', 'pi_older', 'pi_prop', 'pi_pval', 'pi_T'])
 
 # define age bounds
 if avg_age == 10:
-    upper_bound = 31
-    lower_bound = 0
-if avg_age == 20: 
-    upper_bound = 61
-    lower_bound = 1
+    if rVal == 2: 
+        upper_bound = [31, 31, 30, 31, 32, 32, 32, 32, 32, 32, 32, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 30, 31, 31]
+        lower_bound = [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    if rVal == 10: 
+        upper_bound = [31, 31, 31, 31, 31, 32, 32, 32, 32, 32, 31, 31, 31, 31, 31, 31, 31, 30, 31, 31, 31, 31, 31, 31]
+        lower_bound = [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    if rVal == 100: 
+        upper_bound = [31, 31, 31, 31, 32, 32, 31, 31, 31, 31, 31, 31, 31, 31, 30, 31, 31, 31, 31, 31, 31, 31, 31, 31]
+        lower_bound = [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+if avg_age == 20:
+    if rVal == 2: 
+        upper_bound = [61, 61, 60, 60, 62, 62, 62, 61, 62, 61, 61, 61, 61, 61, 62, 60, 60, 61, 60, 61, 61, 61, 60, 61]
+        lower_bound = [1, 1, 1, 1, 2, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    if rVal == 10: 
+        upper_bound = [61, 60, 61, 60, 62, 62, 61, 62, 62, 62, 62, 61, 61, 61, 62, 61, 61, 60, 61, 60, 60, 60, 60, 61]
+        lower_bound = [1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    if rVal == 100: 
+        upper_bound = [60, 61, 60, 61, 61, 61, 61, 61, 61, 61, 61, 61, 61, 62, 61, 61, 62, 61, 60, 60, 61, 61, 60, 61]
+        lower_bound = [1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
     
 # loop through time points to calculate pi using tskit
 
@@ -399,37 +398,19 @@ for n in [*range(0, 24, 1)]:
     
     # data object to store summary stats calculated from all nodes
     tp_summary = pd.DataFrame(columns = ['timepoint', 'pi', 'theta']) # "LD"
-    
-    # data object to store summary stats for age cohorts
-   # tp_age_cohort = pd.DataFrame(columns=['timepoint', 'age', 'N', 'real_pi', 'real_theta'] + [f'pi_perm_{i}' for i in range(1, 101)] + [f'theta_perm_{i}' for i in range(1, 101)])
-    
+        
     # data objects to store bootstrapped replicates of summary stats for age bins and temporal comparison
     tp_age_bin_test = pd.DataFrame(columns = ['timepoint', 'theta_younger', 'theta_older', 'theta_prop', 'theta_pval', 'theta_T', 'pi_younger', 'pi_older', 'pi_prop', 'pi_pval', 'pi_T'])
     tp_temporal_test = pd.DataFrame(columns = ['timepoint', 'theta_future', 'theta_now', 'theta_prop', 'theta_pval', 'theta_T', 'pi_future', 'pi_now', 'pi_prop', 'pi_pval', 'pi_T']) # newBoot(future_nodes, now_nodes, niter = no_straps)
     
-    #tp_permut_age_bin = pd.DataFrame(columns = ['timepoint', 'permutation', 'theta_younger', 'theta_older', 'theta_prop', 'theta_pval', 'theta_T', 'pi_younger', 'pi_older', 'pi_prop', 'pi_pval', 'pi_T'])
-    
-    # tp_age_bin_boot = pd.DataFrame(columns = ['timepoint', 'theta_younger', 'theta_older', 'theta_prop', 'theta_pval', 'theta_T', 'pi_younger', 'pi_older', 'pi_prop', 'pi_pval', 'pi_T'])
-    # tp_temporal_boot = pd.DataFrame(columns = ['timepoint', 'theta_future', 'theta_now', 'theta_prop', 'theta_pval', 'theta_T', 'pi_future', 'pi_now', 'pi_prop', 'pi_pval', 'pi_T']) # newBoot(future_nodes, now_nodes, niter = no_straps)
-
-    # # data object to store results from demographic inference
-    # tp_demo_params_all = pd.DataFrame(columns = ['timepoint', 'verdict', 'con_AIC', 'con_llike', 'con_N_c', 'bn_AIC', 'bn_llike', 'bn_N_pre', 'bn_N_post', 'bn_T_bn'])
-    # tp_demo_params_young = pd.DataFrame(columns = ['timepoint', 'verdict', 'con_AIC', 'con_llike', 'con_N_c', 'bn_AIC', 'bn_llike', 'bn_N_pre', 'bn_N_post', 'bn_T_bn'])
-    # tp_demo_params_yoy = pd.DataFrame(columns = ['timepoint', 'verdict', 'con_AIC', 'con_llike', 'con_N_c', 'bn_AIC', 'bn_llike', 'bn_N_pre', 'bn_N_post', 'bn_T_bn'])
-
     # define tskit time
     tskit_time = convert_time.iloc[n][0]
     print(f"processing sampling point {n} representing tskit time {tskit_time}")
     
     # assign timepoint to output files    
     tp_summary.loc[0, 'timepoint'] = n
-    # tp_age_bin_boot.loc[0, 'timepoint'] = n
-    # tp_temporal_boot.loc[0, 'timepoint'] = n 
     tp_age_bin_test.loc[0, 'timepoint'] = n
     tp_temporal_test.loc[0, 'timepoint'] = n 
-    # tp_demo_params_all.loc[0, 'timepoint'] = n 
-    # tp_demo_params_young.loc[0, 'timepoint'] = n 
-    # tp_demo_params_yoy.loc[0, 'timepoint'] = n 
     
 
     # define pedigree ids sampled by slim, representing individuals we have we have age information for
@@ -464,43 +445,6 @@ for n in [*range(0, 24, 1)]:
     #gt_matrix_all_nodes = mts.genotype_matrix(samples = all_nodes)
     # tp_summary.loc[0, 'LD'] = getrSquaredDecayDist(all_nodes, gt_matrix_all_nodes, positions, seq_length)[3] 
     
-    ### Age Cohorts------------------------------------------------------------------------------------------------------------------------------------------
-            # what to fill in: 'age', 'pi', 'theta'
-        
-    # # # INDIVIDUAL 
-    # 
-    # ## calculate cohort stats, summary
-    # unique_ages = list(set(all_ages))
-    # #noSegSites = mts.segregating_sites(sample_sets = all_nodes, span_normalise = False)
-    # for a in [*range(0, len(unique_ages), 1)]:
-    #     cohort_nodes = [] 
-    #     ids = meta[meta['age'] == unique_ages[a]][["pedigree_id"]]
-    #     for i in ids.to_numpy():
-    #         focal_ind = mts.individual(int(alive[np.where(x==i)])) # get inidvidual id by matching pedigree id to tskit id
-    #         cohort_nodes.append(focal_ind.nodes.tolist())   # make list of nodes
-    #     cohort_nodes = [item for sublist in cohort_nodes for item in sublist] # get rid of sub-lists to get overall pi 
-    #     tp_age_cohort.loc[a, 'timepoint'] = n 
-    #     tp_age_cohort.loc[a, 'age'] = unique_ages[a]
-    #     tp_age_cohort.loc[a, 'N'] = len(cohort_nodes)
-    #     tp_age_cohort.loc[a, 'real_pi'] = mts.diversity(sample_sets = cohort_nodes)
-    #     tp_age_cohort.loc[a, 'real_theta'] = mts.segregating_sites(sample_sets = cohort_nodes) / np.sum([1/i for i in np.arange(1,len(cohort_nodes))])
-    # 
-    # # do permutations
-    # age_permut = all_ages.copy()
-    # for j in range(1, 101):
-    #     random.shuffle(age_permut)
-    #     for a in [*range(0, len(unique_ages), 1)]:
-    #         cohort_nodes = [] 
-    #         ids = meta[pd.Series(age_permut, index=range(700, 800)) == unique_ages[a]][["pedigree_id"]]
-    #         for i in ids.to_numpy():
-    #             focal_ind = mts.individual(int(alive[np.where(x==i)])) # get inidvidual id by matching pedigree id to tskit id
-    #             cohort_nodes.append(focal_ind.nodes.tolist())   # make list of nodes
-    #         cohort_nodes = [item for sublist in cohort_nodes for item in sublist] # get rid of sub-lists to get overall pi 
-    #         tp_age_cohort.loc[a, f'pi_perm_{j}'] = mts.diversity(sample_sets = cohort_nodes)
-    #         tp_age_cohort.loc[a, f'theta_perm_{j}'] = mts.segregating_sites(sample_sets = cohort_nodes) / np.sum([1/i for i in np.arange(1,len(cohort_nodes))])
-    #     
-    # # print(f"done with age cohort sampling for sampling point {n} representing tskit time {tskit_time}")
-  
     ### Age Bins------------------------------------------------------------------------------------------------------------------------------------------
         
     # sort individuals by age
@@ -519,13 +463,13 @@ for n in [*range(0, 24, 1)]:
     # upper_10_percent = meta_sorted[upper_index_ten:]
             
     # lower 10% ------------------------------------------------------------------------------------------------------------------------------------------
-    lower_ids = meta_sorted[meta_sorted["age"] <= lower_bound]["pedigree_id"]
+    lower_ids = meta_sorted[meta_sorted["age"] <= lower_bound[n]]["pedigree_id"]
 
     # lower_ids = lower_10_percent["pedigree_id"] 
     lower_ten_nodes = getNodes(ids = lower_ids, inds_alive = alive, ts = mts)
 
     # upper 10% ------------------------------------------------------------------------------------------------------------------------------------------
-    upper_ids = meta_sorted[meta_sorted["age"] >= upper_bound]["pedigree_id"]
+    upper_ids = meta_sorted[meta_sorted["age"] >= upper_bound[n]]["pedigree_id"]
 
     # upper_ids = upper_10_percent["pedigree_id"] 
     upper_ten_nodes = getNodes(ids = upper_ids, inds_alive = alive, ts = mts)
@@ -541,7 +485,7 @@ for n in [*range(0, 24, 1)]:
     # tp_age_bin_boot.iloc[:, 1:] = bin_vals
     tp_age_bin_test.iloc[:, 1:] = ARG_test
 
-    # permutations  
+    # permutations ------------------------------------------------------------------------------------------------------------------------------------------
     # save to: tp_permut_age_bin = pd.DataFrame(columns = ['timepoint', 'permutation', 'theta_younger', 'theta_older', 'theta_prop', 'theta_pval', 'theta_T', 'pi_younger', 'pi_older', 'pi_prop', 'pi_pval', 'pi_T'])
 
     age_permut = all_ages.copy()
@@ -562,12 +506,12 @@ for n in [*range(0, 24, 1)]:
                 
         # lower 10% ------------------------------------------------------------------------------------------------------------------------------------------
         # lower_ids = lower_10_percent["pedigree_id"] 
-        lower_ids = meta_permut_sorted[meta_permut_sorted["age"] <= lower_bound]["pedigree_id"]
+        lower_ids = meta_permut_sorted[meta_permut_sorted["age_permut"] <= lower_bound[n]]["pedigree_id"]
         lower_ten_nodes = getNodes(ids = lower_ids, inds_alive = alive, ts = mts)
     
         # upper 10% ------------------------------------------------------------------------------------------------------------------------------------------
         # upper_ids = upper_10_percent["pedigree_id"] 
-        upper_ids = meta_permut_sorted[meta_permut_sorted["age"] >= upper_bound]["pedigree_id"]
+        upper_ids = meta_permut_sorted[meta_permut_sorted["age_permut"] >= upper_bound[n]]["pedigree_id"]
         upper_ten_nodes = getNodes(ids = upper_ids, inds_alive = alive, ts = mts)
     
     
