@@ -108,17 +108,17 @@ s5 180000 early() {
 // Define output and remember individuals 
 
 // ** TESTING **
-late(){		
-		catn("Average age: " + mean(p1.individuals.age));
-		catn(range(p1.individuals.age)); 		
-}
+//late(){		
+//		catn("Average age: " + mean(p1.individuals.age));
+//		catn(range(p1.individuals.age)); 		
+//}
 // ** END TESTING **
 
 // before bottleneck
 s2 179800:180000 late(){
 	if (sim.generation % 50 == 0){ //every fifty generations
 		// individual output
-		sample = p1.sampleIndividuals(100, replace = F);
+		sample = p1.sampleIndividuals(500, replace = F);
 		sim.treeSeqRememberIndividuals(sample);
 		for(i in 0:(length(sample)-1)){ //remember metadata for each individual at this point in time (will be overwritten in the treesequence metadata) 
 			OutputLine  = paste(sim.generation, sample.pedigreeID[i], sample.age[i], sep = "\t");
@@ -134,7 +134,7 @@ s2 179800:180000 late(){
 s3 180001:180022 late(){
 	if (sim.generation % 5 == 0){ //every five generations
 		// individual output
-		sample = p1.sampleIndividuals(100, replace = F); // if Nc < 100, will sample Nc individuals
+		sample = p1.sampleIndividuals(500, replace = F); // if Nc < 100, will sample Nc individuals
 		sim.treeSeqRememberIndividuals(sample);
 		for(i in 0:(length(sample)-1)){ //remember metadata for each individual at this point in time (will be overwritten in the treesequence metadata) 
 			OutputLine  = paste(sim.generation, sample.pedigreeID[i], sample[i].age, sep = "\t");
@@ -150,7 +150,7 @@ s3 180001:180022 late(){
 s4 180023:180500 late(){
 	if (sim.generation % 50 == 0){ //every fifty generations
 		// individual output
-		sample = p1.sampleIndividuals(100, replace = F); // if Nc < 100, will sample Nc individuals
+		sample = p1.sampleIndividuals(500, replace = F); // if Nc < 100, will sample Nc individuals
 		sim.treeSeqRememberIndividuals(sample);
 		for(i in 0:(length(sample)-1)){ //remember metadata for each individual at this point in time (will be overwritten in the treesequence metadata) 
 			OutputLine  = paste(sim.generation, sample.pedigreeID[i], sample[i].age, sep = "\t");
