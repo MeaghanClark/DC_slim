@@ -7,22 +7,22 @@ initialize() {
 		
 	if(exists("slimgui")) { 
 		// define constants
-		defineConstant("N", 10000); //desired census population size
-		defineConstant("AVG_AGE", 35); // define average age
+		defineConstant("N", 50000); //desired census population size
+		defineConstant("AVG_AGE", 20); // define average age
 		defineConstant("P", (1/(AVG_AGE+1))); // probability of mortaility, must be less than 0.5, expected lifespan will be (1-P)/P
 		defineConstant("K", N*((1-P)/(1-2*P)));	// carrying capacity 
 
 		// set up output
 		// family size information
-		defineConstant("MA", "./DC_slim/Ne_test_output/Ne_test_35_10000_family_size.txt"); // CHANGE
+		// defineConstant("MA", "./DC_slim/Ne_test_output/Ne_test_50000_family_size.txt"); // CHANGE
 		HeaderLineAll = "generation\tparentid\tparentAge\toffspringCount";
-		writeFile(MA,HeaderLineAll,append=T);
+		//writeFile(MA,HeaderLineAll,append=T);
 		
 		// tagged individuals 
-		defineConstant("MI", "./DC_slim/Ne_test_output/Ne_test_35_10000_tagged_inds.txt"); //CHANGE
+		// defineConstant("MI", "./DC_slim/Ne_test_output/Ne_test_35_10000_tagged_inds.txt"); //CHANGE
 		
 		// cohort size
-		defineConstant("CO", "./DC_slim/Ne_test_output/cohort_size_35_10000.txt"); // CHANGE
+		defineConstant("CO", "./DC_slim/Ne_test_output/cohort_size_20_50000.txt"); // CHANGE
 
 
 	}
@@ -37,7 +37,7 @@ initialize() {
 		// family size information
 		// defineConstant("MA", "./DC_slim/Ne_test_output/family_size.csv"); // set via command line
 		HeaderLineAll = "generation\tparentid\tparentAge\toffspringCount";
-		writeFile(MA,HeaderLineAll,append=T);
+		//writeFile(MA,HeaderLineAll,append=T);
 		
 		// tagged individuals 
 		// defineConstant("MI", "./DC_slim/Ne_test_output/tagged_inds.csv"); // set via command line
@@ -73,12 +73,12 @@ reproduction(NULL) {
 			if(sim.generation > 1000){
 				if(individual.tag == 1) {
 					OutputLine = paste(sim.generation, individual.pedigreeID, individual.age, offspring_count, sep = "\t");
-					writeFile(MA, OutputLine, append = T);
+					//writeFile(MA, OutputLine, append = T);
 					catn("oh hey a reproduction event we care about!");
 				} 
 				if(mate.tag == 1) {
 					OutputLine = paste(sim.generation, mate.pedigreeID, mate.age, offspring_count, sep = "\t");
-					writeFile(MA, OutputLine, append = T);
+					//writeFile(MA, OutputLine, append = T);
 					catn("oh hey a reproduction event we care about!");
 				}
 			} // record reproduction of tagged individuals
@@ -121,7 +121,7 @@ early() {
 		cohort.tag = 1;
 		catn("We tagged " + length(cohort) + " individuals");
 		OutputLine = paste(cohort, sep = "\n");
-		writeFile(MI, OutputLine, append = T);
+		//writeFile(MI, OutputLine, append = T);
 }
 
 
