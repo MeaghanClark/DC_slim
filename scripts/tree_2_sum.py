@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# last updates 1/15/2024
+# last updates 2/05/2024
 
 # removed age cohort analyses and added age bin permutations
 
@@ -382,11 +382,14 @@ df_age_bin_test = pd.DataFrame(columns = ['timepoint', 'theta_younger', 'theta_o
 df_temporal_test = pd.DataFrame(columns = ['timepoint', 'theta_future', 'theta_now', 'theta_prop', 'theta_pval', 'theta_T', 'pi_future', 'pi_now', 'pi_prop', 'pi_pval', 'pi_T'])
 df_permut_age_bin = pd.DataFrame(columns = ['timepoint', 'permutation', 'theta_younger', 'theta_older', 'theta_prop', 'theta_pval', 'theta_T', 'pi_younger', 'pi_older', 'pi_prop', 'pi_pval', 'pi_T'])
 
-# # momi2 
-# df_demo_params_all = pd.DataFrame(columns = ['timepoint', 'verdict', 'con_AIC', 'con_llike', 'con_N_c', 'bn_AIC', 'bn_llike', 'bn_N_pre', 'bn_N_post', 'bn_T_bn'])
-# df_demo_params_young = pd.DataFrame(columns = ['timepoint', 'verdict', 'con_AIC', 'con_llike', 'con_N_c', 'bn_AIC', 'bn_llike', 'bn_N_pre', 'bn_N_post', 'bn_T_bn'])
-# df_demo_params_yoy = pd.DataFrame(columns = ['timepoint', 'verdict', 'con_AIC', 'con_llike', 'con_N_c', 'bn_AIC', 'bn_llike', 'bn_N_pre', 'bn_N_post', 'bn_T_bn'])
-
+# define age bounds
+if avg_age == 10:
+    upper_bound = 31
+    lower_bound = 0
+if avg_age == 20: 
+    upper_bound = 61
+    lower_bound = 1
+    
 # loop through time points to calculate pi using tskit
 
 for n in [*range(0, 24, 1)]: 
@@ -506,22 +509,28 @@ for n in [*range(0, 24, 1)]:
     ## [1] upper/lower 10%
     # define nodes from upper and lower 10% of individuals, calculate theta, pi, and LD of entire subsample, then calculate theta, pi and LD of age bins
     
-    lower_index_ten = int(len(meta_sorted) * 0.1)
-    upper_index_ten = int(len(meta_sorted) * 0.9)
+    # lower_index_ten = int(len(meta_sorted) * 0.1)
+    # upper_index_ten = int(len(meta_sorted) * 0.9)
     
     # Get the lower 10% of individuals by age
-    lower_10_percent = meta_sorted[:lower_index_ten]
+    # lower_10_percent = meta_sorted[:lower_index_ten]
     
     # Get the upper 10% of individuals by age
-    upper_10_percent = meta_sorted[upper_index_ten:]
+    # upper_10_percent = meta_sorted[upper_index_ten:]
             
     # lower 10% ------------------------------------------------------------------------------------------------------------------------------------------
-    lower_ids = lower_10_percent["pedigree_id"] 
+    lower_ids = meta_sorted[meta_sorted["age"] <= lower_bound]["pedigree_id"]
+
+    # lower_ids = lower_10_percent["pedigree_id"] 
     lower_ten_nodes = getNodes(ids = lower_ids, inds_alive = alive, ts = mts)
 
     # upper 10% ------------------------------------------------------------------------------------------------------------------------------------------
-    upper_ids = upper_10_percent["pedigree_id"] 
+    upper_ids = meta_sorted[meta_sorted["age"] >= upper_bound]["pedigree_id"]
+
+    # upper_ids = upper_10_percent["pedigree_id"] 
     upper_ten_nodes = getNodes(ids = upper_ids, inds_alive = alive, ts = mts)
+    
+    print(f"There are {len(lower_ten_nodes)} nodes in the young group and {len(upper_ten_nodes)} nodes in the old group")
 
 
     # bootstrap ------------------------------------------------------------------------------------------------------------------------------------------    
@@ -546,17 +555,19 @@ for n in [*range(0, 24, 1)]:
         meta_permut_sorted = meta_permut.sort_values(by='age_permut', ascending=True) # sort metadata by age
         # redo age bins with permuted ages 
         # Get the lower 10% of individuals by age
-        lower_10_percent = meta_permut_sorted[:lower_index_ten]
+        # lower_10_percent = meta_permut_sorted[:lower_index_ten]
         
         # Get the upper 10% of individuals by age
-        upper_10_percent = meta_permut_sorted[upper_index_ten:]
+        # upper_10_percent = meta_permut_sorted[upper_index_ten:]
                 
         # lower 10% ------------------------------------------------------------------------------------------------------------------------------------------
-        lower_ids = lower_10_percent["pedigree_id"] 
+        # lower_ids = lower_10_percent["pedigree_id"] 
+        lower_ids = meta_permut_sorted[meta_permut_sorted["age"] <= lower_bound]["pedigree_id"]
         lower_ten_nodes = getNodes(ids = lower_ids, inds_alive = alive, ts = mts)
     
         # upper 10% ------------------------------------------------------------------------------------------------------------------------------------------
-        upper_ids = upper_10_percent["pedigree_id"] 
+        # upper_ids = upper_10_percent["pedigree_id"] 
+        upper_ids = meta_permut_sorted[meta_permut_sorted["age"] >= upper_bound]["pedigree_id"]
         upper_ten_nodes = getNodes(ids = upper_ids, inds_alive = alive, ts = mts)
     
     
