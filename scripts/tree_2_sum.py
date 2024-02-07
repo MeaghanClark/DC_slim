@@ -388,7 +388,10 @@ if avg_age == 20:
     if rVal == 100: 
         upper_bound = [60, 61, 60, 61, 61, 61, 61, 61, 61, 61, 61, 61, 61, 62, 61, 61, 62, 61, 60, 60, 61, 61, 60, 61]
         lower_bound = [1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-    
+
+upper_bound.reverse()
+lower_bound.reverse()
+
 # loop through time points to calculate pi using tskit
 
 for n in [*range(0, 24, 1)]: 
