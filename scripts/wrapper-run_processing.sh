@@ -110,7 +110,7 @@ if [ ! -d $outdir ]; then mkdir ./$outdir; fi
 			--mem-per-cpu=$ram_per_cpu \
 			--output=$logfilesdir/${jobname}_${sim_block}_${date}_%A_%A.out \
 			--error=$logfilesdir/${jobname}_${sim_block}_${date}_%A_%a.err \
-			--time=48:00:00 \
+			--time=24:00:00 \
 			$executable
 #		else
 #			echo output files for ${model}_${r}_${rep}_${date} already exist in ${outdir}

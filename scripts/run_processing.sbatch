@@ -96,7 +96,7 @@ cp ${INDIR}/${METAFILE} $TMPDIR
 # [7] -- avg age
 # [8] -- burn in 
 
-python -u ${TREEPROCESS} ${FILENAME} ${METAFILE} ${OUTDIR} ${MODEL}_${AVG_AGE}_${R}_${REP}_${DATE} ${MU} ${GEN} ${AVG_AGE} ${BURN} > ${LOGFILESDIR}/log_${JOBNAME}_${MODEL}_${AVG_AGE}_${R}_${REP}.out
+python -u ${TREEPROCESS} ${FILENAME} ${METAFILE} ${OUTDIR} ${MODEL}_${AVG_AGE}_${R}_${REP}_${DATE} ${MU} ${GEN} ${AVG_AGE} ${BURN} ${R} > ${LOGFILESDIR}/log_${JOBNAME}_${MODEL}_${AVG_AGE}_${R}_${REP}.out
 
 echo done processing trees 
 
