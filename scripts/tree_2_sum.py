@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# last updates 2/05/2024
+# last updates 2/10/2024
 
 # removed age cohort analyses and added age bin permutations
 
@@ -23,6 +23,7 @@ np.set_printoptions(threshold=sys.maxsize)
 
 def getNodes(ids, inds_alive, ts):
     # this function returns a list of nodes from a given list of individuals alive at a specific time from a treesequence
+    x = [ts.individual(j).metadata['pedigree_id'] for j in inds_alive]   
     nodes = []
     for i in ids.to_numpy():
         focal_ind = ts.individual(int(inds_alive[np.where(x==i)])) # get inidvidual id by matching pedigree id to tskit id
@@ -260,7 +261,7 @@ def ARGtest(group1_nodes, group2_nodes, ts):
 # ------------------------------------------------------------------------------------------------------------------------------------------
 
 # uncomment these lines when running from command line
-#sys.argv = ['tree_processing.py', '../troubleshooting/tree_nWF_2_2_60.trees','../troubleshooting/metaInd_nWF_2_2_60.txt', '/Users/meaghan/Desktop/DC_slim/het', 'hpcc_trouble', 1e-8, 3, 2]
+# sys.argv = ['tree_processing.py', '../troubleshooting/tree_nWF_2_2_60.trees','../troubleshooting/metaInd_nWF_2_2_60.txt', '/Users/meaghan/Desktop/DC_slim/het', 'hpcc_trouble', 1e-8, 3, 2, 126300, 2]
 # arguments: 
 # [0] -- python script name
 # [1] -- tree file
@@ -271,6 +272,7 @@ def ARGtest(group1_nodes, group2_nodes, ts):
 # [6] -- gen time
 # [7] -- avg age
 # [8] -- burn in time
+# [9] -- rVal
 
 # print some record keeping output
 seed = random.randint(1,1e6)
@@ -360,33 +362,66 @@ convert_time = pd.DataFrame({'tskit_time':sampling, 'slim_time':cycles}, columns
 
 # initalize data lists
 
-no_straps = 1000 # 100 for troubleshooting, 1000 for running
-
 df_summary = pd.DataFrame(columns = ['timepoint', 'pi', 'theta'])
-df_age_bin_test = pd.DataFrame(columns = ['timepoint', 'theta_younger', 'theta_older', 'theta_prop', 'theta_pval', 'theta_T', 'pi_younger', 'pi_older', 'pi_prop', 'pi_pval', 'pi_T'])
-df_temporal_test = pd.DataFrame(columns = ['timepoint', 'theta_future', 'theta_now', 'theta_prop', 'theta_pval', 'theta_T', 'pi_future', 'pi_now', 'pi_prop', 'pi_pval', 'pi_T'])
-df_permut_age_bin = pd.DataFrame(columns = ['timepoint', 'permutation', 'theta_younger', 'theta_older', 'theta_prop', 'theta_pval', 'theta_T', 'pi_younger', 'pi_older', 'pi_prop', 'pi_pval', 'pi_T'])
+# df_age_bin_test = pd.DataFrame(columns = ['timepoint', 'theta_younger', 'theta_older', 'theta_prop', 'theta_pval', 'theta_T', 'pi_younger', 'pi_older', 'pi_prop', 'pi_pval', 'pi_T'])
+# df_temporal_test = pd.DataFrame(columns = ['timepoint', 'theta_future', 'theta_now', 'theta_prop', 'theta_pval', 'theta_T', 'pi_future', 'pi_now', 'pi_prop', 'pi_pval', 'pi_T'])
+df_age_bin = pd.DataFrame(columns = ['timepoint', 'theta_younger', 'theta_older', 'theta_older_exp', 'pi_younger', 'pi_older', 'pi_older_exp'])
+df_permut_age_bin = pd.DataFrame(columns = ['timepoint', 'permutation', 'theta_younger', 'theta_older', 'theta_older_exp', 'pi_younger', 'pi_older', 'pi_older_exp'])
+df_temporal = pd.DataFrame(columns = ['timepoint', 'theta_now', 'theta_past', 'pi_now', 'pi_past'])
+df_permut_temporal = pd.DataFrame(columns = ['timepoint', 'permutation', 'theta_now', 'theta_past', 'pi_now', 'pi_past'])
 
 # define age bounds
+if avg_age == 2:
+    if rVal == 2: 
+        upper_bound = [5, 5, 5, 5, 6, 6, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
+        upper_bound_exp = [1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+        lower_bound = [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    if rVal == 10: 
+        upper_bound = [5, 5, 5, 5, 6, 6, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
+        upper_bound_exp = [1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+        lower_bound = [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    if rVal == 100: 
+        upper_bound = [5, 5, 5, 5, 6, 6, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
+        upper_bound_exp = [1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+        lower_bound = [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+if avg_age == 5:
+    if rVal == 2: 
+        upper_bound = [12, 12, 12, 12, 13, 13, 13, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]
+        upper_bound_exp = [3, 3, 3, 3, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
+        lower_bound = [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    if rVal == 10: 
+        upper_bound = [12, 12, 12, 12, 13, 13, 13, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]
+        upper_bound_exp = [3, 3, 3, 3, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
+        lower_bound = [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    if rVal == 100: 
+        upper_bound = [12, 12, 12, 12, 13, 13, 13, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]
+        upper_bound_exp = [3, 3, 3, 3, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
+        lower_bound = [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 if avg_age == 10:
     if rVal == 2: 
         upper_bound = [23, 23, 23, 24, 25, 25, 25, 25, 25, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 23, 24, 23, 24, 24]
+        upper_bound_exp = [7, 7, 7, 7, 8, 8, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7]
         lower_bound = [1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
     if rVal == 10: 
         upper_bound = [24, 24, 24, 24, 25, 25, 25, 25, 25, 24, 23, 23, 24, 24, 24, 24, 23, 23, 24, 24, 23, 23, 24, 24]
+        upper_bound_exp = [7, 7, 7, 7, 8, 8, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7]
         lower_bound = [1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
     if rVal == 100: 
         upper_bound = [24, 24, 23, 23, 24, 24, 24, 24, 24, 24, 24, 24, 24, 23, 23, 24, 24, 24, 23, 24, 24, 24, 24, 24]
+        upper_bound_exp = [7, 7, 7, 7, 8, 8, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7]
         lower_bound = [1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 if avg_age == 20:
     if rVal == 2: 
         upper_bound = [46, 46, 46, 47, 48, 48, 48, 47, 48, 47, 47, 47, 47, 47, 47, 47, 46, 46, 47, 47, 47, 47, 46, 47]
+        upper_bound_exp = [14, 14, 14, 14, 15, 15, 15, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14]
         lower_bound = [2, 2, 2, 2, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
     if rVal == 10: 
         upper_bound = [47, 46, 47, 46, 48, 47, 48, 48, 48, 47, 48, 47, 47, 47, 47, 47, 47, 46, 46, 46, 46, 46, 47, 46]
+        upper_bound_exp = [14, 14, 14, 14, 15, 15, 15, 14, 14, 13, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14]
         lower_bound = [2, 2, 2, 2, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
     if rVal == 100: 
         upper_bound = [47, 47, 46, 47, 47, 47, 47, 48, 47, 48, 47, 47, 48, 47, 47, 47, 47, 47, 46, 47, 47, 47, 46, 46]
+        upper_bound_exp = [14, 14, 14, 14, 15, 15, 15, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14]
         lower_bound = [2, 2, 2, 2, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
 
 upper_bound.reverse()
@@ -395,16 +430,19 @@ lower_bound.reverse()
 # loop through time points to calculate pi using tskit
 
 for n in [*range(0, 24, 1)]: 
-#for n in [*range(20, 22 , 1)]: # ------------------------------------------------------------------------------------------------------------------------------------------
+# for n in [*range(22, 24 , 1)]: # ------------------------------------------------------------------------------------------------------------------------------------------
 
     # initialize data object to store stats values that are calculated once per time point
-    
+
     # data object to store summary stats calculated from all nodes
     tp_summary = pd.DataFrame(columns = ['timepoint', 'pi', 'theta']) # "LD"
         
     # data objects to store bootstrapped replicates of summary stats for age bins and temporal comparison
-    tp_age_bin_test = pd.DataFrame(columns = ['timepoint', 'theta_younger', 'theta_older', 'theta_prop', 'theta_pval', 'theta_T', 'pi_younger', 'pi_older', 'pi_prop', 'pi_pval', 'pi_T'])
-    tp_temporal_test = pd.DataFrame(columns = ['timepoint', 'theta_future', 'theta_now', 'theta_prop', 'theta_pval', 'theta_T', 'pi_future', 'pi_now', 'pi_prop', 'pi_pval', 'pi_T']) # newBoot(future_nodes, now_nodes, niter = no_straps)
+    tp_age_bin = pd.DataFrame(columns = ['timepoint', 'theta_younger', 'theta_older', 'theta_older_exp', 'pi_younger', 'pi_older', 'pi_older_exp'])
+    tp_temporal = pd.DataFrame(columns = ['timepoint', 'theta_now', 'theta_past', 'pi_now', 'pi_past']) # newBoot(future_nodes, now_nodes, niter = no_straps)
+    
+    tp_permut_age_bin = pd.DataFrame(columns = ['timepoint', 'permutation', 'theta_younger', 'theta_older', 'theta_older_exp', 'pi_younger', 'pi_older', 'pi_older_exp'])
+    tp_permut_temporal = pd.DataFrame(columns = ['timepoint', 'permutation', 'theta_now', 'theta_past', 'pi_now', 'pi_past'])
     
     # define tskit time
     tskit_time = convert_time.iloc[n][0]
@@ -412,8 +450,8 @@ for n in [*range(0, 24, 1)]:
     
     # assign timepoint to output files    
     tp_summary.loc[0, 'timepoint'] = n
-    tp_age_bin_test.loc[0, 'timepoint'] = n
-    tp_temporal_test.loc[0, 'timepoint'] = n 
+    tp_age_bin.loc[0, 'timepoint'] = n
+    tp_temporal.loc[0, 'timepoint'] = n 
     
 
     # define pedigree ids sampled by slim, representing individuals we have we have age information for
@@ -423,7 +461,7 @@ for n in [*range(0, 24, 1)]:
     alive = pyslim.individuals_alive_at(mts, tskit_time)
 
     # define pedigree ids of individuals alive at the sampling point in the tree sequences (can be longer than samp_pdids)
-    x = [mts.individual(i).metadata['pedigree_id'] for i in alive]   
+    # x = [mts.individual(i).metadata['pedigree_id'] for i in alive]   
 
     # create list of individual ages
     meta = metadata[metadata["generation"] == convert_time.iloc[n][1]] # subset metadata for this timepoint
@@ -433,11 +471,14 @@ for n in [*range(0, 24, 1)]:
     #### START CALCULATIONS ------------------------------------------------------------------------------------------------------------------------------------------
         
     # define nodes to work with -- nodes from sampled individuals at this sampling point regardless of age
-    ind_nodes = []    
-    for i in samp_pdids.to_numpy():                            # for each individual sampled in slim
-        focal_ind = mts.individual(int(alive[np.where(x==i)])) # get inidvidual id by matching pedigree id to tskit id
-        ind_nodes.append(focal_ind.nodes.tolist())                      # make list of nodes
-    all_nodes = [item for sublist in ind_nodes for item in sublist]
+    # ind_nodes = []    
+    # for i in samp_pdids.to_numpy():                            # for each individual sampled in slim
+    #     focal_ind = mts.individual(int(alive[np.where(x==i)])) # get inidvidual id by matching pedigree id to tskit id
+    #     ind_nodes.append(focal_ind.nodes.tolist())                      # make list of nodes
+    # all_nodes = [item for sublist in ind_nodes for item in sublist]
+   
+    all_nodes = getNodes(ids = samp_pdids, inds_alive = alive, ts = mts)
+    
     # print(f"length of all_nodes is {len(all_nodes)}")
 
     ### Summary stats for entire sample------------------------------------------------------------------------------------------------------------------------------------------
@@ -452,148 +493,140 @@ for n in [*range(0, 24, 1)]:
         
     # sort individuals by age
     meta_sorted = meta.sort_values(by='age', ascending=True) # sort metadata by age
-    
-    ## [1] upper/lower 10%
-    # define nodes from upper and lower 10% of individuals, calculate theta, pi, and LD of entire subsample, then calculate theta, pi and LD of age bins
-    
-    # lower_index_ten = int(len(meta_sorted) * 0.1)
-    # upper_index_ten = int(len(meta_sorted) * 0.9)
-    
-    # Get the lower 10% of individuals by age
-    # lower_10_percent = meta_sorted[:lower_index_ten]
-    
-    # Get the upper 10% of individuals by age
-    # upper_10_percent = meta_sorted[upper_index_ten:]
-            
-    # lower 10% ------------------------------------------------------------------------------------------------------------------------------------------
+                
+    # lower bin ------------------------------------------------------------------------------------------------------------------------------------------
     lower_ids = meta_sorted[meta_sorted["age"] <= lower_bound[n]]["pedigree_id"]
+    lower_nodes = getNodes(ids = lower_ids, inds_alive = alive, ts = mts)
 
-    # lower_ids = lower_10_percent["pedigree_id"] 
-    lower_ten_nodes = getNodes(ids = lower_ids, inds_alive = alive, ts = mts)
-
-    # upper 10% ------------------------------------------------------------------------------------------------------------------------------------------
+    # upper bin ------------------------------------------------------------------------------------------------------------------------------------------
     upper_ids = meta_sorted[meta_sorted["age"] >= upper_bound[n]]["pedigree_id"]
-
-    # upper_ids = upper_10_percent["pedigree_id"] 
-    upper_ten_nodes = getNodes(ids = upper_ids, inds_alive = alive, ts = mts)
+    upper_nodes = getNodes(ids = upper_ids, inds_alive = alive, ts = mts)
     
-    print(f"There are {len(lower_ten_nodes)} nodes in the young group and {len(upper_ten_nodes)} nodes in the old group")
-
-
-    # bootstrap ------------------------------------------------------------------------------------------------------------------------------------------    
-    # bin_vals = newBoot(lower_ten_nodes, upper_ten_nodes, niter = no_straps)
-    ARG_test = ARGtest(lower_ten_nodes, upper_ten_nodes, ts = mts)
+    # expanded upper bin ------------------------------------------------------------------------------------------------------------------------------------------
+    upper_exp_ids = meta_sorted[meta_sorted["age"] >= upper_bound_exp[n]]["pedigree_id"]
+    upper_exp_nodes = getNodes(ids = upper_exp_ids, inds_alive = alive, ts = mts)
     
-    # save output ------------------------------------------------------------------------------------------------------------------------------------------
-    # tp_age_bin_boot.iloc[:, 1:] = bin_vals
-    tp_age_bin_test.iloc[:, 1:] = ARG_test
+    print(f"There are {len(lower_nodes)} nodes in the young group and {len(upper_nodes)} nodes in the old group and {len(upper_exp_nodes)} in the expanded old group")
 
-    # permutations ------------------------------------------------------------------------------------------------------------------------------------------
-    # save to: tp_permut_age_bin = pd.DataFrame(columns = ['timepoint', 'permutation', 'theta_younger', 'theta_older', 'theta_prop', 'theta_pval', 'theta_T', 'pi_younger', 'pi_older', 'pi_prop', 'pi_pval', 'pi_T'])
+    tp_age_bin.loc[0, 'pi_younger'] = mts.diversity(sample_sets = lower_nodes)
+    tp_age_bin.loc[0, 'pi_older'] = mts.diversity(sample_sets = upper_nodes)
+    tp_age_bin.loc[0, 'pi_older_exp'] = mts.diversity(sample_sets = upper_exp_nodes)
+                                                                                                                    
+
+    tp_age_bin.loc[0, 'theta_younger'] = mts.segregating_sites(sample_sets = lower_nodes) / np.sum([1/i for i in np.arange(1,len(lower_nodes))])
+    tp_age_bin.loc[0, 'theta_older'] = mts.segregating_sites(sample_sets = upper_nodes) / np.sum([1/i for i in np.arange(1,len(upper_nodes))])
+    tp_age_bin.loc[0, 'theta_older_exp'] = mts.segregating_sites(sample_sets = upper_exp_nodes) / np.sum([1/i for i in np.arange(1,len(upper_exp_nodes))])
 
     age_permut = all_ages.copy()
     meta_permut = meta.copy()
     permuts = [] 
     
     for j in range(1, 101):
+    #for j in range(1, 5):
         random.shuffle(age_permut)
         meta_permut['age_permut'] = age_permut
 
         meta_permut_sorted = meta_permut.sort_values(by='age_permut', ascending=True) # sort metadata by age
+        
         # redo age bins with permuted ages 
-        # Get the lower 10% of individuals by age
-        # lower_10_percent = meta_permut_sorted[:lower_index_ten]
-        
-        # Get the upper 10% of individuals by age
-        # upper_10_percent = meta_permut_sorted[upper_index_ten:]
                 
-        # lower 10% ------------------------------------------------------------------------------------------------------------------------------------------
-        # lower_ids = lower_10_percent["pedigree_id"] 
+        # lower nodes ------------------------------------------------------------------------------------------------------------------------------------------
         lower_ids = meta_permut_sorted[meta_permut_sorted["age_permut"] <= lower_bound[n]]["pedigree_id"]
-        lower_ten_nodes = getNodes(ids = lower_ids, inds_alive = alive, ts = mts)
+        lower_nodes = getNodes(ids = lower_ids, inds_alive = alive, ts = mts)
     
-        # upper 10% ------------------------------------------------------------------------------------------------------------------------------------------
-        # upper_ids = upper_10_percent["pedigree_id"] 
+        # upper nodes ------------------------------------------------------------------------------------------------------------------------------------------
         upper_ids = meta_permut_sorted[meta_permut_sorted["age_permut"] >= upper_bound[n]]["pedigree_id"]
-        upper_ten_nodes = getNodes(ids = upper_ids, inds_alive = alive, ts = mts)
-    
-    
-        # bootstrap ------------------------------------------------------------------------------------------------------------------------------------------    
-        # bin_vals = newBoot(lower_ten_nodes, upper_ten_nodes, niter = no_straps)
-        ARG_test = ARGtest(lower_ten_nodes, upper_ten_nodes, ts = mts)
+        upper_nodes = getNodes(ids = upper_ids, inds_alive = alive, ts = mts)
         
+        # expanded upper nodes ------------------------------------------------------------------------------------------------------------------------------------------
+        upper_exp_ids = meta_permut_sorted[meta_permut_sorted["age"] >= upper_bound_exp[n]]["pedigree_id"]
+        upper_exp_nodes = getNodes(ids = upper_exp_ids, inds_alive = alive, ts = mts)
+                                                                                                                     
         # save output ------------------------------------------------------------------------------------------------------------------------------------------
-        permut_output = list(ARG_test)
+        pi_younger = mts.diversity(sample_sets = lower_nodes)
+        pi_older = mts.diversity(sample_sets = upper_nodes)
+        pi_older_exp = mts.diversity(sample_sets = upper_exp_nodes)
+
+        theta_younger = mts.segregating_sites(sample_sets = lower_nodes) / np.sum([1/i for i in np.arange(1,len(lower_nodes))])
+        theta_older = mts.segregating_sites(sample_sets = upper_nodes) / np.sum([1/i for i in np.arange(1,len(upper_nodes))])
+        theta_older_exp = mts.segregating_sites(sample_sets = upper_exp_nodes) / np.sum([1/i for i in np.arange(1,len(upper_exp_nodes))])
+
+        permut_output = [theta_younger, theta_older, theta_older_exp, pi_younger, pi_older, pi_older_exp]
         permut_output.insert(0, n) 
         permut_output.insert(1, j)
         permuts.append(permut_output)
     
     tp_permut_age_bin = pd.DataFrame(permuts)
-    tp_permut_age_bin.columns = ['timepoint', 'permutation', 'theta_younger', 'theta_older', 'theta_prop', 'theta_pval', 'theta_T', 'pi_younger', 'pi_older', 'pi_prop', 'pi_pval', 'pi_T']
+    tp_permut_age_bin.columns = ['timepoint', 'permutation', 'theta_younger', 'theta_older', 'theta_older_exp', 'pi_younger', 'pi_older', 'pi_older_exp']
     
-    # before nodes 
-    # bootstrap ------------------------------------------------------------------------------------------------------------------------------------------
-    now_nodes = lower_ten_nodes + upper_ten_nodes
+    ### Temporal Sampling------------------------------------------------------------------------------------------------------------------------------------------
+    # actual values 
+    # define nodes for sample
+    if(n < 23):
 
-    if 'future_nodes' in locals():         
-        #temp_vals = newBoot(future_nodes, now_nodes, niter = no_straps)
-        temp_ARG_test = ARGtest(future_nodes, now_nodes, ts = mts)
-       
-    # save output ------------------------------------------------------------------------------------------------------------------------------------------
-        # tp_temporal_boot.iloc[:, 1:] = temp_vals
-        tp_temporal_test.iloc[:, 1:] = temp_ARG_test
-
-    # # momi model selection
-    # SFS = getMomiSFS(now_nodes, mts, "pop")
-    # mod_summary = runMomiModels(SFS, gen_time)
-    # 
-    # # momi inference on 20 young individuals only
-    # young_nodes = getNodes(ids = meta_sorted[0:20]["pedigree_id"], inds_alive = alive, ts = mts) # twenty youngest individuals = 40 nodes total
-    # young_SFS = getMomiSFS(young_nodes, mts, "pop")
-    # young_mod_summary = runMomiModels(young_SFS, gen_time)
-    # 
-    # # momi inference on individuals younger than avg_age/10 only
-    # yoy_nodes = getNodes(ids = meta_sorted[meta_sorted["age"] <= round(avg_age/10)]["pedigree_id"], inds_alive = alive, ts = mts) # all individuals under avg_age/10 (rounded)
-    # yoy_SFS = getMomiSFS(young_nodes, mts, "pop")
-    # yoy_mod_summary = runMomiModels(young_SFS, gen_time)
-
-
-    # # save output to data object
-    # tp_demo_params_all.iloc[:, 1:] = mod_summary
-    # tp_demo_params_young.iloc[:, 1:] = young_mod_summary
-    # tp_demo_params_yoy.iloc[:,1:] = yoy_mod_summary
-
-    # save output ------------------------------------------------------------------------------------------------------------------------------------------
-    df_summary = pd.concat([df_summary, tp_summary], axis=0)
-    # df_age_cohort = pd.concat([df_age_cohort, tp_age_cohort], axis=0)
-    #---
-    # df_age_bin_boot = pd.concat([df_age_bin_boot, tp_age_bin_boot], axis=0)   
-    # df_temporal_boot = pd.concat([df_temporal_boot, tp_temporal_boot], axis=0)  
+        num_inds = int((len(lower_nodes) + len(upper_nodes))/4)
+        
+        now_sample = meta.sample(n=num_inds, replace=False)
+        now_nodes = getNodes(ids = now_sample["pedigree_id"], inds_alive = alive, ts = mts)
     
-    df_age_bin_test = pd.concat([df_age_bin_test, tp_age_bin_test], axis=0)   
-    df_temporal_test = pd.concat([df_temporal_test, tp_temporal_test], axis=0)   
+        # define past nodes (timepoint n + 1) 
+        meta_past = metadata[metadata["generation"] == convert_time.iloc[n+1][1]] # subset metadata for this timepoint
+        past_sample = meta_past.sample(n = num_inds, replace = False)
+        past_nodes = getNodes(ids = past_sample["pedigree_id"], inds_alive = pyslim.individuals_alive_at(mts, convert_time.iloc[n+1][0]), ts = mts)
+        
+        tp_temporal.loc[0, 'theta_now'] = mts.segregating_sites(sample_sets = now_nodes) / np.sum([1/i for i in np.arange(1,len(now_nodes))])
+        tp_temporal.loc[0, 'pi_now'] = mts.diversity(sample_sets = now_nodes)
+        
+        tp_temporal.loc[0, 'theta_past'] = mts.segregating_sites(sample_sets = past_nodes) / np.sum([1/i for i in np.arange(1,len(past_nodes))])
+        tp_temporal.loc[0, 'pi_past'] = mts.diversity(sample_sets = past_nodes)
+    
+        # permutations      tp_permut_temporal = pd.DataFrame(columns = ['timepoint', 'permutation', 'theta_now', 'theta_past', 'pi_now', 'pi_past'])
+        temp_meta = pd.concat([meta, meta_past], ignore_index=True)
+        temp_permuts = [] 
+    
+        for j in range(1, 101):
+        #for j in range(1, 5):
+            now_sample = temp_meta.sample(n=num_inds, replace=False)
+            past_sample = temp_meta.sample(n=num_inds, replace=False)
+            
+            # redo age bins with permuted ages 
+                    
+            # now ------------------------------------------------------------------------------------------------------------------------------------------
+            now_nodes = getNodes(ids = now_sample["pedigree_id"], inds_alive = np.concatenate((pyslim.individuals_alive_at(mts, convert_time.iloc[n][0]), pyslim.individuals_alive_at(mts, convert_time.iloc[n+1][0]))), ts = mts)
+            
+            # past ------------------------------------------------------------------------------------------------------------------------------------------
+            past_nodes = getNodes(ids = past_sample["pedigree_id"], inds_alive = np.concatenate((pyslim.individuals_alive_at(mts, convert_time.iloc[n][0]), pyslim.individuals_alive_at(mts, convert_time.iloc[n+1][0]))), ts = mts)
+                
+            # save output ------------------------------------------------------------------------------------------------------------------------------------------
+            pi_now = mts.diversity(sample_sets = now_nodes)
+            pi_past = mts.diversity(sample_sets = past_nodes)
+    
+            theta_now = mts.segregating_sites(sample_sets = now_nodes) / np.sum([1/i for i in np.arange(1,len(now_nodes))])
+            theta_past = mts.segregating_sites(sample_sets = past_nodes) / np.sum([1/i for i in np.arange(1,len(past_nodes))])
+    
+            permut_output = [theta_now, theta_past, pi_now, pi_past]
+            permut_output.insert(0, n) 
+            permut_output.insert(1, j)
+            temp_permuts.append(permut_output)
+            
+        tp_permut_temporal = pd.DataFrame(temp_permuts)
+        tp_permut_temporal.columns = ['timepoint', 'permutation', 'theta_now', 'theta_past', 'pi_now', 'pi_past']
+        
+        # save output ------------------------------------------------------------------------------------------------------------------------------------------
+        df_temporal = pd.concat([df_temporal, tp_temporal], axis=0)   
+        df_permut_temporal = pd.concat([df_permut_temporal, tp_permut_temporal], axis = 0)
+
+    # save output ------------------------------------------------------------------------------------------------------------------------------------------
+    df_summary = pd.concat([df_summary, tp_summary], axis=0)    
+    df_age_bin = pd.concat([df_age_bin, tp_age_bin], axis=0)   
     df_permut_age_bin = pd.concat([df_permut_age_bin, tp_permut_age_bin], axis = 0)
-    
-    #---
-    # df_demo_params_all = pd.concat([df_demo_params_all, tp_demo_params_all], axis = 0)
-    # df_demo_params_young = pd.concat([df_demo_params_young, tp_demo_params_young], axis = 0)
-    # df_demo_params_yoy = pd.concat([df_demo_params_yoy, tp_demo_params_yoy], axis = 0)
-
-
     # end of for loop
-    future_nodes = lower_ten_nodes + upper_ten_nodes
 
 df_summary.to_csv(outdir+"/"+prefix+"_summary.txt", sep=',', index=False)
-#df_age_cohort.to_csv(outdir+"/"+prefix+"_age_cohort.txt", sep=',', index=False)
-
-# df_age_bin_boot.to_csv(outdir+"/"+prefix+"_age_bin_boot.txt", sep=',', index=False)
-# df_temporal_boot.to_csv(outdir+"/"+prefix+"_temporal_boot.txt", sep=',', index=False)
-df_age_bin_test.to_csv(outdir+"/"+prefix+"_age_bin_test.txt", sep=',', index=False)
-df_temporal_test.to_csv(outdir+"/"+prefix+"_temporal_test.txt", sep=',', index=False)
-df_permut_age_bin.to_csv(outdir+"/"+prefix+"_permut_test.txt", sep=',', index=False)
-# df_demo_params_all.to_csv(outdir+"/"+prefix+"_demo_params_all.txt", sep=',', index=False)
-# df_demo_params_young.to_csv(outdir+"/"+prefix+"_demo_params_young.txt", sep=',', index=False)
-# df_demo_params_yoy.to_csv(outdir+"/"+prefix+"_demo_params_yoy.txt", sep=',', index=False)
+df_age_bin.to_csv(outdir+"/"+prefix+"_age_bin.txt", sep=',', index=False)
+df_temporal.to_csv(outdir+"/"+prefix+"_temporal.txt", sep=',', index=False)
+df_permut_age_bin.to_csv(outdir+"/"+prefix+"_permut_age_bin.txt", sep=',', index=False)
+df_permut_temporal.to_csv(outdir+"/"+prefix+"_permut_temporal.txt", sep=',', index=False)
 
 
 print(f"done saving output")
