@@ -23,7 +23,7 @@ np.set_printoptions(threshold=sys.maxsize)
 
 def getNodes(ids, inds_alive, ts):
     # this function returns a list of nodes from a given list of individuals alive at a specific time from a treesequence
-    x = [ts.individual(j).metadata['pedigree_id'] for j in inds_alive]   
+    x = list(set([ts.individual(j).metadata['pedigree_id'] for j in inds_alive]))   
     nodes = []
     for i in ids.to_numpy():
         focal_ind = ts.individual(int(inds_alive[np.where(x==i)])) # get inidvidual id by matching pedigree id to tskit id
@@ -589,7 +589,7 @@ for n in [*range(0, 24, 1)]:
             now_sample = temp_meta.sample(n=num_inds, replace=False)
             past_sample = temp_meta.sample(n=num_inds, replace=False)
             
-            # redo age bins with permuted ages 
+            # redo temporal comparisons with permuted timepoints
                     
             # now ------------------------------------------------------------------------------------------------------------------------------------------
             now_nodes = getNodes(ids = now_sample["pedigree_id"], inds_alive = np.concatenate((pyslim.individuals_alive_at(mts, convert_time.iloc[n][0]), pyslim.individuals_alive_at(mts, convert_time.iloc[n+1][0]))), ts = mts)

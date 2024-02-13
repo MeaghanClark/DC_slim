@@ -44,7 +44,7 @@ run_name=DC_slim #label to use on output files
 
 if [[ $model == nWF ]]
 then
-    date=02012024
+    date=02102024
     #date=01312024
     #date=11082022 
     #header=${model}_${avg_age} # from input when running wrapper-run_slim_all.sh
