@@ -329,8 +329,10 @@ for n in [*range(0, 24, 1)]:
     
         # define past nodes (timepoint n + 1) 
         meta_past = metadata[metadata["generation"] == convert_time.iloc[n+1][1]] # subset metadata for this timepoint
+       
         # remove individuals in now_sample
         meta_past = meta_past[~meta_past['pedigree_id'].isin(now_sample['pedigree_id'])]
+
         past_sample = meta_past.sample(n = num_inds_past, replace = False)
         past_nodes = getNodes(ids = past_sample["pedigree_id"], inds_alive = pyslim.individuals_alive_at(mts, convert_time.iloc[n+1][0]), ts = mts)
         
@@ -342,10 +344,12 @@ for n in [*range(0, 24, 1)]:
     
         # permutations      tp_permut_temporal = pd.DataFrame(columns = ['timepoint', 'permutation', 'theta_now', 'theta_past', 'pi_now', 'pi_past'])
         temp_meta = pd.concat([meta, meta_past], ignore_index=True)
+        
         # remove duplicate individuals 
         
+        temp_meta = temp_meta.drop_duplicates(subset = ['pedigree_id'], keep = 'first') 
         temp_permuts = [] 
-    
+        
         for j in range(1, 101):
         #for j in range(1, 5):
             now_sample = temp_meta.sample(n=num_inds_now, replace=False)
