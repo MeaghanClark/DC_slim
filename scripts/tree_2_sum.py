@@ -342,6 +342,8 @@ for n in [*range(0, 24, 1)]:
     
         # permutations      tp_permut_temporal = pd.DataFrame(columns = ['timepoint', 'permutation', 'theta_now', 'theta_past', 'pi_now', 'pi_past'])
         temp_meta = pd.concat([meta, meta_past], ignore_index=True)
+        # remove duplicate individuals 
+        
         temp_permuts = [] 
     
         for j in range(1, 101):
