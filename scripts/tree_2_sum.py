@@ -25,11 +25,11 @@ np.set_printoptions(threshold=sys.maxsize)
 
 def getNodes(ids, inds_alive, ts):
     # this function returns a list of nodes from a given list of individuals alive at a specific time from a treesequence
-    x = list(set([ts.individual(j).metadata['pedigree_id'] for j in inds_alive]))       # define pedigree ids of individuals alive at the sampling point in the tree sequences (can be longer than samp_pdids)
+    x = [ts.individual(i).metadata['pedigree_id'] for i in inds_alive]   # define pedigree ids of individuals alive at the sampling point in the tree sequences (can be longer than samp_pdids)
 
     nodes = []
     for i in ids.to_numpy():
-        focal_ind = ts.individual(int(inds_alive[np.where(x==i)])) # get inidvidual id by matching pedigree id to tskit id
+        focal_ind = ts.individual(int(inds_alive[np.where(x==i)[0][0]])) # get inidvidual id by matching pedigree id to tskit id
         nodes.append(focal_ind.nodes.tolist())
     nodes = [item for sublist in nodes for item in sublist] 
     return nodes
@@ -346,7 +346,8 @@ for n in [*range(0, 24, 1)]:
         # permutations      tp_permut_temporal = pd.DataFrame(columns = ['timepoint', 'permutation', 'theta_now', 'theta_past', 'pi_now', 'pi_past'])
         temp_meta = pd.concat([meta, meta_past], ignore_index=True)
         # remove duplicate individuals 
-        
+        temp_meta = temp_meta.drop_duplicates(subset = ['pedigree_id'], keep = 'first')
+
         temp_permuts = [] 
     
         for j in range(1, 101):
@@ -365,47 +366,9 @@ for n in [*range(0, 24, 1)]:
             # I need to sample individuals that have different nodes
             now_nodes = getNodes(ids = now_sample["pedigree_id"], inds_alive = np.concatenate((pyslim.individuals_alive_at(mts, convert_time.iloc[n][0]), pyslim.individuals_alive_at(mts, convert_time.iloc[n+1][0]))), ts = mts)
             
-            # try getting pi_now, catching errors that result from duplicate nodes sampled
-            while True:
-                try:
-                    pi_now = mts.diversity(sample_sets = now_nodes)
-
-                    # Check if the condition is met to exit the loop
-                    if(len(now_nodes) == len(set(now_nodes))):                        
-                        break  # Exit the loop if the condition is met
-            
-                except LibraryError as e:
-                    print("LibraryError occurred:", e)
-                    print(f"Resampling for permutation {j}...")
-                    now_sample = temp_meta.sample(n=num_inds_now, replace=False)
-                    now_nodes = getNodes(ids = now_sample["pedigree_id"], inds_alive = np.concatenate((pyslim.individuals_alive_at(mts, convert_time.iloc[n][0]), pyslim.individuals_alive_at(mts, convert_time.iloc[n+1][0]))), ts = mts)
-
-                except Exception as e:
-                    print("An unexpected error occurred:", e)
-                    break  # Exit the loop if an unexpected error occurs
-
             # past ------------------------------------------------------------------------------------------------------------------------------------------
             past_nodes = getNodes(ids = past_sample["pedigree_id"], inds_alive = np.concatenate((pyslim.individuals_alive_at(mts, convert_time.iloc[n][0]), pyslim.individuals_alive_at(mts, convert_time.iloc[n+1][0]))), ts = mts)
             
-            # try getting pi_now, catching errors that result from duplicate nodes sampled
-            while True:
-                try:
-                    pi_past = mts.diversity(sample_sets = past_nodes)
-
-                    # Check if the condition is met to exit the loop
-                    if(len(past_nodes) == len(set(past_nodes))):                        
-                        break  # Exit the loop if the condition is met
-            
-                except LibraryError as e:
-                    print("LibraryError occurred:", e)
-                    print(f"Resampling for permutation {j}...")
-                    past_sample = temp_meta.sample(n=num_inds_past, replace=False)
-                    past_nodes = getNodes(ids = past_sample["pedigree_id"], inds_alive = np.concatenate((pyslim.individuals_alive_at(mts, convert_time.iloc[n][0]), pyslim.individuals_alive_at(mts, convert_time.iloc[n+1][0]))), ts = mts)
-
-                except Exception as e:
-                    print("An unexpected error occurred:", e)
-                    break  # Exit the loop if an unexpected error occurs    
-                
             # save output ------------------------------------------------------------------------------------------------------------------------------------------
             pi_now = mts.diversity(sample_sets = now_nodes)
             pi_past = mts.diversity(sample_sets = past_nodes)
