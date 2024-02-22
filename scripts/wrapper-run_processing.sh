@@ -44,10 +44,15 @@ run_name=DC_slim #label to use on output files
 
 if [[ $model == nWF ]]
 then
-    date=02102024
-    #date=01312024
-    #date=11082022 
-    #header=${model}_${avg_age} # from input when running wrapper-run_slim_all.sh
+    if [[ $array_key == high ]]
+    then
+	date=02102024
+    fi
+    
+    if [[ $array_key == low ]]
+    then
+	date=02112024
+    fi
     treeprocess=tree_2_sum.py #processing python script 
 fi
 
@@ -80,43 +85,17 @@ reps=100 # testing with 1 rep, should be 100
 if [ ! -d $logfilesdir ]; then mkdir $logfilesdir; fi
 if [ ! -d $outdir ]; then mkdir ./$outdir; fi
 
-    #submit job to cluster
-#for r in 2 10 100; do
-#for r in 100; do
-#	for rep in $(seq 1 $reps) ; do 
-#        if [[ $model == nWF ]]
-#        then
-#             filename=tree_${model}_${avg_age}_${r}_${rep}.trees
-#             metafile=metaInd_${model}_${avg_age}_${r}_${rep}.txt
-#             output_file=${homedir}${outdir}/${model}_${avg_age}_${r}_${rep}_${date}_age_bin.txt
-#        fi
-        
-#        if [[ $model == pWF ]]
-#	then
-#             filename=tree_${model}_${avg_age}_${r}_${rep}.trees
-#             metafile=metaInd_${model}_${avg_age}_${r}_${rep}.txt
-#             output_file=${homedir}${outdir}/${model}_${r}_${rep}_${date}_age_bin.txt
-#        fi
-
-#		if [ ! -f "$output_file" ] # don't start job if output files already exists
-#		then 
+#submit job to cluster
 				
-#			echo Starting job ${model}_${r}_${rep}_${date} with $filename and $metafile
-				
-			sbatch --job-name=$jobname \
-			--array=1-600 \
-			--export=JOBNAME=$jobname,TREEPROCESS=$treeprocess,ARRAY_KEY=$array_key,MODEL=$model,CPUS=$cpus,RUN_NAME=$run_name,STORAGENODE=$storagenode,INDIR=$indir,OUTDIR=$outdir,HOMEDIR=$homedir,PYTHONDIR=$pythondir,MU=$mu,DATE=$date,EXECUTABLE=$executable,HEADER=$header,REPS=$reps,LOGFILESDIR=$logfilesdir \
-			--cpus-per-task=$cpus \
-			--mem-per-cpu=$ram_per_cpu \
-			--output=$logfilesdir/${jobname}_${sim_block}_${date}_%A_%A.out \
-			--error=$logfilesdir/${jobname}_${sim_block}_${date}_%A_%a.err \
-			--time=24:00:00 \
-			$executable
-#		else
-#			echo output files for ${model}_${r}_${rep}_${date} already exist in ${outdir}
-#		fi		
-#	done
-#done	
+sbatch --job-name=$jobname \
+	--array=1-600 \
+	--export=JOBNAME=$jobname,TREEPROCESS=$treeprocess,ARRAY_KEY=$array_key,MODEL=$model,CPUS=$cpus,RUN_NAME=$run_name,STORAGENODE=$storagenode,INDIR=$indir,OUTDIR=$outdir,HOMEDIR=$homedir,PYTHONDIR=$pythondir,MU=$mu,DATE=$date,EXECUTABLE=$executable,HEADER=$header,REPS=$reps,LOGFILESDIR=$logfilesdir \
+	--cpus-per-task=$cpus \
+	--mem-per-cpu=$ram_per_cpu \
+	--output=$logfilesdir/${jobname}_${sim_block}_${date}_%A_%A.out \
+	--error=$logfilesdir/${jobname}_${sim_block}_${date}_%A_%a.err \
+	--time=24:00:00 \
+	$executable
 
 echo ----------------------------------------------------------------------------------------
 echo My executable is $executable		

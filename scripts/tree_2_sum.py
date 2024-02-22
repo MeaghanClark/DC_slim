@@ -15,6 +15,8 @@ import csv
 import tskit
 import scipy.stats as stats
 import momi
+from tskit import LibraryError
+
 #import matplotlib.pyplot as plt
 
 np.set_printoptions(threshold=sys.maxsize)
