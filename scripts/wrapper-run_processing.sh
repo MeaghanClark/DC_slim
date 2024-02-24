@@ -24,35 +24,16 @@ fi
 # tree processing variables: 
 mu=1e-8
 
-#if [[ $model == nWF ]]
-#then
-	#if [[ $avg_age == 2 ]]; then gen=3; fi
-        #if [[ $avg_age == 5 ]]; then gen=6; fi 
-        #if [[ $avg_age == 10 ]]; then gen=11; fi 
-        #if [[ $avg_age == 20 ]]; then gen=21; fi 
-#	if [[ $avg_age == 2 ]]; then gen=2.999165; fi
-#	if [[ $avg_age == 5 ]]; then gen=6.006728; fi 
-#	if [[ $avg_age == 10 ]]; then gen=11.01567; fi 
-#	if [[ $avg_age == 20 ]]; then gen=20.97633; fi 
-#else 
-#	gen=1 # for pWF model
-#fi
-
 # define upper level variables:
 jobname=run-trees #label for SLURM book-keeping 
 run_name=DC_slim #label to use on output files
 
 if [[ $model == nWF ]]
 then
-    if [[ $array_key == high ]]
-    then
-	date=02102024
-    fi
+    if [[ $sim_block == low ]]; then date=02102024; fi
     
-    if [[ $array_key == low ]]
-    then
-	date=02112024
-    fi
+    if [[ $sim_block == high ]]; then date=02112024; fi
+    
     treeprocess=tree_2_sum.py #processing python script 
 fi
 
@@ -62,6 +43,8 @@ then
     header=${model}
     treeprocess=pWF_tree_2_sum.py #processing python script 
 fi
+
+echo date is ${date}
 
 rundate=$(date +%m%d%Y)
 # define dirs:

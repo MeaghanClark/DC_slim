@@ -192,6 +192,7 @@ if avg_age == 20:
         lower_bound = [2, 2, 2, 2, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
 
 upper_bound.reverse()
+upper_bound_exp.reverse()
 lower_bound.reverse()
 
 # loop through time points to calculate pi using tskit
@@ -361,9 +362,6 @@ for n in [*range(0, 24, 1)]:
             # redo temporal comparisons with permuted timepoints
                 
             # now ------------------------------------------------------------------------------------------------------------------------------------------
-            
-            # ISSUE: some individual in now_sample have unique pedigree ids but the same nodes! So ts.diversity throws an error 
-            # I need to sample individuals that have different nodes
             now_nodes = getNodes(ids = now_sample["pedigree_id"], inds_alive = np.concatenate((pyslim.individuals_alive_at(mts, convert_time.iloc[n][0]), pyslim.individuals_alive_at(mts, convert_time.iloc[n+1][0]))), ts = mts)
             
             # past ------------------------------------------------------------------------------------------------------------------------------------------
