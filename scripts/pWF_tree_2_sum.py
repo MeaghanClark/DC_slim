@@ -197,20 +197,20 @@ for n in [*range(0, 24, 1)]:
     # actual values
     # define nodes for sample
     if(n < 23):
-        num_inds_now = young_sizes[n] # CHANGE THESE
+        num_inds_now = young_sizes[n] 
         num_inds_past = old_sizes[n]
         
         now_sample = meta.sample(n=num_inds_now, replace=False)
         now_nodes = getNodes(ids = now_sample["pedigree_id"], inds_alive = alive, ts = mts)
     
-                # define past nodes (timepoint n + 1) 
+        # define past nodes (timepoint n + 1) 
         meta_past = metadata[metadata["generation"] == convert_time.iloc[n+1][1]] # subset metadata for this timepoint
         # remove individuals in now_sample
         meta_past = meta_past[~meta_past['pedigree_id'].isin(now_sample['pedigree_id'])]
         past_sample = meta_past.sample(n = num_inds_past, replace = False)
         past_nodes = getNodes(ids = past_sample["pedigree_id"], inds_alive = pyslim.individuals_alive_at(mts, convert_time.iloc[n+1][0]), ts = mts)
 
-                tp_temporal.loc[0, 'theta_now'] = mts.segregating_sites(sample_sets = now_nodes) / np.sum([1/i for i in np.arange(1,len(now_nodes))])
+        tp_temporal.loc[0, 'theta_now'] = mts.segregating_sites(sample_sets = now_nodes) / np.sum([1/i for i in np.arange(1,len(now_nodes))])
         tp_temporal.loc[0, 'pi_now'] = mts.diversity(sample_sets = now_nodes)
         
         tp_temporal.loc[0, 'theta_past'] = mts.segregating_sites(sample_sets = past_nodes) / np.sum([1/i for i in np.arange(1,len(past_nodes))])
