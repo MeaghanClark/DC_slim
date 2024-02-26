@@ -39,8 +39,7 @@ fi
 
 if [[ $model == pWF ]]
 then
-    date=04262023
-    header=${model}
+    date=02102024
     treeprocess=pWF_tree_2_sum.py #processing python script 
 fi
 
@@ -72,7 +71,7 @@ if [ ! -d $outdir ]; then mkdir ./$outdir; fi
 				
 sbatch --job-name=$jobname \
 	--array=1-600 \
-	--export=JOBNAME=$jobname,TREEPROCESS=$treeprocess,ARRAY_KEY=$array_key,MODEL=$model,CPUS=$cpus,RUN_NAME=$run_name,STORAGENODE=$storagenode,INDIR=$indir,OUTDIR=$outdir,HOMEDIR=$homedir,PYTHONDIR=$pythondir,MU=$mu,DATE=$date,EXECUTABLE=$executable,HEADER=$header,REPS=$reps,LOGFILESDIR=$logfilesdir \
+	--export=JOBNAME=$jobname,TREEPROCESS=$treeprocess,ARRAY_KEY=$array_key,MODEL=$model,CPUS=$cpus,RUN_NAME=$run_name,STORAGENODE=$storagenode,INDIR=$indir,OUTDIR=$outdir,HOMEDIR=$homedir,PYTHONDIR=$pythondir,MU=$mu,DATE=$date,EXECUTABLE=$executable,REPS=$reps,LOGFILESDIR=$logfilesdir \
 	--cpus-per-task=$cpus \
 	--mem-per-cpu=$ram_per_cpu \
 	--output=$logfilesdir/${jobname}_${sim_block}_${date}_%A_%A.out \
