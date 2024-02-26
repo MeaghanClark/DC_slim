@@ -137,7 +137,7 @@ df_temporal = pd.DataFrame(columns = ['timepoint', 'theta_now', 'theta_past', 'p
 df_permut_temporal = pd.DataFrame(columns = ['timepoint', 'permutation', 'theta_now', 'theta_past', 'pi_now', 'pi_past'])
 df_bin_sample_size = pd.DataFrame(columns = ['young_bin', 'old_bin'])
 
-# define age bounds
+# define age bounds, as calculated in define_age_bounds.R
 if avg_age == 2:
     if rVal == 2: 
         upper_bound = [5, 5, 5, 5, 6, 6, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
@@ -203,9 +203,9 @@ for n in [*range(0, 24, 1)]:
     # initialize data object to store stats values that are calculated once per time point
 
     # data object to store summary stats calculated from all nodes
-    tp_summary = pd.DataFrame(columns = ['timepoint', 'pi', 'theta']) # "LD"
+    tp_summary = pd.DataFrame(columns = ['timepoint', 'pi', 'theta']) 
         
-    # data objects to store bootstrapped replicates of summary stats for age bins and temporal comparison
+    # data objects 
     tp_age_bin = pd.DataFrame(columns = ['timepoint', 'theta_younger', 'theta_older', 'theta_older_exp', 'pi_younger', 'pi_older', 'pi_older_exp'])
     tp_temporal = pd.DataFrame(columns = ['timepoint', 'theta_now', 'theta_past', 'pi_now', 'pi_past']) # newBoot(future_nodes, now_nodes, niter = no_straps)
     

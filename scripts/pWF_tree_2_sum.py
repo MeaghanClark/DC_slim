@@ -138,6 +138,22 @@ df_summary = pd.DataFrame(columns = ['timepoint', 'pi', 'theta'])
 df_temporal = pd.DataFrame(columns = ['timepoint', 'theta_now', 'theta_past', 'pi_now', 'pi_past'])
 df_permut_temporal = pd.DataFrame(columns = ['timepoint', 'permutation', 'theta_now', 'theta_past', 'pi_now', 'pi_past'])
 
+# define sample sizes for temporal sampling, calculated as the mean sample size for each R value from the perennial simulations in get_pWF_sample_sizes.R
+if rVal == 2: 
+    old_sizes = [111, 113, 115, 112, 115, 111, 113, 114, 112, 111, 113, 112, 112, 113, 114, 113, 114, 111, 111, 111, 112, 115, 116, 115]
+    young_sizes = [201, 202, 203, 202, 203, 202, 202, 203, 204, 204, 201, 202, 202, 202, 201, 202, 202, 202, 201, 203, 203, 204, 201, 201]
+if rVal == 10: 
+    old_sizes = [113, 111, 116, 115, 112, 113, 114, 114, 111, 111, 114, 114, 116, 113, 113, 112, 112, 113, 113, 113, 113, 113, 114, 112]
+    young_sizes = [202, 202, 202, 203, 201, 202, 204, 204, 202, 203, 200, 203, 202, 202, 202, 202, 202, 203, 202, 202, 202, 202, 203, 202]
+if rVal == 100: 
+    old_sizes = [105, 106, 104, 104, 104, 108, 104, 103, 104, 105, 107, 103, 105, 105, 104, 107, 106, 108, 107, 107, 113, 116, 111, 113]
+    young_sizes = [185, 186, 185, 186, 186, 185, 186, 186, 186, 186, 187, 187, 185, 185, 185, 186, 185, 184, 186, 186, 203, 202, 203, 201]
+
+old_sizes.reverse()
+young_sizes.reverse()
+
+
+
 # loop through time points to calculate stats using tskit
 
 for n in [*range(0, 24, 1)]: 
@@ -181,8 +197,8 @@ for n in [*range(0, 24, 1)]:
     # actual values
     # define nodes for sample
     if(n < 23):
-        num_inds_now = 40 # CHANGE THESE
-        num_inds_past = 40
+        num_inds_now = young_sizes[n] # CHANGE THESE
+        num_inds_past = old_sizes[n]
         
         now_sample = meta.sample(n=num_inds_now, replace=False)
         now_nodes = getNodes(ids = now_sample["pedigree_id"], inds_alive = alive, ts = mts)
