@@ -59,7 +59,14 @@ echo ---------------------------------------------------------------------------
 # define input files 
 FILENAME=tree_${MODEL}_${AVG_AGE}_${R}_${REP}.trees
 METAFILE=metaInd_${MODEL}_${AVG_AGE}_${R}_${REP}.txt
-OUTPUT_FILE=${HOMEDIR}${OUTDIR}/${MODEL}_${AVG_AGE}_${R}_${REP}_${DATE}_age_bin.txt # use if re-doing for subset of jobs.. not written yet! 
+OUTPUT_FILE=${HOMEDIR}${OUTDIR}/${MODEL}_${AVG_AGE}_${R}_${REP}_${DATE}_summary.txt # use if re-doing for subset of jobs.. not written yet! 
+
+if [ -e "$OUTPUT_FILE" ]; then
+       echo "Error: output file '$OUTPUT_FILE' already exists. Script terminated." 
+       exit 1
+else
+       echo "Output file does not exist. Continuing script... " 
+fi
 
 if [[ $MODEL == nWF ]]
 then
