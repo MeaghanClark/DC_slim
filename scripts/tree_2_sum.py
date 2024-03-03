@@ -89,7 +89,7 @@ orig_ts = pyslim.update(orig_ts)
 print(f"Loaded tree file")
 
 # recapitate tree
-rts = pyslim.recapitate(orig_ts, ancestral_Ne=(10000*float(gen_time)), recombination_rate = (1e-8/float(gen_time))) 
+rts = pyslim.recapitate(orig_ts, ancestral_Ne=(23677*float(gen_time)), recombination_rate = (1e-8/float(gen_time))) 
 
 orig_max_roots = max(t.num_roots for t in orig_ts.trees())
 recap_max_roots = max(t.num_roots for t in rts.trees())

@@ -87,7 +87,7 @@ orig_ts = pyslim.update(orig_ts)
 print(f"Loaded tree file")
 
 # recapitate tree
-rts = pyslim.recapitate(orig_ts, ancestral_Ne=(10000*float(gen_time)), recombination_rate = (1e-8/float(gen_time))) 
+rts = pyslim.recapitate(orig_ts, ancestral_Ne=(23677*float(gen_time)), recombination_rate = (1e-8/float(gen_time))) 
 
 orig_max_roots = max(t.num_roots for t in orig_ts.trees())
 recap_max_roots = max(t.num_roots for t in rts.trees())
@@ -163,7 +163,7 @@ for n in [*range(0, 24, 1)]:
     
     # data object to store summary stats calculated from all nodes
     tp_summary = pd.DataFrame(columns = ['timepoint', 'pi', 'theta'])
-    tp_temporal_subsamp = pd.DataFrame(columns = ['timepoint', 'theta_now', 'theta_past', 'pi_now', 'pi_past'])
+    tp_temporal = pd.DataFrame(columns = ['timepoint', 'theta_now', 'theta_past', 'pi_now', 'pi_past'])
 
     # define tskit time
     tskit_time = convert_time.iloc[n][0]
@@ -171,7 +171,7 @@ for n in [*range(0, 24, 1)]:
     
     # assign timepoint to output files    
     tp_summary.loc[0, 'timepoint'] = n
-    tp_temporal_subsamp.loc[0,'timepoint'] = n
+    tp_temporal.loc[0,'timepoint'] = n
 
     # define pedigree ids sampled by slim, representing individuals we have we have age information for
     samp_pdids = metadata[metadata["generation"] == convert_time.iloc[n][1]].filter(["pedigree_id"])
@@ -197,6 +197,19 @@ for n in [*range(0, 24, 1)]:
     # actual values
     # define nodes for sample
     if(n < 23):
+        if len(meta) > young_sizes[n]:
+            num_inds_now = young_sizes[n] 
+        else: 
+            num_inds_now = len(meta)
+        if len(meta) > old_sizes[n]:
+            num_inds_past = old_sizes[n]
+        else: 
+            num_inds_past = len(meta)        
+        
+        print(f'number of individuals now: {num_inds_now}')
+        print(f'length of meta: {len(meta)}')
+        print(f'number of individuals past: {num_inds_past}')
+        
         num_inds_now = young_sizes[n] 
         num_inds_past = old_sizes[n]
         

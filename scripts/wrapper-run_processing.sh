@@ -35,12 +35,16 @@ then
     if [[ $sim_block == high ]]; then date=02112024; fi
     
     treeprocess=tree_2_sum.py #processing python script 
+    array_no=600
+
 fi
 
 if [[ $model == pWF ]]
 then
-    date=02262024
-    treeprocess=pWF_tree_2_sum.py #processing python script 
+    date=03012024
+    treeprocess=pWF_tree_2_sum.py #processing python script
+    array_no=300
+    #array_no=5 
 fi
 
 echo date is ${date}
@@ -70,13 +74,13 @@ if [ ! -d $outdir ]; then mkdir ./$outdir; fi
 #submit job to cluster
 				
 sbatch --job-name=$jobname \
-	--array=1-600 \
+	--array=1-$array_no \
 	--export=JOBNAME=$jobname,TREEPROCESS=$treeprocess,ARRAY_KEY=$array_key,MODEL=$model,CPUS=$cpus,RUN_NAME=$run_name,STORAGENODE=$storagenode,INDIR=$indir,OUTDIR=$outdir,HOMEDIR=$homedir,PYTHONDIR=$pythondir,MU=$mu,DATE=$date,EXECUTABLE=$executable,REPS=$reps,LOGFILESDIR=$logfilesdir \
 	--cpus-per-task=$cpus \
 	--mem-per-cpu=$ram_per_cpu \
 	--output=$logfilesdir/${jobname}_${sim_block}_${date}_%A_%A.out \
 	--error=$logfilesdir/${jobname}_${sim_block}_${date}_%A_%a.err \
-	--time=24:00:00 \
+	--time=32:00:00 \
 	$executable
 
 echo ----------------------------------------------------------------------------------------
