@@ -355,9 +355,9 @@ for n in [*range(0, 24, 1)]:
         #for j in range(1, 5):
             now_sample = temp_meta.sample(n=num_inds_now, replace=False)
             # remove individuals in now_sample
-            temp_meta_unique = temp_meta[~temp_meta['pedigree_id'].isin(now_sample['pedigree_id'])]
+            #temp_meta_unique = temp_meta[~temp_meta['pedigree_id'].isin(now_sample['pedigree_id'])]
 
-            past_sample = temp_meta_unique.sample(n=num_inds_past, replace=False)
+            past_sample = temp_meta.sample(n=num_inds_past, replace=False)
             
             # redo temporal comparisons with permuted timepoints
                 
