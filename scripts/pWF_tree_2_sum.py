@@ -14,8 +14,6 @@ import datetime # FOR DEBUGGING
 import csv
 import tskit
 import scipy.stats as stats
-import momi
-#import matplotlib.pyplot as plt
 
 np.set_printoptions(threshold=sys.maxsize)
 
@@ -128,12 +126,6 @@ convert_time = pd.DataFrame({'tskit_time':sampling, 'slim_time':cycles}, columns
 
 # initalize data lists
 
-
-# save some characteristic of the tree sequence for later
-seq_length = mts.sequence_length
-positions = mts.tables.sites.position
-
-
 df_summary = pd.DataFrame(columns = ['timepoint', 'pi', 'theta'])
 df_temporal = pd.DataFrame(columns = ['timepoint', 'theta_now', 'theta_past', 'pi_now', 'pi_past'])
 df_permut_temporal = pd.DataFrame(columns = ['timepoint', 'permutation', 'theta_now', 'theta_past', 'pi_now', 'pi_past'])
@@ -233,7 +225,7 @@ for n in [*range(0, 24, 1)]:
     
         # permutations      tp_permut_temporal = pd.DataFrame(columns = ['timepoint', 'permutation', 'theta_now', 'theta_past', 'pi_now', 'pi_past'])
         temp_meta = pd.concat([meta, meta_past], ignore_index=True)
-        
+
         temp_permuts = [] 
         
         for j in range(1, 101):
