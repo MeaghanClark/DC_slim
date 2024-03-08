@@ -284,7 +284,7 @@ for n in [*range(0, 24, 1)]:
         #tp_bin_sample_size.loc[0, 'old_bin'] = len(upper_nodes)
     
         # expanded upper bin ------------------------------------------------------------------------------------------------------------------------------------------
-        upper_exp_ids = meta_sorted[meta_sorted["age"] >= upper_bound_exp[n]]["pedigree_id"][(len(meta_sorted[meta_sorted["age"] >= upper_bound_exp[n]]) - len(upper_ids)):len(meta_sorted[meta_sorted["age"] >= upper_bound_exp[n]])]
+        upper_exp_ids = meta_sorted[meta_sorted["age"] >= upper_bound_exp[n]].sample(n=len(upper_ids), replace = False)["pedigree_id"]
         upper_exp_nodes = getNodes(ids = upper_exp_ids, inds_alive = alive, ts = mts)
         
         #print(f"There are {len(lower_nodes)} nodes in the young group and {len(upper_nodes)} nodes in the old group and {len(upper_exp_nodes)} in the expanded old group")
@@ -319,7 +319,7 @@ for n in [*range(0, 24, 1)]:
             lower_nodes = getNodes(ids = lower_ids, inds_alive = alive, ts = mts)
         
             # expanded upper nodes ------------------------------------------------------------------------------------------------------------------------------------------
-            upper_exp_ids = meta_permut_sorted[meta_permut_sorted["age"] >= upper_bound_exp[n]]["pedigree_id"][(len(meta_permut_sorted[meta_permut_sorted["age"] >= upper_bound_exp[n]]) - len(upper_ids)):len(meta_sorted[meta_sorted["age"] >= upper_bound_exp[n]])]
+            upper_exp_ids = meta_permut_sorted[meta_permut_sorted["age_permut"] >= upper_bound_exp[n]].sample(n=len(upper_ids), replace = False)["pedigree_id"]
             upper_exp_nodes = getNodes(ids = upper_exp_ids, inds_alive = alive, ts = mts)
             
             #print(f"There are {len(lower_nodes)} nodes in the young group and {len(upper_nodes)} nodes in the old group and {len(upper_exp_nodes)} in the expanded old group for permutations")
