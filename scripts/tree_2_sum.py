@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-# last updates 3/7/2024
+# last updates 3/9/2024
 
-# combined functionality of pWF and nWF tree processing scripts 
+# small bug fixes
 
 import sys
 import msprime
@@ -351,9 +351,13 @@ for n in [*range(0, 24, 1)]:
         if model_type == "pWF": 
             num_inds_now = old_sizes[n] # keep sample size consistent
             num_inds_past = old_sizes[n]
-    
+        
+        now_sample = meta.sample(n=num_inds_now, replace=False)
+        now_nodes = getNodes(ids = now_sample["pedigree_id"], inds_alive = alive, ts = mts)
+
         # define past nodes (timepoint n + 1) 
         meta_past = metadata[metadata["generation"] == convert_time.iloc[n+1][1]] # subset metadata for this timepoint
+        
         # remove individuals in now_sample
         meta_past_unique = meta_past[~meta_past['pedigree_id'].isin(now_sample['pedigree_id'])]
         
@@ -376,10 +380,11 @@ for n in [*range(0, 24, 1)]:
         for j in range(1, 101):
         # for j in range(1, 5):
             now_sample = temp_meta.sample(n=num_inds_now, replace=False)
+            
             # remove individuals in now_sample
-            #temp_meta_unique = temp_meta[~temp_meta['pedigree_id'].isin(now_sample['pedigree_id'])]
+            temp_meta_unique = temp_meta[~temp_meta['pedigree_id'].isin(now_sample['pedigree_id'])]
 
-            past_sample = temp_meta.sample(n=num_inds_past, replace=False)
+            past_sample = temp_meta_unique.sample(n=num_inds_past, replace=False)
             
             # redo temporal comparisons with permuted timepoints
                 
